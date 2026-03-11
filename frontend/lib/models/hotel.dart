@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+enum HotelBadge { topRated, recommended, verifiedPremium, bestDeals }
+
 class Hotel {
   final String name;
   final String location;
@@ -26,6 +28,90 @@ class Hotel {
     required this.amenities,
     required this.roomTypes,
   });
+
+  String badgeLabel(HotelBadge badge) {
+    switch (badge) {
+      case HotelBadge.topRated:
+        return 'TOP RATED';
+      case HotelBadge.recommended:
+        return 'RECOMMENDED FOR YOU';
+      case HotelBadge.verifiedPremium:
+        return 'VERIFIED PREMIUM';
+      case HotelBadge.bestDeals:
+        return 'BEST DEALS';
+    }
+  }
+
+  Color badgeColor(HotelBadge badge) {
+    switch (badge) {
+      case HotelBadge.topRated:
+        return const Color(0xFF3B82F6);
+      case HotelBadge.recommended:
+        return const Color(0xFF10B981);
+      case HotelBadge.verifiedPremium:
+        return const Color(0xFF6366F1);
+      case HotelBadge.bestDeals:
+        return const Color(0xFFF97316);
+    }
+  }
+
+  IconData badgeIcon(HotelBadge badge) {
+    switch (badge) {
+      case HotelBadge.topRated:
+        return Icons.star_rounded;
+      case HotelBadge.recommended:
+        return Icons.thumb_up_rounded;
+      case HotelBadge.verifiedPremium:
+        return Icons.verified_rounded;
+      case HotelBadge.bestDeals:
+        return Icons.local_offer_rounded;
+    }
+  }
+}
+
+// 1. TOP RATED - rating user tertinggi
+// 2. BEST DEALS - harga per night termurah
+// 3. VERIFIED PREMIUM - harga per night termahal
+// 4. RECOMMENDED - sisa
+
+Map<String, HotelBadge> assignBadges(List<Hotel> hotels) {
+  if (hotels.isEmpty) return {};
+
+  final Map<String, HotelBadge> badges = {};
+  final Set<String> assigned = {};
+
+  final topRated = hotels
+      .where((h) => !assigned.contains(h.name))
+      .reduce((a, b) => a.userRating > b.userRating
+          ? a
+          : (a.userRating == b.userRating
+              ? (a.popularity < b.popularity ? a : b)
+              : b));
+  badges[topRated.name] = HotelBadge.topRated;
+  assigned.add(topRated.name);
+
+  final bestDeals = hotels
+      .where((h) => !assigned.contains(h.name))
+      .reduce((a, b) => a.pricePerNight < b.pricePerNight ? a : b);
+  badges[bestDeals.name] = HotelBadge.bestDeals;
+  assigned.add(bestDeals.name);
+
+  final remaining = hotels.where((h) => !assigned.contains(h.name)).toList();
+  if (remaining.isNotEmpty) {
+    final premium = remaining
+        .reduce((a, b) => a.pricePerNight > b.pricePerNight ? a : b);
+    badges[premium.name] = HotelBadge.verifiedPremium;
+    assigned.add(premium.name);
+  }
+
+  for (final hotel in hotels) {
+    if (!assigned.contains(hotel.name)) {
+      badges[hotel.name] = HotelBadge.recommended;
+      assigned.add(hotel.name);
+    }
+  }
+
+  return badges;
 }
 
 final List<Hotel> dummyHotels = [
@@ -82,3 +168,5 @@ final List<Hotel> dummyHotels = [
     roomTypes: ['Non Smoking'],
   ),
 ];
+
+final Map<String, HotelBadge> hotelBadges = assignBadges(dummyHotels);

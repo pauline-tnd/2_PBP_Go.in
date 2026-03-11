@@ -1,15 +1,26 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../models/hotel.dart';
 import 'hotel_image.dart';
 import 'package:intl/intl.dart';
 
-class HotelCard extends StatelessWidget {
+class HotelCard extends StatefulWidget {
   final Hotel hotel;
 
   const HotelCard({super.key, required this.hotel});
 
   @override
+  State<HotelCard> createState() => _HotelCardState();
+}
+
+class _HotelCardState extends State<HotelCard> {
+  bool _isWishlisted = false;
+
+  @override
   Widget build(BuildContext context) {
+    final hotel = widget.hotel;
+    final badge = hotelBadges[hotel.name];
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
@@ -17,7 +28,7 @@ class HotelCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF1E293B).withValues(alpha: 0.06),
+            color: const Color(0xFF1E293B).withAlpha(15),
             blurRadius: 16,
             offset: const Offset(0, 4),
           ),
@@ -26,17 +37,97 @@ class HotelCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          HotelImage(
-            imagePath: hotel.imagePath,
-            placeholderColor: hotel.placeholderColor,
-            width: double.infinity,
-            height: 160,
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(16),
-              topRight: Radius.circular(16),
-            ),
+          // ─── Image + Badge + Wishlist ───
+          Stack(
+            children: [
+              HotelImage(
+                imagePath: hotel.imagePath,
+                placeholderColor: hotel.placeholderColor,
+                width: double.infinity,
+                height: 160,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(16),
+                  topRight: Radius.circular(16),
+                ),
+              ),
+
+              // Badge — top left
+              if (badge != null)
+                Positioned(
+                  top: 12,
+                  left: 12,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: hotel.badgeColor(badge),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          hotel.badgeIcon(badge),
+                          size: 12,
+                          color: const Color(0xFFF5F7F8),
+                        ),
+                        const SizedBox(width: 5),
+                        Text(
+                          hotel.badgeLabel(badge),
+                          style: const TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFFF5F7F8),
+                            letterSpacing: 0.3,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+              // Wishlist — top right
+              Positioned(
+                top: 12,
+                right: 12,
+                child: GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _isWishlisted = !_isWishlisted;
+                    });
+                  },
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                      child: Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withAlpha(38),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Colors.white.withAlpha(51),
+                            width: 0.5,
+                          ),
+                        ),
+                        child: Icon(
+                          _isWishlisted
+                              ? Icons.favorite_rounded
+                              : Icons.favorite_border_rounded,
+                          size: 20,
+                          color: _isWishlisted
+                              ? const Color(0xFFEF4444)
+                              : Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
 
+          // ─── Hotel Info ───
           Padding(
             padding: const EdgeInsets.all(14),
             child: Column(
@@ -158,10 +249,10 @@ class HotelCard extends StatelessWidget {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFBBF24).withValues(alpha: 0.12),
+                        color: const Color(0xFFFBBF24).withAlpha(31),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: const Color(0xFFFBBF24).withValues(alpha: 0.3),
+                          color: const Color(0xFFFBBF24).withAlpha(77),
                           width: 1,
                         ),
                       ),
@@ -182,7 +273,6 @@ class HotelCard extends StatelessWidget {
                               color: Color(0xFFF97316),
                             ),
                           ),
-                          const SizedBox(width: 4),
                         ],
                       ),
                     ),
