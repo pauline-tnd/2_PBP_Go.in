@@ -39,8 +39,8 @@ class _HomePageState extends State<HomePage> {
           ),
 
           BottomNavbar(
-            currentIndex: _navIndex,
-            onTap: (index) => setState(() => _navIndex = index),
+            currentIndex: 0,
+            onTap: (_) {},
           ),
         ],
       ),
@@ -80,7 +80,7 @@ class _HomePageState extends State<HomePage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Hello, Traveler! 👋',
+                    'Hello, Traveler!',
                     style: TextStyle(
                       fontSize: 14,
                       color: Colors.white.withValues(alpha: 0.85),
@@ -165,14 +165,12 @@ class _HomePageState extends State<HomePage> {
               ],
             ),
             const SizedBox(height: 14),
-
             _buildInputField(
               icon: Icons.people_rounded,
               label: 'Guests',
               value: '$_guests Guests, 1 Room',
             ),
             const SizedBox(height: 18),
-
             SizedBox(
               width: double.infinity,
               height: 50,

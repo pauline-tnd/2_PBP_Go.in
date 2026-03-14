@@ -72,7 +72,7 @@ class Hotel {
 // 1. TOP RATED - rating user tertinggi
 // 2. BEST DEALS - harga per night termurah
 // 3. VERIFIED PREMIUM - harga per night termahal
-// 4. RECOMMENDED - sisa
+// 4. RECOMMENDED - sisa(???????????????????)
 
 Map<String, HotelBadge> assignBadges(List<Hotel> hotels) {
   if (hotels.isEmpty) return {};

@@ -176,10 +176,9 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
               ),
             ],
           ),
-
           BottomNavbar(
-            currentIndex: _navIndex,
-            onTap: (index) => setState(() => _navIndex = index),
+            currentIndex: 0,
+            onTap: (_) {},
           ),
         ],
       ),
@@ -277,9 +276,7 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
               ),
             ),
           ),
-
           const SizedBox(width: 8),
-
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -322,9 +319,7 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
               ],
             ),
           ),
-
           const SizedBox(width: 8),
-
           GestureDetector(
             onTap: _showFilterSheet,
             child: Stack(
@@ -519,7 +514,6 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
                   ),
                 ),
                 const SizedBox(height: 20),
-
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -569,9 +563,7 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
                     ),
                   ],
                 ),
-
                 const SizedBox(height: 28),
-
                 const Text(
                   'Price Range',
                   style: TextStyle(
@@ -581,7 +573,6 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
                   ),
                 ),
                 const SizedBox(height: 12),
-
                 Row(
                   children: [
                     Expanded(
@@ -662,9 +653,7 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
                     ),
                   ],
                 ),
-
                 const SizedBox(height: 12),
-
                 RangeSlider(
                   values: _priceRange,
                   min: 0,
@@ -684,9 +673,7 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
                     });
                   },
                 ),
-
                 const SizedBox(height: 24),
-
                 const Text(
                   'Star Rating',
                   style: TextStyle(
@@ -752,9 +739,7 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
                     );
                   }),
                 ),
-
                 const SizedBox(height: 24),
-
                 const Text(
                   'Amenities',
                   style: TextStyle(
@@ -814,9 +799,7 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
                     );
                   }).toList(),
                 ),
-
                 const SizedBox(height: 24),
-
                 const Text(
                   'Room Type',
                   style: TextStyle(
@@ -876,9 +859,7 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
                     );
                   }).toList(),
                 ),
-
                 const SizedBox(height: 32),
-
                 SizedBox(
                   width: double.infinity,
                   height: 52,
@@ -901,7 +882,6 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 16),
               ],
             ),
