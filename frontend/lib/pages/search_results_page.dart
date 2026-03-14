@@ -178,8 +178,8 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
           ),
 
           BottomNavbar(
-            currentIndex: _navIndex,
-            onTap: (index) => setState(() => _navIndex = index),
+            currentIndex: 0,
+            onTap: (_) {},
           ),
         ],
       ),
