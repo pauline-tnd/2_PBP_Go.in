@@ -37,7 +37,6 @@ class _HotelCardState extends State<HotelCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ─── Image + Badge + Wishlist ───
           Stack(
             children: [
               HotelImage(
@@ -50,8 +49,6 @@ class _HotelCardState extends State<HotelCard> {
                   topRight: Radius.circular(16),
                 ),
               ),
-
-              // Badge — top left
               if (badge != null)
                 Positioned(
                   top: 12,
@@ -84,8 +81,6 @@ class _HotelCardState extends State<HotelCard> {
                     ),
                   ),
                 ),
-
-              // Wishlist — top right
               Positioned(
                 top: 12,
                 right: 12,
@@ -126,8 +121,6 @@ class _HotelCardState extends State<HotelCard> {
               ),
             ],
           ),
-
-          // ─── Hotel Info ───
           Padding(
             padding: const EdgeInsets.all(14),
             child: Column(
@@ -166,9 +159,7 @@ class _HotelCardState extends State<HotelCard> {
                     ),
                   ],
                 ),
-
                 const SizedBox(height: 6),
-
                 Row(
                   children: [
                     const Icon(
@@ -191,16 +182,12 @@ class _HotelCardState extends State<HotelCard> {
                     ),
                   ],
                 ),
-
                 const SizedBox(height: 12),
-
                 Container(
                   height: 1,
                   color: const Color(0xFFF1F5F9),
                 ),
-
                 const SizedBox(height: 12),
-
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.end,
@@ -242,7 +229,6 @@ class _HotelCardState extends State<HotelCard> {
                         ),
                       ],
                     ),
-
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 10,
