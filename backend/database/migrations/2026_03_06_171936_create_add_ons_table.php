@@ -16,13 +16,13 @@ return new class extends Migration
             $table->foreignId('hotel_id')
                 ->constrained()
                 ->cascadeOnDelete();
+            $table->foreignId('icon_id')
+                ->constrained()
+                ->cascadeOnDelete();
 
             $table->string('name');
-            $table->string('icon');
 
             $table->decimal('price', 10, 2);
-
-            $table->timestamps();
         });
     }
 

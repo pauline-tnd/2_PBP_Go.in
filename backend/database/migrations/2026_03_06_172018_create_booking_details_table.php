@@ -24,6 +24,7 @@ return new class extends Migration
 
             $table->integer('total_room');
             $table->decimal('sub_total', 10, 2);
+            $table->text('notes')->nullable();
 
             $table->timestamps();
         });
