@@ -2,66 +2,67 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\BookingDetail;
+use App\Models\BookingDetailAddOn;
 use Illuminate\Http\Request;
 
-class BookingDetailController extends Controller
+class BookingDetailAddOnController extends Controller
 {
     public function index()
     {
-        $details = BookingDetail::with(['booking.user', 'room', 'addOns.addOn'])->get();
-        return response()->json($details);
+        $addons = BookingDetailAddOn::with(['bookingDetail.booking.user', 'addOn'])->get();
+        return response()->json($addons);
     }
 
     public function show($id)
     {
-        $detail = BookingDetail::with(['booking.user', 'room', 'addOns.addOn'])->findOrFail($id);
-        return response()->json($detail);
+        $addon = BookingDetailAddOn::with(['bookingDetail.booking.user', 'addOn'])->findOrFail($id);
+        return response()->json($addon);
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'booking_id' => 'required|exists:bookings,book_id',
-            'room_id' => 'required|exists:rooms,id',
-            'total_room' => 'required|integer|min:1',
+            'booking_detail_id' => 'required|exists:booking_details,id',
+            'add_on_id' => 'required|exists:add_ons,id',
+            'qty' => 'required|integer|min:1',
             'sub_total' => 'required|numeric|min:0',
-            'notes' => 'nullable|string',
         ]);
-
-        $detail = BookingDetail::create($validated);
-
+        $addon = BookingDetailAddOn::create($validated);
         return response()->json([
-            'message' => 'Booking Detail Created',
-            'detail' => $detail
+            'message' => 'Add-on berhasil ditambahkan ke booking detail',
+            'addon' => $addon
         ], 201);
     }
 
     public function update(Request $request, $id)
     {
-        $detail = BookingDetail::findOrFail($id);
-
+        $addon = BookingDetailAddOn::findOrFail($id);
         $validated = $request->validate([
-            'total_room' => 'integer|min:1',
+            'qty' => 'integer|min:1',
             'sub_total' => 'numeric|min:0',
-            'notes' => 'nullable|string',
         ]);
-
-        $detail->update($validated);
-
+        $addon->update($validated);
         return response()->json([
-            'message' => 'Booking Detail Updated',
-            'detail' => $detail
+            'message' => 'Add-on booking detail berhasil diperbarui',
+            'addon' => $addon
         ]);
     }
 
     public function destroy($id)
     {
-        $detail = BookingDetail::findOrFail($id);
-        $detail->delete();
-
+        $addon = BookingDetailAddOn::findOrFail($id);
+        $addon->delete();
         return response()->json([
-            'message' => 'Booking Detail Deleted'
+            'message' => 'Add-on booking detail berhasil dihapus'
         ]);
+    }
+
+    public function getByBookingDetail($bookingDetailId)
+    {
+        $addons = BookingDetailAddOn::with('addOn')
+            ->where('booking_detail_id', $bookingDetailId)
+            ->get();
+
+        return response()->json($addons);
     }
 }
