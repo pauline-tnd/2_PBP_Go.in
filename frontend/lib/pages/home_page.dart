@@ -9,7 +9,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  int _navIndex = 0;
   final _destinationController = TextEditingController(text: 'London, UK');
   final String _checkIn = '24 Jan 2025';
   final String _checkOut = '26 Jan 2025';
@@ -37,7 +36,6 @@ class _HomePageState extends State<HomePage> {
               ],
             ),
           ),
-
           BottomNavbar(
             currentIndex: 0,
             onTap: (_) {},

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 enum HotelBadge { topRated, recommended, verifiedPremium, bestDeals }
 
 class Hotel {
+  final int id;
   final String name;
   final String location;
   final int starRating;
@@ -16,6 +17,7 @@ class Hotel {
   final List<String> roomTypes;
 
   Hotel({
+    required this.id,
     required this.name,
     required this.location,
     required this.starRating,
@@ -29,16 +31,71 @@ class Hotel {
     required this.roomTypes,
   });
 
+  factory Hotel.fromMap(Map<String, dynamic> map) {
+    final images = map['hotel_images'] as List<dynamic>?;
+    String? imageUrl = (images != null && images.isNotEmpty) 
+        ? images.first['image'] 
+        : null;
+    final List<dynamic> roomsData = map['rooms'] as List<dynamic>? ?? [];
+    double minPrice = 0;
+    if (roomsData.isNotEmpty) {
+      final prices = roomsData
+        .map((room) => double.tryParse(room['price'].toString()) ?? 0.0)
+        .where((p) => p > 0)
+        .toList();
+      if (prices.isNotEmpty) {
+        minPrice = prices.reduce((curr, next) => curr < next ? curr : next);
+      }
+    }
+    double averageRating = 0;
+    List<num> allRatings = [];
+    for (var room in roomsData) {
+      final reviews = room['reviews'] as List<dynamic>? ?? [];
+      for (var review in reviews) {
+        if (review['rating'] != null) {
+          allRatings.add(review['rating'] as num);
+        }
+      }
+    }
+
+    if (allRatings.isNotEmpty) {
+      averageRating = allRatings.reduce((a, b) => a + b) / allRatings.length;
+    }
+
+    final facilitiesData = map['hotel_facilities'] as List<dynamic>? ?? [];
+    final List<String> facilitiesList = facilitiesData
+      .map((f) => f['name'].toString())
+      .where((name) => name != 'null')
+      .toList();
+
+    return Hotel(
+      id: map['id'] ?? 0,
+      name: map['name'] ?? 'No Name',
+      location: map['location'] ?? 'No Location',
+      starRating: map['star'] ?? 0,
+      pricePerNight: minPrice,
+      userRating: averageRating,
+      popularity: map['popularity'] ?? 0,
+      distance: (map['distance'] ?? 0).toDouble(),
+      imagePath: imageUrl,
+      placeholderColor: const Color(0xFF1E3A5F),
+      amenities: facilitiesList,
+      roomTypes: map['room_types'] is List 
+          ? List<String>.from(map['room_types']) 
+          : [],
+    );
+  }
+
   String badgeLabel(HotelBadge badge) {
     switch (badge) {
+      case HotelBadge.bestDeals:
+        return 'BEST DEALS';
       case HotelBadge.topRated:
         return 'TOP RATED';
       case HotelBadge.recommended:
         return 'RECOMMENDED FOR YOU';
       case HotelBadge.verifiedPremium:
         return 'VERIFIED PREMIUM';
-      case HotelBadge.bestDeals:
-        return 'BEST DEALS';
     }
   }
 
@@ -69,16 +126,16 @@ class Hotel {
   }
 }
 
-// 1. TOP RATED - rating user tertinggi
-// 2. BEST DEALS - harga per night termurah
-// 3. VERIFIED PREMIUM - harga per night termahal
-// 4. RECOMMENDED - sisa(???????????????????)
-
 Map<String, HotelBadge> assignBadges(List<Hotel> hotels) {
   if (hotels.isEmpty) return {};
-
   final Map<String, HotelBadge> badges = {};
   final Set<String> assigned = {};
+
+  final bestDeals = hotels
+      .where((h) => !assigned.contains(h.name))
+      .reduce((a, b) => a.pricePerNight < b.pricePerNight ? a : b);
+  badges[bestDeals.name] = HotelBadge.bestDeals;
+  assigned.add(bestDeals.name);
 
   final topRated = hotels
       .where((h) => !assigned.contains(h.name))
@@ -89,12 +146,6 @@ Map<String, HotelBadge> assignBadges(List<Hotel> hotels) {
               : b));
   badges[topRated.name] = HotelBadge.topRated;
   assigned.add(topRated.name);
-
-  final bestDeals = hotels
-      .where((h) => !assigned.contains(h.name))
-      .reduce((a, b) => a.pricePerNight < b.pricePerNight ? a : b);
-  badges[bestDeals.name] = HotelBadge.bestDeals;
-  assigned.add(bestDeals.name);
 
   final remaining = hotels.where((h) => !assigned.contains(h.name)).toList();
   if (remaining.isNotEmpty) {
@@ -110,63 +161,5 @@ Map<String, HotelBadge> assignBadges(List<Hotel> hotels) {
       assigned.add(hotel.name);
     }
   }
-
   return badges;
 }
-
-final List<Hotel> dummyHotels = [
-  Hotel(
-    name: 'The Ritz London',
-    location: 'Westminster Borough, London',
-    starRating: 5,
-    pricePerNight: 25600466,
-    userRating: 4.8,
-    placeholderColor: const Color(0xFF1E3A5F),
-    popularity: 1,
-    distance: 1.2,
-    imagePath: 'assets/images/hotel/ritz-london-exterior.webp',
-    amenities: ['WiFi', 'Spa', 'Restaurant', 'Gym', 'Parking', 'Swimming Pool', 'Water Heater'],
-    roomTypes: ['Smoking', 'Non Smoking'],
-  ),
-  Hotel(
-    name: 'The Savoy',
-    location: 'Strand, Westminster, London',
-    starRating: 5,
-    pricePerNight: 17314352,
-    userRating: 4.6,
-    placeholderColor: const Color(0xFF5E3A2D),
-    popularity: 4,
-    distance: 3.1,
-    imagePath: 'assets/images/hotel/the-savoy-london.webp',
-    amenities: ['WiFi', 'Restaurant', 'Gym', 'Parking', 'Laundry', 'Airport Shuttle', 'Water Heater'],
-    roomTypes: ['Smoking', 'Non Smoking'],
-  ),
-  Hotel(
-    name: 'The Lanesborough',
-    location: 'Strand, Westminster, London',
-    starRating: 5,
-    pricePerNight: 20683887,
-    userRating: 4.9,
-    placeholderColor: const Color(0xFF4A2D5E),
-    popularity: 3,
-    distance: 1.8,
-    imagePath: 'assets/images/hotel/the-lanesborough-oetker-london.jpg',
-    amenities: ['WiFi', 'Spa', 'Restaurant', 'Gym', 'Parking', 'Swimming Pool', 'Laundry', 'Pet Friendly', 'Water Heater'],
-    roomTypes: ['Non Smoking'],
-  ),
-  Hotel(
-    name: 'Mandarin Oriental Hyde Park',
-    location: 'Knightsbridge, Westminster Borough',
-    starRating: 5,
-    pricePerNight: 43684255,
-    userRating: 4.7,
-    placeholderColor: const Color(0xFF2D4A3E),
-    popularity: 2,
-    distance: 2.5,
-    imagePath: 'assets/images/hotel/mandarin-oriental-hyde-park-london.jpg',
-    amenities: ['WiFi', 'Spa', 'Restaurant', 'Gym', 'Swimming Pool', 'Laundry', 'Airport Shuttle', 'Water Heater'],
-    roomTypes: ['Non Smoking'],
-  ),
-];
-
-final Map<String, HotelBadge> hotelBadges = assignBadges(dummyHotels);
