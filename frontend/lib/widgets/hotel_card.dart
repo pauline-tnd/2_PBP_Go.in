@@ -198,8 +198,8 @@ class _HotelCardState extends State<HotelCard> {
                         const Text(
                           'Start from',
                           style: TextStyle(
-                            fontSize: 11,
-                            color: Color(0xFF94A3B8),
+                            fontSize: 12,
+                            color: Color(0xFF3B82F6),
                             fontWeight: FontWeight.w400,
                           ),
                         ),
@@ -220,7 +220,23 @@ class _HotelCardState extends State<HotelCard> {
                             const Text(
                               '/ night',
                               style: TextStyle(
-                                fontSize: 12,
+                                fontSize: 11,
+                                color: Color(0xFF94A3B8),
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 1),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.baseline,
+                          textBaseline: TextBaseline.alphabetic,
+                          children: [
+                            const SizedBox(width: 3),
+                            const Text(
+                              'Includes taxes & fees',
+                              style: TextStyle(
+                                fontSize: 10,
                                 color: Color(0xFF94A3B8),
                                 fontWeight: FontWeight.w400,
                               ),
@@ -246,7 +262,7 @@ class _HotelCardState extends State<HotelCard> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           const Icon(
-                            Icons.star_rounded,
+                            Icons.star_border,
                             size: 16,
                             color: Color(0xFFF59E0B),
                           ),
