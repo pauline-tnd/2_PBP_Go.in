@@ -88,14 +88,14 @@ class Hotel {
 
   String badgeLabel(HotelBadge badge) {
     switch (badge) {
+      case HotelBadge.bestDeals:
+        return 'BEST DEALS';
       case HotelBadge.topRated:
         return 'TOP RATED';
       case HotelBadge.recommended:
         return 'RECOMMENDED FOR YOU';
       case HotelBadge.verifiedPremium:
         return 'VERIFIED PREMIUM';
-      case HotelBadge.bestDeals:
-        return 'BEST DEALS';
     }
   }
 
@@ -131,6 +131,12 @@ Map<String, HotelBadge> assignBadges(List<Hotel> hotels) {
   final Map<String, HotelBadge> badges = {};
   final Set<String> assigned = {};
 
+  final bestDeals = hotels
+      .where((h) => !assigned.contains(h.name))
+      .reduce((a, b) => a.pricePerNight < b.pricePerNight ? a : b);
+  badges[bestDeals.name] = HotelBadge.bestDeals;
+  assigned.add(bestDeals.name);
+
   final topRated = hotels
       .where((h) => !assigned.contains(h.name))
       .reduce((a, b) => a.userRating > b.userRating
@@ -140,12 +146,6 @@ Map<String, HotelBadge> assignBadges(List<Hotel> hotels) {
               : b));
   badges[topRated.name] = HotelBadge.topRated;
   assigned.add(topRated.name);
-
-  final bestDeals = hotels
-      .where((h) => !assigned.contains(h.name))
-      .reduce((a, b) => a.pricePerNight < b.pricePerNight ? a : b);
-  badges[bestDeals.name] = HotelBadge.bestDeals;
-  assigned.add(bestDeals.name);
 
   final remaining = hotels.where((h) => !assigned.contains(h.name)).toList();
   if (remaining.isNotEmpty) {
@@ -163,64 +163,3 @@ Map<String, HotelBadge> assignBadges(List<Hotel> hotels) {
   }
   return badges;
 }
-
-final List<Hotel> dummyHotels = [
-  Hotel(
-    id: 1,
-    name: 'The Ritz London',
-    location: 'Westminster Borough, London',
-    starRating: 5,
-    pricePerNight: 25600466,
-    userRating: 4.8,
-    placeholderColor: const Color(0xFF1E3A5F),
-    popularity: 1,
-    distance: 1.2,
-    imagePath: 'assets/images/hotel/ritz-london-exterior.webp',
-    amenities: ['WiFi', 'Spa', 'Restaurant', 'Gym', 'Parking', 'Swimming Pool', 'Water Heater'],
-    roomTypes: ['Smoking', 'Non Smoking'],
-  ),
-  Hotel(
-    id: 2,
-    name: 'The Savoy',
-    location: 'Strand, Westminster, London',
-    starRating: 5,
-    pricePerNight: 17314352,
-    userRating: 4.6,
-    placeholderColor: const Color(0xFF5E3A2D),
-    popularity: 4,
-    distance: 3.1,
-    imagePath: 'assets/images/hotel/the-savoy-london.webp',
-    amenities: ['WiFi', 'Restaurant', 'Gym', 'Parking', 'Laundry', 'Airport Shuttle', 'Water Heater'],
-    roomTypes: ['Smoking', 'Non Smoking'],
-  ),
-  Hotel(
-    id: 3,
-    name: 'The Lanesborough',
-    location: 'Strand, Westminster, London',
-    starRating: 5,
-    pricePerNight: 20683887,
-    userRating: 4.9,
-    placeholderColor: const Color(0xFF4A2D5E),
-    popularity: 3,
-    distance: 1.8,
-    imagePath: 'assets/images/hotel/the-lanesborough-oetker-london.jpg',
-    amenities: ['WiFi', 'Spa', 'Restaurant', 'Gym', 'Parking', 'Swimming Pool', 'Laundry', 'Pet Friendly', 'Water Heater'],
-    roomTypes: ['Non Smoking'],
-  ),
-  Hotel(
-    id: 4,
-    name: 'Mandarin Oriental Hyde Par',
-    location: 'Knightsbridge, Westminster Borough',
-    starRating: 5,
-    pricePerNight: 43684255,
-    userRating: 4.7,
-    placeholderColor: const Color(0xFF2D4A3E),
-    popularity: 2,
-    distance: 2.5,
-    imagePath: 'assets/images/hotel/mandarin-oriental-hyde-park-london.jpg',
-    amenities: ['WiFi', 'Spa', 'Restaurant', 'Gym', 'Swimming Pool', 'Laundry', 'Airport Shuttle', 'Water Heater'],
-    roomTypes: ['Non Smoking'],
-  ),
-];
-
-final Map<String, HotelBadge> hotelBadges = assignBadges(dummyHotels);

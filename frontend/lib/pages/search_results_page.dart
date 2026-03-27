@@ -205,13 +205,19 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 24),
                         child: hotels.isEmpty
-                            ? _buildEmptyState()
-                            : Column(
-                                children: hotels
-                                    .map((hotel) => HotelCard(hotel: hotel))
-                                    .toList(),
-                              ),
-                      ),
+                          ? _buildEmptyState()
+                          : Column(
+                              children: hotels.map((hotel) {
+                                // Ambil badge berdasarkan Nama Hotel (karena di _hotelBadges key-nya hotel.name)
+                                final badge = _hotelBadges[hotel.name]; 
+                                
+                                return HotelCard(
+                                  hotel: hotel,
+                                  badge: badge, // Masukkan badge-nya ke sini
+                                );
+                              }).toList(),
+                            ),
+                        ),
                     ],
                   ),
                 ),

@@ -6,8 +6,9 @@ import 'package:intl/intl.dart';
 
 class HotelCard extends StatefulWidget {
   final Hotel hotel;
+  final HotelBadge? badge;
 
-  const HotelCard({super.key, required this.hotel});
+  const HotelCard({super.key, required this.hotel, this.badge});
 
   @override
   State<HotelCard> createState() => _HotelCardState();
@@ -19,7 +20,7 @@ class _HotelCardState extends State<HotelCard> {
   @override
   Widget build(BuildContext context) {
     final hotel = widget.hotel;
-    final badge = hotelBadges[hotel.name];
+    final badge = widget.badge;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
