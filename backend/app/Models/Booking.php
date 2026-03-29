@@ -9,13 +9,13 @@ class Booking extends Model
 {
     use HasFactory;
 
-    protected $primaryKey = 'book_id';
+    protected $table = 'bookings';
+    protected $primaryKey = 'id';
     public $incrementing = true;
-    protected $keyType = 'bigint';
+    protected $keyType = 'int';
 
     protected $fillable = [
         'user_id',
-        'room_id',
         'booking_number',
         'qr_code',
         'check_in',
@@ -35,20 +35,8 @@ class Booking extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    public function room()
+    public function bookingDetails()
     {
-        return $this->belongsTo(Room::class, 'room_id');
-    }
-
-    public function hotel()
-    {
-        return $this->hasOneThrough(
-            Hotel::class,
-            Room::class,
-            'id',
-            'id',
-            'room_id',
-            'hotel_id'
-        );
+        return $this->hasMany(BookingDetail::class, 'booking_id');
     }
 }

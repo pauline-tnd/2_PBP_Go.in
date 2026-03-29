@@ -12,7 +12,7 @@ class BookingDetail extends Model
     protected $table = 'booking_details';
     protected $primaryKey = 'id';
     public $incrementing = true;
-    protected $keyType = 'bigint';
+    protected $keyType = 'int';
 
     protected $fillable = [
         'booking_id',
@@ -20,12 +20,16 @@ class BookingDetail extends Model
         'total_room',
         'sub_total',
         'notes',
+        'created_at',
+        'updated_at',
     ];
 
     protected $casts = [
         'total_room' => 'integer',
         'sub_total' => 'decimal:2',
         'notes' => 'string',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     public function booking()

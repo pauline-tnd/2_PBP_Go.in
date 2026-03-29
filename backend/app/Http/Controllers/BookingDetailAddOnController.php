@@ -15,7 +15,12 @@ class BookingDetailAddOnController extends Controller
 
     public function show($id)
     {
-        $addon = BookingDetailAddOn::with(['bookingDetail.booking.user', 'addOn'])->findOrFail($id);
+        $addon = BookingDetailAddOn::with(['bookingDetail.booking.user', 'addOn'])->find($id);
+        if (!$addon) {
+            return response()->json([
+                'message' => 'Data Booking Detail Add-On tidak ditemukan'
+            ], 404);
+        }
         return response()->json($addon);
     }
 
@@ -37,11 +42,14 @@ class BookingDetailAddOnController extends Controller
     public function update(Request $request, $id)
     {
         $addon = BookingDetailAddOn::findOrFail($id);
+
         $validated = $request->validate([
             'qty' => 'integer|min:1',
             'sub_total' => 'numeric|min:0',
         ]);
+
         $addon->update($validated);
+
         return response()->json([
             'message' => 'Add-on booking detail berhasil diperbarui',
             'addon' => $addon
@@ -50,8 +58,16 @@ class BookingDetailAddOnController extends Controller
 
     public function destroy($id)
     {
-        $addon = BookingDetailAddOn::findOrFail($id);
+        $addon = BookingDetailAddOn::find($id);
+
+        if (!$addon) {
+            return response()->json([
+                'message' => 'Data Booking Detail Add-On tidak ditemukan'
+            ], 404);
+        }
+
         $addon->delete();
+
         return response()->json([
             'message' => 'Add-on booking detail berhasil dihapus'
         ]);
@@ -62,7 +78,14 @@ class BookingDetailAddOnController extends Controller
         $addons = BookingDetailAddOn::with('addOn')
             ->where('booking_detail_id', $bookingDetailId)
             ->get();
-
-        return response()->json($addons);
+        if ($addons->isEmpty()) {
+            return response()->json([
+                'message' => 'Add-on untuk Booking Detail ini tidak ditemukan'
+            ], 404);
+        }
+        return response()->json([
+            'message' => 'Data add-on ditemukan',
+            'data' => $addons
+        ]);
     }
 }
