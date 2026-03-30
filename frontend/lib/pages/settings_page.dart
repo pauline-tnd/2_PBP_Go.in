@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../widgets/bottom_navbar.dart';
+import 'edit_profile_page.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -17,7 +18,6 @@ class SettingsPage extends StatelessWidget {
                 child: Stack(
                   clipBehavior: Clip.none,
                   children: [
-                    // gelap-primary
                     Positioned(
                       top: 0,
                       left: 0,
@@ -54,7 +54,6 @@ class SettingsPage extends StatelessWidget {
                         ),
                       ),
                     ),
-                    // posisi ttle
                     Positioned(
                       top: 68,
                       left: 0,
@@ -92,7 +91,7 @@ class SettingsPage extends StatelessWidget {
                     children: [
                       _buildSectionTitle('ACCOUNT SETTINGS'),
                       const SizedBox(height: 12),
-                      _buildSettingsCard([
+                      _buildSettingsCard(context, [
                         _SettingsItem(
                           icon: Icons.person_outline_rounded,
                           label: 'Edit Profile',
@@ -113,7 +112,7 @@ class SettingsPage extends StatelessWidget {
                       const SizedBox(height: 28),
                       _buildSectionTitle('SUPPORT & LEGAL'),
                       const SizedBox(height: 12),
-                      _buildSettingsCard([
+                      _buildSettingsCard(context, [
                         _SettingsItem(
                           icon: Icons.help_outline_rounded,
                           label: 'Help Center',
@@ -121,6 +120,10 @@ class SettingsPage extends StatelessWidget {
                         _SettingsItem(
                           icon: Icons.mail_outline_rounded,
                           label: 'Contact Us',
+                        ),
+                        _SettingsItem(
+                          icon: Icons.help_outline_rounded,
+                          label: 'FAQ',
                         ),
                       ]),
                       const SizedBox(height: 28),
@@ -293,7 +296,7 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  static Widget _buildSettingsCard(List<_SettingsItem> items) {
+  static Widget _buildSettingsCard(BuildContext context, List<_SettingsItem> items) {
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFFFFFFFF),
@@ -316,7 +319,12 @@ class SettingsPage extends StatelessWidget {
               Material(
                 color: Colors.transparent,
                 child: InkWell(
-                  onTap: () {},
+                  onTap: () {Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const EditProfilePage(),
+                    ),
+                  );},
                   borderRadius: BorderRadius.vertical(
                     top: index == 0 ? const Radius.circular(16) : Radius.zero,
                     bottom: isLast ? const Radius.circular(16) : Radius.zero,
