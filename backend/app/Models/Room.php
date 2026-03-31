@@ -17,6 +17,7 @@ class Room extends Model
         'description',
         'price',
         'capacity',
+        'room_size'
     ];
 
     public function roomImage()
