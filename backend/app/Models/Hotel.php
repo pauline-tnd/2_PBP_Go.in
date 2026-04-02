@@ -53,8 +53,8 @@ class Hotel extends Model
         return $this->hasManyThrough(Review::class, Room::class);
     }
 
-    public function bookings() // Hotel has many Bookings, through Room
+    public function bookingDetails() // Hotel has many Bookings, through Room
     {
-        return $this->hasManyThrough(Booking::class, Room::class);
+        return $this->hasManyThrough(BookingDetail::class, Room::class);
     }
 }

@@ -17,7 +17,7 @@ Route::apiResource('hotels', HotelController::class)
 // Read Room (nested)
 Route::apiResource('hotels.rooms', RoomController::class)
     ->only(['index', 'show']);
-    // GET /hotels/{hotel}/rooms/{room}
+// GET /hotels/{hotel}/rooms/{room}
 
 Route::prefix('bookings')->group(function () {
     Route::get('/', [BookingController::class, 'index']);
@@ -28,6 +28,7 @@ Route::prefix('bookings')->group(function () {
     Route::delete('/destroy/{id}', [BookingController::class, 'destroy']);
 });
 
+// Route::apiResource('booking-details', BookingDetailController::class);
 Route::prefix('booking-details')->group(function () {
     Route::get('/', [BookingDetailController::class, 'index']);
     Route::get('/{id}', [BookingDetailController::class, 'show']);
