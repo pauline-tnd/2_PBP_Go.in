@@ -6,8 +6,6 @@ class SettingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final topPadding = MediaQuery.of(context).padding.top;
-
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7F8),
       body: Stack(

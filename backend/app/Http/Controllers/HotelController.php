@@ -15,12 +15,13 @@ class HotelController extends Controller
         ])
             ->withMin('rooms as start_from_price', 'price')                          // start from price
             ->withAvg('reviews as hotel_rating', 'rating')   // table reviews, column rating
-            ->withCount('bookings as total_bookings');       // total booking for popularity
+            ->withCount('bookingDetails as total_bookings');       // total booking for popularity
 
         // When = Optional
-        // Search by hotel name
+        // Search by hotel name / location
         $query->when($request->search, function ($q, $search) {
-            $q->where('name', 'like', '%' . $search . '%');
+            $q->where('name', 'like', '%' . $search . '%')
+                ->orWhere('location', 'like', '%' . $search . '%');
         });
 
         // Filter Price Range
@@ -100,8 +101,8 @@ class HotelController extends Controller
             'rooms.roomImages',
             'rooms.roomFacilities',
         ])
-            ->withAvg('rooms.reviews as hotel_rating', 'rating')   // hotel's average rating
-            ->withCount('rooms.reviews as total_reviews')           // review total
+            ->withAvg('reviews as hotel_rating', 'rating')   // hotel's average rating
+            ->withCount('reviews as total_reviews')           // review total
             ->find($id);
 
         if (!$hotel) { // invalid id

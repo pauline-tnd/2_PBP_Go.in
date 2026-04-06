@@ -10,19 +10,6 @@ class BottomNavbar extends StatelessWidget {
     required this.onTap,
   });
 
-  static const List<String> _routes = [
-    '/',
-    '/activity',
-    '/promo',
-    '/settings',
-  ];
-
-  void _handleTap(BuildContext context, int index) {
-    if (index == currentIndex) return;
-    onTap(index);
-    Navigator.pushReplacementNamed(context, _routes[index]);
-  }
-
   @override
   Widget build(BuildContext context) {
     return Positioned(
@@ -33,7 +20,7 @@ class BottomNavbar extends StatelessWidget {
         height: 68,
         decoration: BoxDecoration(
           color: const Color(0xFF3B82F6),
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: BorderRadius.circular(30),
           boxShadow: [
             BoxShadow(
               color: const Color(0xFF3B82F6).withAlpha(77),
@@ -46,28 +33,24 @@ class BottomNavbar extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             _buildNavItem(
-              context: context,
               index: 0,
               icon: Icons.home_rounded,
               outlineIcon: Icons.home_outlined,
               label: 'Home',
             ),
             _buildNavItem(
-              context: context,
               index: 1,
               icon: Icons.calendar_today_rounded,
               outlineIcon: Icons.calendar_today_outlined,
               label: 'Activity',
             ),
             _buildNavItem(
-              context: context,
               index: 2,
               icon: Icons.local_offer_rounded,
               outlineIcon: Icons.local_offer_outlined,
               label: 'Promo',
             ),
             _buildNavItem(
-              context: context,
               index: 3,
               icon: Icons.settings_rounded,
               outlineIcon: Icons.settings_outlined,
@@ -80,7 +63,6 @@ class BottomNavbar extends StatelessWidget {
   }
 
   Widget _buildNavItem({
-    required BuildContext context,
     required int index,
     required IconData icon,
     required IconData outlineIcon,
@@ -89,40 +71,31 @@ class BottomNavbar extends StatelessWidget {
     final isActive = currentIndex == index;
 
     return GestureDetector(
-      onTap: () => _handleTap(context, index),
+      onTap: () => onTap(index),
       behavior: HitTestBehavior.opaque,
       child: SizedBox(
         width: 64,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            AnimatedContainer(
+            AnimatedSwitcher(
               duration: const Duration(milliseconds: 200),
-              width: isActive ? 6 : 0,
-              height: isActive ? 6 : 0,
-              margin: const EdgeInsets.only(bottom: 4),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
+              child: Icon(
+                isActive ? icon : outlineIcon,
+                key: ValueKey(isActive),
+                size: 24,
+                color: isActive ? Colors.white : Colors.white.withAlpha(153),
               ),
             ),
-            Icon(
-              isActive ? icon : outlineIcon,
-              size: 24,
-              color: isActive
-                  ? Colors.white
-                  : Colors.white.withAlpha(153),
-            ),
             const SizedBox(height: 4),
-            Text(
-              label,
+            AnimatedDefaultTextStyle(
+              duration: const Duration(milliseconds: 200),
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
-                color: isActive
-                    ? Colors.white
-                    : Colors.white.withAlpha(153),
+                color: isActive ? Colors.white : Colors.white.withAlpha(153),
               ),
+              child: Text(label),
             ),
           ],
         ),

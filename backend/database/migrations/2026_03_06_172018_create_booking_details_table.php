@@ -20,6 +20,8 @@ return new class extends Migration
                 ->constrained()
                 ->cascadeOnDelete();
 
+            $table->text('notes')->nullable();
+
             $table->integer('total_room');
             $table->decimal('sub_total', 10, 2);
             $table->text('notes')->nullable();

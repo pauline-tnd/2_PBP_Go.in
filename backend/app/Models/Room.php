@@ -17,6 +17,7 @@ class Room extends Model
         'description',
         'price',
         'capacity',
+        'room_size'
     ];
 
     public function roomImage()
@@ -47,5 +48,10 @@ class Room extends Model
     public function reviews()
     {
         return $this->hasMany(Review::class, 'room_id');
+    }
+
+    public function hotel()
+    {
+        return $this->belongsTo(Hotel::class, 'hotel_id');
     }
 }

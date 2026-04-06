@@ -16,7 +16,6 @@ return new class extends Migration
 
             $table->string('name');
             $table->text('description')->nullable();
-
             $table->tinyInteger('star')->unsigned();
             $table->string('location');
 
