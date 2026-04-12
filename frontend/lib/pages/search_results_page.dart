@@ -176,10 +176,7 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
               ),
             ],
           ),
-          BottomNavbar(
-            currentIndex: 0,
-            onTap: (_) {},
-          ),
+          BottomNavbar(currentIndex: 0, onTap: (_) {}),
         ],
       ),
     );
@@ -208,10 +205,7 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
           const SizedBox(height: 8),
           const Text(
             'Try adjusting your filters',
-            style: TextStyle(
-              fontSize: 14,
-              color: Color(0xFF94A3B8),
-            ),
+            style: TextStyle(fontSize: 14, color: Color(0xFF94A3B8)),
           ),
           const SizedBox(height: 24),
           GestureDetector(
@@ -581,7 +575,10 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
                         children: [
                           const Text(
                             'Min (Rp)',
-                            style: TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Color(0xFF94A3B8),
+                            ),
                           ),
                           const SizedBox(height: 6),
                           Container(
@@ -589,7 +586,9 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
                             decoration: BoxDecoration(
                               color: const Color(0xFFF5F7F8),
                               borderRadius: BorderRadius.circular(10),
-                              border: Border.all(color: const Color(0xFFE2E8F0)),
+                              border: Border.all(
+                                color: const Color(0xFFE2E8F0),
+                              ),
                             ),
                             child: TextField(
                               controller: _minPriceController,
@@ -601,7 +600,9 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
                                 color: Color(0xFF1E293B),
                               ),
                               decoration: const InputDecoration(
-                                contentPadding: EdgeInsets.symmetric(horizontal: 12),
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                ),
                                 border: InputBorder.none,
                                 hintText: '0',
                                 hintStyle: TextStyle(color: Color(0xFF94A3B8)),
@@ -613,7 +614,13 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
                     ),
                     const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 12),
-                      child: Text('—', style: TextStyle(fontSize: 16, color: Color(0xFF94A3B8))),
+                      child: Text(
+                        '—',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Color(0xFF94A3B8),
+                        ),
+                      ),
                     ),
                     Expanded(
                       child: Column(
@@ -621,7 +628,10 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
                         children: [
                           const Text(
                             'Max (Rp)',
-                            style: TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Color(0xFF94A3B8),
+                            ),
                           ),
                           const SizedBox(height: 6),
                           Container(
@@ -629,7 +639,9 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
                             decoration: BoxDecoration(
                               color: const Color(0xFFF5F7F8),
                               borderRadius: BorderRadius.circular(10),
-                              border: Border.all(color: const Color(0xFFE2E8F0)),
+                              border: Border.all(
+                                color: const Color(0xFFE2E8F0),
+                              ),
                             ),
                             child: TextField(
                               controller: _maxPriceController,
@@ -641,7 +653,9 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
                                 color: Color(0xFF1E293B),
                               ),
                               decoration: const InputDecoration(
-                                contentPadding: EdgeInsets.symmetric(horizontal: 12),
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                ),
                                 border: InputBorder.none,
                                 hintText: '200.000.000',
                                 hintStyle: TextStyle(color: Color(0xFF94A3B8)),
@@ -668,8 +682,12 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
                   onChanged: (values) {
                     setState(() {
                       _priceRange = values;
-                      _minPriceController.text = _formatPrice(values.start.toInt());
-                      _maxPriceController.text = _formatPrice(values.end.toInt());
+                      _minPriceController.text = _formatPrice(
+                        values.start.toInt(),
+                      );
+                      _maxPriceController.text = _formatPrice(
+                        values.end.toInt(),
+                      );
                     });
                   },
                 ),
@@ -700,7 +718,10 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
                         });
                       },
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 8,
+                        ),
                         decoration: BoxDecoration(
                           color: isSelected
                               ? const Color(0xFF3B82F6).withAlpha(46)
@@ -767,7 +788,10 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
                         });
                       },
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 10,
+                        ),
                         decoration: BoxDecoration(
                           color: isSelected
                               ? const Color(0xFF3B82F6).withAlpha(46)
@@ -783,7 +807,11 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(icon, size: 16, color: const Color(0xFF3B82F6)),
+                            Icon(
+                              icon,
+                              size: 16,
+                              color: const Color(0xFF3B82F6),
+                            ),
                             const SizedBox(width: 8),
                             Text(
                               name,
@@ -827,7 +855,10 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
                         });
                       },
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 10,
+                        ),
                         decoration: BoxDecoration(
                           color: isSelected
                               ? const Color(0xFF3B82F6).withAlpha(46)
@@ -843,7 +874,11 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(icon, size: 16, color: const Color(0xFF3B82F6)),
+                            Icon(
+                              icon,
+                              size: 16,
+                              color: const Color(0xFF3B82F6),
+                            ),
                             const SizedBox(width: 8),
                             Text(
                               name,
