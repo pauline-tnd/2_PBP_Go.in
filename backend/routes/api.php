@@ -8,6 +8,7 @@ use App\Http\Controllers\{
     BookingController,
     BookingDetailController,
     BookingDetailAddOnController,
+    ReviewController,
 };
 
 // Read Hotel
@@ -44,4 +45,13 @@ Route::prefix('booking-detail-addons')->group(function () {
     Route::post('/store', [BookingDetailAddOnController::class, 'store']);
     Route::put('/update/{id}', [BookingDetailAddOnController::class, 'update']);
     Route::delete('/destroy/{id}', [BookingDetailAddOnController::class, 'destroy']);
+});
+
+Route::prefix('reviews')->group(function () {
+    Route::get('/', [ReviewController::class, 'index']);
+    Route::get('/{id}', [ReviewController::class, 'show']);
+    Route::get('/user/{userId}', [ReviewController::class, 'userReviews']);
+    Route::post('/store', [ReviewController::class, 'store']);
+    Route::put('/update/{id}', [ReviewController::class, 'update']);
+    Route::delete('/destroy/{id}', [ReviewController::class, 'destroy']);
 });
