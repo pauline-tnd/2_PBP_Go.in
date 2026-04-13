@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Review extends Model
 {
-    use HasFactory;
+    // use HasFactory;
 
     protected $table = 'reviews';
     protected $primaryKey = 'id';
@@ -17,7 +17,7 @@ class Review extends Model
     protected $fillable = [
         'user_id',
         'room_id',
-        'booking_id',
+        'booking_detail_id',
         'rating',
         'description',
         'image',
@@ -38,8 +38,8 @@ class Review extends Model
         return $this->belongsTo(Room::class, 'room_id');
     }
 
-    public function bookingDetails()
+    public function bookingDetail()
     {
-        return $this->belongsTo(BookingDetail::class, 'booking_id');
+        return $this->belongsTo(BookingDetail::class, 'booking_detail_id');
     }
 }

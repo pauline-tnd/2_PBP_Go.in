@@ -14,98 +14,111 @@ class ReviewController extends Controller
 {
     public function index()
     {
-        $bookings = Booking::with([
+        $reviews = Review::with([
             'user',
-            'bookingDetails.room.hotel'
+            'room',
+            'room.hotel',
+            'bookingDetail'
         ])->get();
-        if ($bookings->isEmpty()) {
+
+        if ($reviews->isEmpty()) {
             return response()->json([
-                'message' => 'Belum ada data booking'
+                'message' => 'Belum ada data review'
             ], 404);
         }
-        return response()->json($bookings);
+        return response()->json($reviews);
     }
 
     public function show($id)
     {
-        $booking = Booking::with([
+        $review = Review::with([
             'user',
-            'bookingDetails.room.hotel'
+            'room',
+            'room.hotel',
+            'bookingDetail'
         ])->find($id);
-        if (!$booking) {
+
+        if (!$review) {
             return response()->json([
-                'message' => 'Booking tidak ditemukan'
+                'message' => 'Tidak ada review yang sesuai'
             ], 404);
         }
-        return response()->json($booking);
+        return response()->json($review);
     }
 
-    public function userBookings($userId)
+    public function userReviews($userId)
     {
-        $bookings = Booking::with([
-            'bookingDetails.room.hotel'
+        $reviews = Review::with([
+            'room.hotel'
         ])
         ->where('user_id', $userId)
         ->get();
-        if ($bookings->isEmpty()) {
+        if ($reviews->isEmpty()) {
             return response()->json([
-                'message' => 'User belum memiliki booking'
+                'message' => 'User belum memiliki review'
             ], 404);
         }
-        return response()->json($bookings);
+        return response()->json($reviews);
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'check_in' => 'required|date',
-            'check_out' => 'required|date|after:check_in',
-            'total_price' => 'required|numeric|min:0',
-            'status' => ['nullable', Rule::in(['pending','paid','completed','cancelled'])],
+            'user_id'           => 'required|exists:users,id',
+            'room_id'           => 'required|exists:rooms,id',
+            'booking_detail_id' => 'required|exists:booking_details,id',
+            'rating'            => 'required|integer|min:1|max:5',
+            'description'       => 'required|string',
+            'created_at'        => 'required|date',
+            'image'             => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
-        $validated['booking_number'] = 'BK-' . strtoupper(Str::random(8));
-        $validated['status'] = $validated['status'] ?? 'pending';
-        $booking = Booking::create($validated);
+        if ($request->hasFile('image')) {
+            $validated['image'] = $request->file('image')->store('reviews', 'public');
+        }
+        $review = Review::create($validated);
         return response()->json([
-            'message' => 'Booking berhasil dibuat',
-            'booking' => $booking
+            'message' => 'Review berhasil dibuat',
+            'review' => $review
         ], 201);
     }
 
     public function update(Request $request, $id)
     {
-        $booking = Booking::find($id);
-        if (!$booking) {
+        $review = Review::find($id);
+        if (!$review) {
             return response()->json([
-                'message' => 'Booking tidak ditemukan'
+                'message' => 'Data review tidak ditemukan'
             ], 404);
         }
         $validated = $request->validate([
-            'user_id' => 'exists:users,id',
-            'check_in' => 'date',
-            'check_out' => 'date|after:check_in',
-            'total_price' => 'numeric|min:0',
-            'status' => [Rule::in(['pending','paid','completed','cancelled'])],
+            'user_id'           => 'exists:users,id',
+            'room_id'           => 'exists:rooms,id',
+            'booking_detail_id' => 'exists:booking_details,id',
+            'rating'            => 'integer|min:1|max:5',
+            'description'       => 'string',
+            'image'             => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
-        $booking->update($validated);
+        if ($request->hasFile('image')) {
+            $validated['image'] = $request->file('image')->store('reviews', 'public');
+        }
+        $review->update($validated);
         return response()->json([
-            'message' => 'Booking berhasil diperbarui',
-            'booking' => $booking
+            'message' => 'Data review berhasil diperbarui',
+            'review' => $review
         ]);
     }
 
     public function destroy($id)
     {
-        $booking = Booking::find($id);
-        if (!$booking) {
+        $review = Review::find($id);
+        if (!$review) {
             return response()->json([
-                'message' => 'Booking tidak ditemukan'
+                'message' => 'Data review tidak ditemukan'
             ], 404);
         }
-        $booking->delete();
+        $review->delete();
         return response()->json([
-            'message' => 'Booking berhasil dihapus'
+            'message' => 'Data review berhasil dihapus'
         ]);
     }
 }
