@@ -4,24 +4,26 @@ import '../models/hotel.dart';
 import '../widgets/bottom_navbar.dart';
 import '../widgets/hotel_card.dart';
 import '../widgets/sorting_bar.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'loading_page.dart';
 
 class FilterState {
   final RangeValues priceRange;
   final Set<int> selectedStars;
   final Set<String> selectedAmenities;
-  final Set<String> selectedRoomTypes;
+  // final Set<String> selectedRoomTypes;
 
   const FilterState({
     this.priceRange = const RangeValues(0, 200000000),
     this.selectedStars = const {},
     this.selectedAmenities = const {},
-    this.selectedRoomTypes = const {},
+    // this.selectedRoomTypes = const {},
   });
 
   bool get hasActiveFilters =>
       selectedStars.isNotEmpty ||
       selectedAmenities.isNotEmpty ||
-      selectedRoomTypes.isNotEmpty ||
+      // selectedRoomTypes.isNotEmpty ||
       priceRange.start > 0 ||
       priceRange.end < 200000000;
 
@@ -35,7 +37,7 @@ class FilterState {
       priceRange: priceRange ?? this.priceRange,
       selectedStars: selectedStars ?? this.selectedStars,
       selectedAmenities: selectedAmenities ?? this.selectedAmenities,
-      selectedRoomTypes: selectedRoomTypes ?? this.selectedRoomTypes,
+      // selectedRoomTypes: selectedRoomTypes ?? this.selectedRoomTypes,
     );
   }
 }
@@ -48,23 +50,57 @@ class SearchResultsPage extends StatefulWidget {
 }
 
 class _SearchResultsPageState extends State<SearchResultsPage> {
-  int _navIndex = 0;
   SortOption _currentSort = SortOption.none;
   FilterState _filterState = const FilterState();
 
+  List<Hotel> _allHotels = [];
+  bool _isLoading = true;
+  Map<String, HotelBadge> _hotelBadges = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchHotelsFromSupabase();
+  }
+
+  Future<void> _fetchHotelsFromSupabase() async {
+    try {
+      final response = await Supabase.instance.client.from('hotels').select('''
+          *, 
+          hotel_images(image),
+          hotel_facilities(name),
+          rooms(
+            price,
+            reviews(rating)
+          )
+        ''');
+
+      final List<Hotel> fetchedHotels = (response as List<dynamic>).map((item) {
+        return Hotel.fromMap(item as Map<String, dynamic>);
+      }).toList();
+
+      setState(() {
+        _allHotels = fetchedHotels;
+        _hotelBadges = assignBadges(_allHotels);
+        _isLoading = false;
+      });
+    } catch (error) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
   List<Hotel> get _filteredAndSortedHotels {
-    List<Hotel> result = dummyHotels.where((hotel) {
-      // Price filter
+    List<Hotel> result = _allHotels.where((hotel) {
       if (hotel.pricePerNight < _filterState.priceRange.start ||
           hotel.pricePerNight > _filterState.priceRange.end) {
         return false;
       }
-
       if (_filterState.selectedStars.isNotEmpty &&
           !_filterState.selectedStars.contains(hotel.starRating)) {
         return false;
       }
-
       if (_filterState.selectedAmenities.isNotEmpty) {
         for (final amenity in _filterState.selectedAmenities) {
           if (!hotel.amenities.contains(amenity)) {
@@ -72,18 +108,16 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
           }
         }
       }
-
-      if (_filterState.selectedRoomTypes.isNotEmpty) {
-        bool hasMatch = false;
-        for (final roomType in _filterState.selectedRoomTypes) {
-          if (hotel.roomTypes.contains(roomType)) {
-            hasMatch = true;
-            break;
-          }
-        }
-        if (!hasMatch) return false;
-      }
-
+      // if (_filterState.selectedRoomTypes.isNotEmpty) {
+      //   bool hasMatch = false;
+      //   for (final roomType in _filterState.selectedRoomTypes) {
+      //     if (hotel.roomTypes.contains(roomType)) {
+      //       hasMatch = true;
+      //       break;
+      //     }
+      //   }
+      //   if (!hasMatch) return false;
+      // }
       return true;
     }).toList();
 
@@ -135,6 +169,9 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
     final hotels = _filteredAndSortedHotels;
 
     return Scaffold(
@@ -165,9 +202,15 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
                         child: hotels.isEmpty
                             ? _buildEmptyState()
                             : Column(
-                                children: hotels
-                                    .map((hotel) => HotelCard(hotel: hotel))
-                                    .toList(),
+                                children: hotels.map((hotel) {
+                                  // Ambil badge berdasarkan Nama Hotel (karena di _hotelBadges key-nya hotel.name)
+                                  final badge = _hotelBadges[hotel.name];
+
+                                  return HotelCard(
+                                    hotel: hotel,
+                                    badge: badge, // Masukkan badge-nya ke sini
+                                  );
+                                }).toList(),
                               ),
                       ),
                     ],
@@ -373,7 +416,7 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
   late TextEditingController _maxPriceController;
   late Set<int> _selectedStars;
   late Set<String> _selectedAmenities;
-  late Set<String> _selectedRoomTypes;
+  // late Set<String> _selectedRoomTypes;
 
   final List<Map<String, dynamic>> _amenities = [
     {'name': 'WiFi', 'icon': Icons.wifi_rounded},
@@ -388,10 +431,10 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
     {'name': 'Water Heater', 'icon': Icons.hot_tub_rounded},
   ];
 
-  final List<Map<String, dynamic>> _roomTypes = [
-    {'name': 'Smoking', 'icon': Icons.smoking_rooms_rounded},
-    {'name': 'Non Smoking', 'icon': Icons.smoke_free_rounded},
-  ];
+  // final List<Map<String, dynamic>> _roomTypes = [
+  //   {'name': 'Smoking', 'icon': Icons.smoking_rooms_rounded},
+  //   {'name': 'Non Smoking', 'icon': Icons.smoke_free_rounded},
+  // ];
 
   @override
   void initState() {
@@ -399,7 +442,7 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
     _priceRange = widget.initialFilter.priceRange;
     _selectedStars = Set.from(widget.initialFilter.selectedStars);
     _selectedAmenities = Set.from(widget.initialFilter.selectedAmenities);
-    _selectedRoomTypes = Set.from(widget.initialFilter.selectedRoomTypes);
+    // _selectedRoomTypes = Set.from(widget.initialFilter.selectedRoomTypes);
     _minPriceController = TextEditingController(
       text: _formatPrice(_priceRange.start.toInt()),
     );
@@ -449,7 +492,7 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
       _maxPriceController.text = _formatPrice(200000000);
       _selectedStars = {};
       _selectedAmenities = {};
-      _selectedRoomTypes = {};
+      // _selectedRoomTypes = {};
     });
   }
 
@@ -460,7 +503,7 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
         priceRange: _priceRange,
         selectedStars: _selectedStars,
         selectedAmenities: _selectedAmenities,
-        selectedRoomTypes: _selectedRoomTypes,
+        // selectedRoomTypes: _selectedRoomTypes,
       ),
     );
   }
@@ -470,7 +513,7 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
     if (_priceRange.start > 0 || _priceRange.end < 200000000) count++;
     if (_selectedStars.isNotEmpty) count++;
     if (_selectedAmenities.isNotEmpty) count++;
-    if (_selectedRoomTypes.isNotEmpty) count++;
+    // if (_selectedRoomTypes.isNotEmpty) count++;
     return count;
   }
 
@@ -693,7 +736,7 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
                 ),
                 const SizedBox(height: 24),
                 const Text(
-                  'Star Rating',
+                  'Hotel Class',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -828,72 +871,65 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
                   }).toList(),
                 ),
                 const SizedBox(height: 24),
-                const Text(
-                  'Room Type',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF1E293B),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 10,
-                  runSpacing: 10,
-                  children: _roomTypes.map((roomType) {
-                    final name = roomType['name'] as String;
-                    final icon = roomType['icon'] as IconData;
-                    final isSelected = _selectedRoomTypes.contains(name);
-                    return GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          if (isSelected) {
-                            _selectedRoomTypes.remove(name);
-                          } else {
-                            _selectedRoomTypes.add(name);
-                          }
-                        });
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 10,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? const Color(0xFF3B82F6).withAlpha(46)
-                              : const Color(0xFFFFFFFF),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: isSelected
-                                ? const Color(0xFF3B82F6)
-                                : const Color(0xFF94A3B8).withAlpha(97),
-                            width: isSelected ? 1.0 : 0.5,
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              icon,
-                              size: 16,
-                              color: const Color(0xFF3B82F6),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              name,
-                              style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w500,
-                                color: Color(0xFF3B82F6),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
+                // const Text(
+                //   'Room Type',
+                //   style: TextStyle(
+                //     fontSize: 16,
+                //     fontWeight: FontWeight.w600,
+                //     color: Color(0xFF1E293B),
+                //   ),
+                // ),
+                // const SizedBox(height: 12),
+                // Wrap(
+                //   spacing: 10,
+                //   runSpacing: 10,
+                //   children: _roomTypes.map((roomType) {
+                //     final name = roomType['name'] as String;
+                //     final icon = roomType['icon'] as IconData;
+                //     final isSelected = _selectedRoomTypes.contains(name);
+                //     return GestureDetector(
+                //       onTap: () {
+                //         setState(() {
+                //           if (isSelected) {
+                //             _selectedRoomTypes.remove(name);
+                //           } else {
+                //             _selectedRoomTypes.add(name);
+                //           }
+                //         });
+                //       },
+                //       child: Container(
+                //         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                //         decoration: BoxDecoration(
+                //           color: isSelected
+                //               ? const Color(0xFF3B82F6).withAlpha(46)
+                //               : const Color(0xFFFFFFFF),
+                //           borderRadius: BorderRadius.circular(20),
+                //           border: Border.all(
+                //             color: isSelected
+                //                 ? const Color(0xFF3B82F6)
+                //                 : const Color(0xFF94A3B8).withAlpha(97),
+                //             width: isSelected ? 1.0 : 0.5,
+                //           ),
+                //         ),
+                //         child: Row(
+                //           mainAxisSize: MainAxisSize.min,
+                //           children: [
+                //             Icon(icon, size: 16, color: const Color(0xFF3B82F6)),
+                //             const SizedBox(width: 8),
+                //             Text(
+                //               name,
+                //               style: const TextStyle(
+                //                 fontSize: 13,
+                //                 fontWeight: FontWeight.w500,
+                //                 color: Color(0xFF3B82F6),
+                //               ),
+                //             ),
+                //           ],
+                //         ),
+                //       ),
+                //     );
+                //   }).toList(),
+                // ),
                 const SizedBox(height: 32),
                 SizedBox(
                   width: double.infinity,

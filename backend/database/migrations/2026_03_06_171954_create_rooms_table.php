@@ -18,12 +18,11 @@ return new class extends Migration
                 ->cascadeOnDelete();
 
             $table->string('type');
-            $table->string('description');
+            $table->text('description')->nullable();
 
             $table->tinyInteger('capacity')->unsigned();
             $table->decimal('price', 10, 2);
-
-            $table->timestamps();
+            $table->tinyInteger('room_size')->nullable();
         });
     }
 

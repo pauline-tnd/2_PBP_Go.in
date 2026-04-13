@@ -25,7 +25,7 @@ return new class extends Migration
 
             $table->tinyInteger('rating')->unsigned();
 
-            $table->string('description');
+            $table->text('description');
             $table->string('image')->nullable();
 
             $table->timestamps();

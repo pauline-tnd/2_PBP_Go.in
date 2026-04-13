@@ -18,8 +18,6 @@ return new class extends Migration
                 ->cascadeOnDelete();
 
             $table->string('image');
-
-            $table->timestamps();
         });
     }
 
