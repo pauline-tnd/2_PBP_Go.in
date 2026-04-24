@@ -17,6 +17,10 @@ class HotelFacility extends Model
         'name',
     ];
 
+    protected $casts = [
+        'name' => 'string'
+    ];
+
     public function hotel()
     {
         return $this->belongsTo(Hotel::class, 'hotel_id');

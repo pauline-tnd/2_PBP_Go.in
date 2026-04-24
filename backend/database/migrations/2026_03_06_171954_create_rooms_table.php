@@ -22,7 +22,8 @@ return new class extends Migration
 
             $table->tinyInteger('capacity')->unsigned();
             $table->decimal('price', 10, 2);
-            $table->tinyInteger('room_size')->nullable();
+            $table->tinyInteger('room_size')->unsigned()->nullable();
+            $table->string('bed_type')->nullable();
         });
     }
 

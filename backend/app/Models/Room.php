@@ -17,7 +17,17 @@ class Room extends Model
         'description',
         'price',
         'capacity',
+        'bed_type',
         'room_size'
+    ];
+
+    protected $casts = [
+        'type' => 'string',
+        'description' => 'string',
+        'price' => 'decimal:2',
+        'capacity' => 'integer',
+        'bed_type' => 'string',
+        'room_size' => 'integer',
     ];
 
     public function roomImage()

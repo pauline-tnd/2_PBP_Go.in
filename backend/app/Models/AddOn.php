@@ -18,6 +18,11 @@ class AddOn extends Model
         'price'
     ];
 
+    protected $casts = [
+        'name' => 'string',
+        'price' => 'decimal:2',
+    ];
+
     public function hotel()
     {
         return $this->belongsTo(Hotel::class, 'hotel_id');
