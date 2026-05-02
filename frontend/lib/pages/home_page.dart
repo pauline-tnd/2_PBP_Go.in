@@ -57,13 +57,10 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7F8),
-      body: SingleChildScrollView(
-        child: Column(
+      body: HomeHeader(
+        body: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header
-            const HomeHeader(),
-
             // Search card
             HomeSearchCard(
               onSearch: () {
