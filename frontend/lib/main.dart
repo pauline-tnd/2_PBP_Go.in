@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'pages/main_shell.dart';
+import 'pages/landing-page.dart';
 import 'pages/search_results_page.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -35,7 +35,7 @@ class MyApp extends StatelessWidget {
         fontFamily: 'PlusJakartaSans',
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF3B82F6)),
       ),
-      home: const MainShell(),
+      home: const LandingPage(),
       routes: {'/search-results': (context) => const SearchResultsPage()},
     );
   }
