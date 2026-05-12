@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Hotel;
+use App\Models\Wishlist;
 use Illuminate\Http\Request;
 use Illuminate\Support\Optional;
 
@@ -10,12 +11,7 @@ class HotelController extends Controller
 {
     public function index(Request $request) // all hotel
     {
-        $query = Hotel::with([
-            'hotelImage',
-        ])
-            ->withMin('rooms as start_from_price', 'price')                          // start from price
-            ->withAvg('reviews as hotel_rating', 'rating')   // table reviews, column rating
-            ->withCount('bookingDetails as total_bookings');       // total booking for popularity
+        $query = Hotel::hotelCard();
 
         // When = Optional
         // Search by hotel name / location
@@ -111,8 +107,17 @@ class HotelController extends Controller
             ], 404);
         }
 
+        $isWishlist = false;
+
+        if (auth()->check()) {
+            $isWishlist = Wishlist::where('hotel_id', $id)
+                ->where('user_id', auth()->id())
+                ->exists();
+        }
+
         return response()->json([ // success
-            'data' => $hotel
+            'data' => $hotel,
+            'is_wishlist' => $isWishlist
         ], 200);
     }
 }

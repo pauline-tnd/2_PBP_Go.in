@@ -21,11 +21,12 @@ class Review extends Model
         'rating',
         'description',
         'image',
-        'created_at',
     ];
 
     protected $casts = [
-        'created_at' => 'date',
+        'rating' => 'integer',
+        'description' => 'string',
+        'image' => 'string',
     ];
 
     public function user()

@@ -16,6 +16,10 @@ class RoomImage extends Model
         'image',
     ];
 
+    protected $casts = [
+        'image' => 'string',
+    ];
+
     public function room()
     {
         return $this->belongsTo(Room::class, 'room_id');

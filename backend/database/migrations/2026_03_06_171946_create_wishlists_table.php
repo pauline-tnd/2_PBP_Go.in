@@ -19,8 +19,6 @@ return new class extends Migration
             $table->foreignId('hotel_id')
                 ->constrained()
                 ->cascadeOnDelete();
-
-            $table->timestamps();
         });
     }
 
