@@ -7,6 +7,14 @@ class SettingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isTablet = screenWidth >= 768;
+    final isDesktop = screenWidth >= 1024;
+    final horizontalPadding = isDesktop
+      ? screenWidth * 0.18
+      : isTablet
+        ? screenWidth * 0.1
+        : 24.0;
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7F8),
       body: Stack(
@@ -14,7 +22,11 @@ class SettingsPage extends StatelessWidget {
           Column(
             children: [
               SizedBox(
-                height: 240,
+                height: isDesktop
+                  ? 300
+                  : isTablet
+                    ? 270
+                    : 240,
                 child: Stack(
                   clipBehavior: Clip.none,
                   children: [
@@ -73,16 +85,19 @@ class SettingsPage extends StatelessWidget {
                       top: 108,
                       left: 0,
                       right: 0,
-                      child: Center(child: _buildProfileCard()),
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+                        child: _buildProfileCard(isTablet, isDesktop),
+                      ),
                     ),
                   ],
                 ),
               ),
               Expanded(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.only(
-                    left: 24,
-                    right: 24,
+                  padding: EdgeInsets.only(
+                    left: horizontalPadding,
+                    right: horizontalPadding,
                     top: 4,
                     bottom: 100,
                   ),
@@ -155,10 +170,10 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  static Widget _buildProfileCard() {
+  static Widget _buildProfileCard(bool isTablet, bool isDesktop) {
     return Container(
-      width: 345,
-      padding: const EdgeInsets.all(20),
+      width: double.infinity,
+      padding: EdgeInsets.all(isTablet ? 24 : 20),
       decoration: BoxDecoration(
         color: const Color(0xFFFFFFFF),
         borderRadius: BorderRadius.circular(20),
@@ -175,8 +190,8 @@ class SettingsPage extends StatelessWidget {
           Stack(
             children: [
               Container(
-                width: 64,
-                height: 64,
+                width: isTablet ? 80 : 64,
+                height: isTablet ? 80 : 64,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
@@ -187,8 +202,8 @@ class SettingsPage extends StatelessWidget {
                 child: ClipOval(
                   child: Image.asset(
                     'assets/images/profile-photo.jpg',
-                    width: 64,
-                    height: 64,
+                    width: isTablet ? 80 : 64,
+                    height: isTablet ? 80 : 64,
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) {
                       return Container(
@@ -228,10 +243,10 @@ class SettingsPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Shinnosuke Nohara',
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: isTablet ? 18 : 16,
                     fontWeight: FontWeight.w700,
                     color: Color(0xFF1E293B),
                   ),
@@ -239,10 +254,10 @@ class SettingsPage extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 3),
-                const Text(
+                Text(
                   'shin@gmail.com',
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: isTablet ? 14 : 13,
                     fontWeight: FontWeight.w400,
                     color: Color(0xFF94A3B8),
                   ),
