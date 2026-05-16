@@ -18,6 +18,15 @@ class Hotel extends Model
         'longitude',
     ];
 
+    protected $casts = [
+        'name' => 'string',
+        'description' => 'string',
+        'star' => 'integer',
+        'location' => 'string',
+        'latitude' => 'decimal:8',
+        'longitude' => 'decimal:8',
+    ];
+
     public function rooms()
     {
         return $this->hasMany(Room::class, 'hotel_id');
@@ -56,5 +65,14 @@ class Hotel extends Model
     public function bookingDetails() // Hotel has many Bookings, through Room
     {
         return $this->hasManyThrough(BookingDetail::class, Room::class);
+    }
+
+    // Hotel.php
+    public function scopeHotelCard($query)
+    {
+        return $query->with('hotelImage')
+            ->withMin('rooms as start_from_price', 'price')
+            ->withAvg('reviews as hotel_rating', 'rating')
+            ->withCount('bookingDetails as total_bookings');
     }
 }

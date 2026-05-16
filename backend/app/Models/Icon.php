@@ -16,6 +16,11 @@ class Icon extends Model
         'name'
     ];
 
+    protected $casts = [
+        'icon' => 'string',
+        'name' => 'string',
+    ];
+
     public function hotelFacilities()
     {
         return $this->hasMany(HotelFacility::class, 'icon_id');

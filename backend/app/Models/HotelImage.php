@@ -16,6 +16,10 @@ class HotelImage extends Model
         'image',
     ];
 
+    protected $casts = [
+        'image' => 'string',
+    ];
+
     public function hotel()
     {
         return $this->belongsTo(Hotel::class, 'hotel_id');

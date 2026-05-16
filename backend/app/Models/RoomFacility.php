@@ -16,6 +16,10 @@ class RoomFacility extends Model
         'icon_id',
         'name',
     ];
+    
+    protected $casts = [
+        'name' => 'string',
+    ];
 
     public function room()
     {
