@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 import 'pages/main_shell.dart';
+import 'pages/landing-page.dart';
 import 'pages/search_results_page.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -50,6 +51,6 @@ class MyApp extends StatelessWidget {
           },
         );
       },
-    );
+    )
   }
 }
