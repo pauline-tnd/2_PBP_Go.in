@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:responsive_sizer/responsive_sizer.dart';
 import '../models/hotel.dart';
 import '../widgets/bottom_navbar.dart';
 import '../widgets/hotel_card.dart';
@@ -183,35 +184,58 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
               _buildTopBar(),
               Expanded(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.only(bottom: 120),
+                  padding: EdgeInsets.only(bottom: 14.h),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const SizedBox(height: 16),
+                      SizedBox(height: 2.h),
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        padding: EdgeInsets.symmetric(horizontal: 5.w),
                         child: SortingBar(
                           selectedSort: _currentSort,
                           onSortChanged: _sortHotels,
                         ),
                       ),
-
-                      const SizedBox(height: 16),
+                      SizedBox(height: 2.h),
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        padding: EdgeInsets.symmetric(horizontal: 5.w),
                         child: hotels.isEmpty
-                            ? _buildEmptyState()
-                            : Column(
-                                children: hotels.map((hotel) {
-                                  // Ambil badge berdasarkan Nama Hotel (karena di _hotelBadges key-nya hotel.name)
-                                  final badge = _hotelBadges[hotel.name];
-
-                                  return HotelCard(
-                                    hotel: hotel,
-                                    badge: badge, // Masukkan badge-nya ke sini
-                                  );
-                                }).toList(),
-                              ),
+                          ? _buildEmptyState()
+                          : LayoutBuilder(
+                              builder: (context, constraints) {
+                                int crossAxisCount = 1;
+                                double childAspectRatio = 1.038;
+                                if (constraints.maxWidth >= 1200) {
+                                  crossAxisCount = 4;
+                                  childAspectRatio = 0.78;
+                                } else if (constraints.maxWidth >= 900) {
+                                  crossAxisCount = 3;
+                                  childAspectRatio = 0.82;
+                                } else if (constraints.maxWidth >= 600) {
+                                  crossAxisCount = 2;
+                                  childAspectRatio = 0.94;
+                                }
+                                return GridView.builder(
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  itemCount: hotels.length,
+                                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: crossAxisCount,
+                                    crossAxisSpacing: 16,
+                                    mainAxisSpacing: 16,
+                                    childAspectRatio: childAspectRatio,
+                                  ),
+                                  itemBuilder: (context, index) {
+                                    final hotel = hotels[index];
+                                    final badge = _hotelBadges[hotel.name];
+                                    return HotelCard(
+                                      hotel: hotel,
+                                      badge: badge,
+                                    );
+                                  },
+                                );
+                              },
+                            ),
                       ),
                     ],
                   ),
@@ -233,10 +257,10 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
         children: [
           Icon(
             Icons.search_off_rounded,
-            size: 64,
+            size: 24.sp,
             color: const Color(0xFF94A3B8).withAlpha(128),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 2.h),
           const Text(
             'No hotels found',
             style: TextStyle(
@@ -246,11 +270,11 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
+          Text(
             'Try adjusting your filters',
-            style: TextStyle(fontSize: 14, color: Color(0xFF94A3B8)),
+            style: TextStyle(fontSize: 14.sp, color: Color(0xFF94A3B8)),
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: 3.h),
           GestureDetector(
             onTap: () {
               setState(() {
@@ -261,12 +285,12 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               decoration: BoxDecoration(
                 color: const Color(0xFF3B82F6),
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(4.w),
               ),
-              child: const Text(
+              child: Text(
                 'Clear Filters',
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: 14.sp,
                   fontWeight: FontWeight.w600,
                   color: Colors.white,
                 ),
@@ -281,10 +305,10 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
   Widget _buildTopBar() {
     return Container(
       padding: EdgeInsets.only(
-        top: MediaQuery.of(context).padding.top + 12,
-        bottom: 14,
-        left: 24,
-        right: 24,
+        top: MediaQuery.of(context).padding.top + 1.5.h,
+        bottom: 1.8.h,
+        left: 5.w,
+        right: 5.w,
       ),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -318,10 +342,10 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'London, United Kingdom',
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: 16.sp,
                     fontWeight: FontWeight.w700,
                     color: Color(0xFF1E293B),
                   ),
@@ -362,8 +386,8 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
             child: Stack(
               children: [
                 Container(
-                  width: 40,
-                  height: 40,
+                  width: 10.w,
+                  height: 5.h,
                   decoration: BoxDecoration(
                     color: _filterState.hasActiveFilters
                         ? const Color(0xFF3B82F6)
@@ -542,8 +566,8 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
               children: [
                 Center(
                   child: Container(
-                    width: 40,
-                    height: 4,
+                    width: 10.w,
+                    height: 5.h,
                     decoration: BoxDecoration(
                       color: const Color(0xFFE2E8F0),
                       borderRadius: BorderRadius.circular(2),
@@ -589,10 +613,10 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
                     ),
                     GestureDetector(
                       onTap: _resetFilters,
-                      child: const Text(
+                      child: Text(
                         'Reset',
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: 14.sp,
                           fontWeight: FontWeight.w600,
                           color: Color(0xFF3B82F6),
                         ),
@@ -601,10 +625,10 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
                   ],
                 ),
                 const SizedBox(height: 28),
-                const Text(
+                Text(
                   'Price Range',
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: 16.sp,
                     fontWeight: FontWeight.w600,
                     color: Color(0xFF1E293B),
                   ),
@@ -637,8 +661,8 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
                               controller: _minPriceController,
                               keyboardType: TextInputType.number,
                               onSubmitted: _onMinPriceSubmitted,
-                              style: const TextStyle(
-                                fontSize: 14,
+                              style: TextStyle(
+                                fontSize: 14.sp,
                                 fontWeight: FontWeight.w600,
                                 color: Color(0xFF1E293B),
                               ),
@@ -655,12 +679,12 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
                         ],
                       ),
                     ),
-                    const Padding(
+                    Padding(
                       padding: EdgeInsets.symmetric(horizontal: 12),
                       child: Text(
                         '—',
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 16.sp,
                           color: Color(0xFF94A3B8),
                         ),
                       ),
@@ -690,8 +714,8 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
                               controller: _maxPriceController,
                               keyboardType: TextInputType.number,
                               onSubmitted: _onMaxPriceSubmitted,
-                              style: const TextStyle(
-                                fontSize: 14,
+                              style: TextStyle(
+                                fontSize: 14.sp,
                                 fontWeight: FontWeight.w600,
                                 color: Color(0xFF1E293B),
                               ),
@@ -734,11 +758,11 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
                     });
                   },
                 ),
-                const SizedBox(height: 24),
-                const Text(
+                SizedBox(height: 3.h),
+                Text(
                   'Hotel Class',
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: 16.sp,
                     fontWeight: FontWeight.w600,
                     color: Color(0xFF1E293B),
                   ),
@@ -769,7 +793,7 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
                           color: isSelected
                               ? const Color(0xFF3B82F6).withAlpha(46)
                               : const Color(0xFFFFFFFF),
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular(4.w),
                           border: Border.all(
                             color: isSelected
                                 ? const Color(0xFF3B82F6)
@@ -803,11 +827,11 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
                     );
                   }),
                 ),
-                const SizedBox(height: 24),
-                const Text(
+                SizedBox(height: 3.h),
+                Text(
                   'Amenities',
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: 16.sp,
                     fontWeight: FontWeight.w600,
                     color: Color(0xFF1E293B),
                   ),
@@ -839,7 +863,7 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
                           color: isSelected
                               ? const Color(0xFF3B82F6).withAlpha(46)
                               : const Color(0xFFFFFFFF),
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular(4.w),
                           border: Border.all(
                             color: isSelected
                                 ? const Color(0xFF3B82F6)
@@ -870,11 +894,11 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
                     );
                   }).toList(),
                 ),
-                const SizedBox(height: 24),
-                // const Text(
+                SizedBox(height: 3.h),
+                // Text(
                 //   'Room Type',
                 //   style: TextStyle(
-                //     fontSize: 16,
+                //     fontSize: 16.sp,
                 //     fontWeight: FontWeight.w600,
                 //     color: Color(0xFF1E293B),
                 //   ),
@@ -903,7 +927,7 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
                 //           color: isSelected
                 //               ? const Color(0xFF3B82F6).withAlpha(46)
                 //               : const Color(0xFFFFFFFF),
-                //           borderRadius: BorderRadius.circular(20),
+                //           borderRadius: BorderRadius.circular(4.w),
                 //           border: Border.all(
                 //             color: isSelected
                 //                 ? const Color(0xFF3B82F6)
@@ -933,7 +957,7 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
                 const SizedBox(height: 32),
                 SizedBox(
                   width: double.infinity,
-                  height: 52,
+                  height: 6.5.h,
                   child: ElevatedButton(
                     onPressed: _applyFilters,
                     style: ElevatedButton.styleFrom(
@@ -944,16 +968,16 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
                       ),
                       elevation: 0,
                     ),
-                    child: const Text(
+                    child: Text(
                       'Apply Filters',
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: 16.sp,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 2.h),
               ],
             ),
           ),

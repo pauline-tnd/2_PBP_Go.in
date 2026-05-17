@@ -1,11 +1,20 @@
 import 'package:flutter/material.dart';
 import '../widgets/bottom_navbar.dart';
+import 'edit_profile_page.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isTablet = screenWidth >= 768;
+    final isDesktop = screenWidth >= 1024;
+    final horizontalPadding = isDesktop
+      ? screenWidth * 0.18
+      : isTablet
+        ? screenWidth * 0.1
+        : 24.0;
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7F8),
       body: Stack(
@@ -13,11 +22,14 @@ class SettingsPage extends StatelessWidget {
           Column(
             children: [
               SizedBox(
-                height: 240,
+                height: isDesktop
+                  ? 300
+                  : isTablet
+                    ? 270
+                    : 240,
                 child: Stack(
                   clipBehavior: Clip.none,
                   children: [
-                    // gelap-primary
                     Positioned(
                       top: 0,
                       left: 0,
@@ -54,7 +66,6 @@ class SettingsPage extends StatelessWidget {
                         ),
                       ),
                     ),
-                    // posisi ttle
                     Positioned(
                       top: 68,
                       left: 0,
@@ -74,16 +85,19 @@ class SettingsPage extends StatelessWidget {
                       top: 108,
                       left: 0,
                       right: 0,
-                      child: Center(child: _buildProfileCard()),
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+                        child: _buildProfileCard(isTablet, isDesktop),
+                      ),
                     ),
                   ],
                 ),
               ),
               Expanded(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.only(
-                    left: 24,
-                    right: 24,
+                  padding: EdgeInsets.only(
+                    left: horizontalPadding,
+                    right: horizontalPadding,
                     top: 4,
                     bottom: 100,
                   ),
@@ -92,7 +106,7 @@ class SettingsPage extends StatelessWidget {
                     children: [
                       _buildSectionTitle('ACCOUNT SETTINGS'),
                       const SizedBox(height: 12),
-                      _buildSettingsCard([
+                      _buildSettingsCard(context, [
                         _SettingsItem(
                           icon: Icons.person_outline_rounded,
                           label: 'Edit Profile',
@@ -113,7 +127,7 @@ class SettingsPage extends StatelessWidget {
                       const SizedBox(height: 28),
                       _buildSectionTitle('SUPPORT & LEGAL'),
                       const SizedBox(height: 12),
-                      _buildSettingsCard([
+                      _buildSettingsCard(context, [
                         _SettingsItem(
                           icon: Icons.help_outline_rounded,
                           label: 'Help Center',
@@ -121,6 +135,10 @@ class SettingsPage extends StatelessWidget {
                         _SettingsItem(
                           icon: Icons.mail_outline_rounded,
                           label: 'Contact Us',
+                        ),
+                        _SettingsItem(
+                          icon: Icons.help_outline_rounded,
+                          label: 'FAQ',
                         ),
                       ]),
                       const SizedBox(height: 28),
@@ -152,10 +170,10 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  static Widget _buildProfileCard() {
+  static Widget _buildProfileCard(bool isTablet, bool isDesktop) {
     return Container(
-      width: 345,
-      padding: const EdgeInsets.all(20),
+      width: double.infinity,
+      padding: EdgeInsets.all(isTablet ? 24 : 20),
       decoration: BoxDecoration(
         color: const Color(0xFFFFFFFF),
         borderRadius: BorderRadius.circular(20),
@@ -172,8 +190,8 @@ class SettingsPage extends StatelessWidget {
           Stack(
             children: [
               Container(
-                width: 64,
-                height: 64,
+                width: isTablet ? 80 : 64,
+                height: isTablet ? 80 : 64,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
@@ -184,8 +202,8 @@ class SettingsPage extends StatelessWidget {
                 child: ClipOval(
                   child: Image.asset(
                     'assets/images/profile-photo.jpg',
-                    width: 64,
-                    height: 64,
+                    width: isTablet ? 80 : 64,
+                    height: isTablet ? 80 : 64,
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) {
                       return Container(
@@ -225,10 +243,10 @@ class SettingsPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Shinnosuke Nohara',
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: isTablet ? 18 : 16,
                     fontWeight: FontWeight.w700,
                     color: Color(0xFF1E293B),
                   ),
@@ -236,10 +254,10 @@ class SettingsPage extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 3),
-                const Text(
+                Text(
                   'shin@gmail.com',
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: isTablet ? 14 : 13,
                     fontWeight: FontWeight.w400,
                     color: Color(0xFF94A3B8),
                   ),
@@ -293,7 +311,7 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  static Widget _buildSettingsCard(List<_SettingsItem> items) {
+  static Widget _buildSettingsCard(BuildContext context, List<_SettingsItem> items) {
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFFFFFFFF),
@@ -316,7 +334,12 @@ class SettingsPage extends StatelessWidget {
               Material(
                 color: Colors.transparent,
                 child: InkWell(
-                  onTap: () {},
+                  onTap: () {Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const EditProfilePage(),
+                    ),
+                  );},
                   borderRadius: BorderRadius.vertical(
                     top: index == 0 ? const Radius.circular(16) : Radius.zero,
                     bottom: isLast ? const Radius.circular(16) : Radius.zero,

@@ -12,6 +12,7 @@ dependencies:
   google_fonts: ^6.2.1
   supabase_flutter: ^2.4.0
   flutter_dotenv: ^5.1.0
+  responsive_sizer: ^3.3.1
   flutter:
     sdk: flutter
 
