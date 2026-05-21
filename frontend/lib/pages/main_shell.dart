@@ -3,7 +3,7 @@ import '../widgets/bottom_navbar.dart';
 import 'home_page.dart';
 import 'activity_page.dart';
 import 'promo_page.dart';
-import 'settings_page.dart';
+import 'settings/settings_page.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});

@@ -8,21 +8,11 @@ class EditProfilePage extends StatefulWidget {
 }
 
 class _EditProfilePageState extends State<EditProfilePage> {
-
-  final TextEditingController nameController =
-      TextEditingController(text: "Shinnosuke Nohara");
-
-  final TextEditingController cityController =
-      TextEditingController(text: "Tokyo");
-
-  final TextEditingController emailController =
-      TextEditingController(text: "shin@gmail.com");
-
-  final TextEditingController phoneController =
-      TextEditingController(text: "12345678901");
-
+  final TextEditingController nameController = TextEditingController(text: "Shinnosuke Nohara");
+  final TextEditingController cityController = TextEditingController(text: "Tokyo");
+  final TextEditingController emailController = TextEditingController(text: "shin@gmail.com");
+  final TextEditingController phoneController = TextEditingController(text: "12345678901");
   DateTime? selectedDate = DateTime(2000, 5, 5);
-
   String gender = "Male";
 
   Future<void> pickDate() async {
@@ -42,8 +32,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   String formatDate(DateTime date) {
     return "${date.day.toString().padLeft(2, '0')}/"
-        "${date.month.toString().padLeft(2, '0')}/"
-        "${date.year}";
+      "${date.month.toString().padLeft(2, '0')}/"
+      "${date.year}";
   }
 
   @override
@@ -51,22 +41,39 @@ class _EditProfilePageState extends State<EditProfilePage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7F8),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: const Color(0xFFF5F7F8),
         elevation: 0,
+        scrolledUnderElevation: 0,
+        toolbarHeight: 90,
         centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF1E293B)),
-          onPressed: () => Navigator.pop(context),
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 12),
+          child: IconButton(
+            icon: const Icon(
+              Icons.arrow_back_ios_new_rounded,
+              color: Color(0xFF0F172A),
+              size: 20,
+            ),
+            onPressed: () => Navigator.pop(context),
+          ),
         ),
         title: const Text(
-          "Edit Profile",
+          'Edit Profile',
           style: TextStyle(
-            color: Color(0xFF1E293B),
+            fontSize: 18,
             fontWeight: FontWeight.w600,
+            color: Color(0xFF1E293B),
+          ),
+        ),
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1),
+          child: Divider(
+            height: 1,
+            thickness: 1,
+            color: Color(0xFFE2E8F0),
           ),
         ),
       ),
-
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(
           horizontal: 16,
@@ -141,8 +148,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                   style: const TextStyle(fontSize: 15),
                                 ),
                               ),
-                              const Icon(Icons.calendar_today_rounded,
-                                  size: 18, color: Color(0xFF64748B))
+                              const Icon(
+                                Icons.calendar_today_rounded,
+                                size: 18, color: Color(0xFF64748B),
+                              )
                             ],
                           ),
                         ),
