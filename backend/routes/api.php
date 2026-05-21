@@ -1,17 +1,16 @@
 <?php
 
-use App\Http\Controllers\Auth\AuthController;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\WishlistController;
 use Illuminate\Support\Facades\Route;
-
 use App\Http\Controllers\{
+    Auth\AuthController,
     HotelController,
     RoomController,
     BookingController,
     BookingDetailController,
     BookingDetailAddOnController,
     ReviewController,
+    WishlistController,
+    UserController
 };
 
 // Public Route
@@ -38,9 +37,9 @@ Route::middleware('auth:sanctum')->group(function () {
         ->only(['index', 'show']);
     
     // Read Room (nested)
-    Route::apiResource('hotels.rooms', RoomController::class)
+    Route::apiResource('rooms', RoomController::class)
         ->only(['index', 'show']);
-        // GET /hotels/{hotel}/rooms/{room}
+        // GET /rooms/{room}
     
     // Wishlist
     Route::apiResource('wishlists', WishlistController::class)
@@ -64,6 +63,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Reviews
     Route::apiResource('reviews', ReviewController::class);
+    Route::get('hotels/{hotel}/reviews', [ReviewController::class, 'hotelReviews']);
+    Route::get('rooms/{room}/reviews', [ReviewController::class, 'roomReviews']);
     Route::get('users/{user}/reviews', [ReviewController::class, 'userReviews']);
 
 

@@ -29,6 +29,46 @@ class ReviewController extends Controller
         return response()->json($reviews);
     }
 
+    public function roomReviews($roomId)
+    {
+        $reviews = Review::with([
+            'user',
+            'room',
+            'room.hotel',
+            'bookingDetail'
+        ])
+        ->where('room_id', $roomId)
+        ->get();
+
+        if ($reviews->isEmpty()) {
+            return response()->json([
+                'message' => 'Belum ada data review'
+            ], 404);
+        }
+        return response()->json($reviews);
+    }
+
+    public function hotelReviews($hotelId)
+    {
+        $reviews = Review::with([
+            'user',
+            'room',
+            'room.hotel',
+            'bookingDetail'
+        ])
+        ->whereHas('room.hotel', function ($query) use ($hotelId) {
+            $query->where('hotel_id', $hotelId);
+        })
+        ->get();
+
+        if ($reviews->isEmpty()) {
+            return response()->json([
+                'message' => 'Belum ada data review'
+            ], 404);
+        }
+        return response()->json($reviews);
+    }
+
     public function show($id)
     {
         $review = Review::with([

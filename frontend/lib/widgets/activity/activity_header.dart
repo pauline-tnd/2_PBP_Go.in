@@ -16,11 +16,12 @@ class ActivityHeader extends StatelessWidget {
           'Activity',
           style: TextStyle(
             fontSize: 20,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w600,
             color: Colors.white,
           ),
         ),
       ),
+      bodyTopPadding: 110,
       body: body,
     );
   }

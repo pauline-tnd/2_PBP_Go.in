@@ -138,6 +138,7 @@ class GradientScrollHeader extends StatefulWidget {
     required this.body,
     this.flexibleContent,
     this.scrollController,
+    this.bodyTopPadding,
   });
 
   /// Widget di sisi kiri navbar (misal: HeaderLocation).
@@ -167,6 +168,9 @@ class GradientScrollHeader extends StatefulWidget {
 
   /// Opsional: scroll controller eksternal. Kalau null, dibuat sendiri.
   final ScrollController? scrollController;
+
+  /// Opsional: Jarak padding atas untuk body. Default = expandedHeight
+  final double? bodyTopPadding;
 
   @override
   State<GradientScrollHeader> createState() => _GradientScrollHeaderState();
@@ -251,7 +255,9 @@ class _GradientScrollHeaderState extends State<GradientScrollHeader> {
 
                   // 2. Body konten halaman (di atas gradasi)
                   Padding(
-                    padding: EdgeInsets.only(top: widget.expandedHeight),
+                    padding: EdgeInsets.only(
+                      top: widget.bodyTopPadding ?? widget.expandedHeight,
+                    ),
                     child: widget.body,
                   ),
                 ],
