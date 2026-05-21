@@ -1,15 +1,21 @@
 import 'package:flutter/material.dart';
-import '../../models/hotel.dart';
-import '../hotel_card.dart';
+import 'package:frontend/models/hotel.dart';
+import 'package:frontend/widgets/hotel_card.dart';
 
 class HomeRecommendedSection extends StatefulWidget {
   final List<Hotel> hotels;
   final Map<String, HotelBadge> hotelBadges;
+  final Set<int> wishlistedHotelIds;
+  final Set<int> favoriteLoadingHotelIds;
+  final ValueChanged<Hotel>? onFavoriteTap;
 
   const HomeRecommendedSection({
     super.key,
     required this.hotels,
     required this.hotelBadges,
+    this.wishlistedHotelIds = const {},
+    this.favoriteLoadingHotelIds = const {},
+    this.onFavoriteTap,
   });
 
   @override
@@ -40,12 +46,6 @@ class _HomeRecommendedSectionState extends State<HomeRecommendedSection> {
   Widget build(BuildContext context) {
     // mulai animasi setelah scroll 30px
     final double progress = (_scrollOffset / 80).clamp(0.0, 1.0);
-    final bool isScrolled = progress > 0.01;
-
-    // Posisi & ukuran teks: animasi ke atas
-    final double topPosition = lerpDouble(0, 0, progress)!;
-    final double fontSize = lerpDouble(20, 13, progress)!;
-    final double leftPadding = lerpDouble(24, 16, progress)!;
 
     return Transform.translate(
       offset: const Offset(0, -20),
@@ -112,7 +112,16 @@ class _HomeRecommendedSectionState extends State<HomeRecommendedSection> {
                           ),
                           child: SizedBox(
                             width: MediaQuery.of(context).size.width * 0.8,
-                            child: HotelCard(hotel: hotel, badge: badge),
+                            child: HotelCard(
+                              hotel: hotel,
+                              badge: badge,
+                              initialIsWishlisted: widget.wishlistedHotelIds
+                                  .contains(hotel.id),
+                              isFavoriteLoading: widget.favoriteLoadingHotelIds
+                                  .contains(hotel.id),
+                              onFavoriteTap: () =>
+                                  widget.onFavoriteTap?.call(hotel),
+                            ),
                           ),
                         );
                       },

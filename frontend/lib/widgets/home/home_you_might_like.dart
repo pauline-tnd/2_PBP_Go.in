@@ -5,11 +5,17 @@ import '../hotel_card.dart';
 class HomeYouMightLike extends StatelessWidget {
   final List<Hotel> hotels;
   final Map<String, HotelBadge> hotelBadges;
+  final Set<int> wishlistedHotelIds;
+  final Set<int> favoriteLoadingHotelIds;
+  final ValueChanged<Hotel>? onFavoriteTap;
 
   const HomeYouMightLike({
     super.key,
     required this.hotels,
     required this.hotelBadges,
+    this.wishlistedHotelIds = const {},
+    this.favoriteLoadingHotelIds = const {},
+    this.onFavoriteTap,
   });
 
   @override
@@ -35,7 +41,13 @@ class HomeYouMightLike extends StatelessWidget {
           else
             ...hotels.map((hotel) {
               final badge = hotelBadges[hotel.name];
-              return HotelCard(hotel: hotel, badge: badge);
+              return HotelCard(
+                hotel: hotel,
+                badge: badge,
+                initialIsWishlisted: wishlistedHotelIds.contains(hotel.id),
+                isFavoriteLoading: favoriteLoadingHotelIds.contains(hotel.id),
+                onFavoriteTap: () => onFavoriteTap?.call(hotel),
+              );
             }),
         ],
       ),

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../widgets/bottom_navbar.dart';
+import 'package:frontend/widgets/bottom_navbar.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -28,10 +28,7 @@ class SettingsPage extends StatelessWidget {
                           gradient: LinearGradient(
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
-                            colors: [
-                              Color(0xFF0E4399),
-                              Color(0xFF3B82F6),
-                            ],
+                            colors: [Color(0xFF0E4399), Color(0xFF3B82F6)],
                           ),
                         ),
                       ),
@@ -46,10 +43,7 @@ class SettingsPage extends StatelessWidget {
                           gradient: LinearGradient(
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
-                            colors: [
-                              Color(0xFF3B82F6),
-                              Color(0xFFF5F7F8),
-                            ],
+                            colors: [Color(0xFF3B82F6), Color(0xFFF5F7F8)],
                           ),
                         ),
                       ),
@@ -124,7 +118,7 @@ class SettingsPage extends StatelessWidget {
                         ),
                       ]),
                       const SizedBox(height: 28),
-                     _LogoutButton(),
+                      _LogoutButton(),
                       const SizedBox(height: 12),
                       const Center(
                         child: Text(
@@ -143,10 +137,7 @@ class SettingsPage extends StatelessWidget {
               ),
             ],
           ),
-          BottomNavbar(
-            currentIndex: 3,
-            onTap: (_) {},
-          ),
+          BottomNavbar(currentIndex: 3, onTap: (_) {}),
         ],
       ),
     );
@@ -248,17 +239,17 @@ class SettingsPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFEACD80).withAlpha(128),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: ShaderMask(
                     shaderCallback: (bounds) => const LinearGradient(
-                      colors: [
-                        Color(0xFFF59E0B),
-                        Color(0xFF8F5C06),
-                      ],
+                      colors: [Color(0xFFF59E0B), Color(0xFF8F5C06)],
                       stops: [0.0, 0.61],
                     ).createShader(bounds),
                     blendMode: BlendMode.srcIn,
@@ -322,7 +313,10 @@ class SettingsPage extends StatelessWidget {
                     bottom: isLast ? const Radius.circular(16) : Radius.zero,
                   ),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 18,
+                      vertical: 16,
+                    ),
                     child: Row(
                       children: [
                         Container(
@@ -362,10 +356,7 @@ class SettingsPage extends StatelessWidget {
               if (!isLast)
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 18),
-                  child: Container(
-                    height: 1,
-                    color: const Color(0xFFF1F5F9),
-                  ),
+                  child: Container(height: 1, color: const Color(0xFFF1F5F9)),
                 ),
             ],
           );
@@ -379,10 +370,7 @@ class _SettingsItem {
   final IconData icon;
   final String label;
 
-  _SettingsItem({
-    required this.icon,
-    required this.label,
-  });
+  _SettingsItem({required this.icon, required this.label});
 }
 
 class _LogoutButton extends StatelessWidget {
@@ -407,11 +395,7 @@ class _LogoutButton extends StatelessWidget {
         child: const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.logout_rounded,
-              size: 20,
-              color: Color(0xFFEF4444),
-            ),
+            Icon(Icons.logout_rounded, size: 20, color: Color(0xFFEF4444)),
             SizedBox(width: 10),
             Text(
               'Logout Account',

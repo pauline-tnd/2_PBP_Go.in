@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../models/hotel.dart';
-import '../widgets/bottom_navbar.dart';
-import '../widgets/hotel_card.dart';
-import '../widgets/sorting_bar.dart';
+import 'package:frontend/models/hotel.dart';
+import 'package:frontend/widgets/bottom_navbar.dart';
+import 'package:frontend/widgets/hotel_card.dart';
+import 'package:frontend/widgets/sorting_bar.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'loading_page.dart';
+import 'package:frontend/pages/loading_page.dart';
 
 class FilterState {
   final RangeValues priceRange;
