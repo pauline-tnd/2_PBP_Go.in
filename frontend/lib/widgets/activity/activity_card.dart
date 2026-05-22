@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-enum BookingStatus { pending, paid, completed, cancelled }
+enum BookingStatus { paid, completed, cancelled }
 
 class BookingItem {
   final String id;
@@ -184,12 +184,6 @@ class _StatusBadge extends StatelessWidget {
 
   _StatusConfig _statusConfig(BookingStatus status) {
     switch (status) {
-      case BookingStatus.pending:
-        return _StatusConfig(
-          label: 'Pending',
-          backgroundColor: const Color(0xFFFFF3CD),
-          textColor: const Color(0xFFB07D00),
-        );
       case BookingStatus.paid:
         return _StatusConfig(
           label: 'Paid',

@@ -33,21 +33,28 @@ class Hotel {
 
   factory Hotel.fromMap(Map<String, dynamic> map) {
     final images = map['hotel_images'] as List<dynamic>?;
-    String? imageUrl = (images != null && images.isNotEmpty) 
-        ? images.first['image'] 
-        : null;
+    final image = map['hotel_image'];
+    String? imageUrl;
+    if (images != null && images.isNotEmpty) {
+      imageUrl = images.first['image'];
+    } else if (image is Map<String, dynamic>) {
+      imageUrl = image['image'];
+    }
+
     final List<dynamic> roomsData = map['rooms'] as List<dynamic>? ?? [];
-    double minPrice = 0;
+    double minPrice =
+        double.tryParse(map['start_from_price']?.toString() ?? '') ?? 0;
     if (roomsData.isNotEmpty) {
       final prices = roomsData
-        .map((room) => double.tryParse(room['price'].toString()) ?? 0.0)
-        .where((p) => p > 0)
-        .toList();
+          .map((room) => double.tryParse(room['price'].toString()) ?? 0.0)
+          .where((p) => p > 0)
+          .toList();
       if (prices.isNotEmpty) {
         minPrice = prices.reduce((curr, next) => curr < next ? curr : next);
       }
     }
-    double averageRating = 0;
+    double averageRating =
+        double.tryParse(map['hotel_rating']?.toString() ?? '') ?? 0;
     List<num> allRatings = [];
     for (var room in roomsData) {
       final reviews = room['reviews'] as List<dynamic>? ?? [];
@@ -64,9 +71,9 @@ class Hotel {
 
     final facilitiesData = map['hotel_facilities'] as List<dynamic>? ?? [];
     final List<String> facilitiesList = facilitiesData
-      .map((f) => f['name'].toString())
-      .where((name) => name != 'null')
-      .toList();
+        .map((f) => f['name'].toString())
+        .where((name) => name != 'null')
+        .toList();
 
     return Hotel(
       id: map['id'] ?? 0,
@@ -75,13 +82,13 @@ class Hotel {
       starRating: map['star'] ?? 0,
       pricePerNight: minPrice,
       userRating: averageRating,
-      popularity: map['popularity'] ?? 0,
+      popularity: map['popularity'] ?? map['total_bookings'] ?? 0,
       distance: (map['distance'] ?? 0).toDouble(),
       imagePath: imageUrl,
       placeholderColor: const Color(0xFF1E3A5F),
       amenities: facilitiesList,
-      roomTypes: map['room_types'] is List 
-          ? List<String>.from(map['room_types']) 
+      roomTypes: map['room_types'] is List
+          ? List<String>.from(map['room_types'])
           : [],
     );
   }
@@ -137,20 +144,26 @@ Map<String, HotelBadge> assignBadges(List<Hotel> hotels) {
   badges[bestDeals.name] = HotelBadge.bestDeals;
   assigned.add(bestDeals.name);
 
-  final topRated = hotels
+  final topRatedCandidates = hotels
       .where((h) => !assigned.contains(h.name))
-      .reduce((a, b) => a.userRating > b.userRating
+      .toList();
+  if (topRatedCandidates.isNotEmpty) {
+    final topRated = topRatedCandidates.reduce(
+      (a, b) => a.userRating > b.userRating
           ? a
           : (a.userRating == b.userRating
-              ? (a.popularity < b.popularity ? a : b)
-              : b));
-  badges[topRated.name] = HotelBadge.topRated;
-  assigned.add(topRated.name);
+                ? (a.popularity < b.popularity ? a : b)
+                : b),
+    );
+    badges[topRated.name] = HotelBadge.topRated;
+    assigned.add(topRated.name);
+  }
 
   final remaining = hotels.where((h) => !assigned.contains(h.name)).toList();
   if (remaining.isNotEmpty) {
-    final premium = remaining
-        .reduce((a, b) => a.pricePerNight > b.pricePerNight ? a : b);
+    final premium = remaining.reduce(
+      (a, b) => a.pricePerNight > b.pricePerNight ? a : b,
+    );
     badges[premium.name] = HotelBadge.verifiedPremium;
     assigned.add(premium.name);
   }

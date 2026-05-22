@@ -2,10 +2,10 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import '../models/room.dart';
-import '../models/booking.dart';
-import '../models/wishlist.dart';
-import '../models/review.dart';
+import 'package:frontend/models/room.dart';
+import 'package:frontend/models/booking.dart';
+import 'package:frontend/models/wishlist.dart';
+import 'package:frontend/models/review.dart';
 
 class ApiService {
   static const String baseUrl = 'http://127.0.0.1:8000/api';
@@ -325,7 +325,7 @@ class ApiService {
       body: jsonEncode({'hotel_id': hotelId}),
     );
 
-    if (response.statusCode == 201) {
+    if (response.statusCode == 200 || response.statusCode == 201) {
       return jsonDecode(response.body);
     } else {
       throw Exception('Failed to store wishlist: ${response.body}');

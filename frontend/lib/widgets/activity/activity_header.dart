@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../header.dart';
+import 'package:frontend/widgets/header.dart';
 
 class ActivityHeader extends StatelessWidget {
   final Widget body;

@@ -6,7 +6,7 @@ import '../widgets/bottom_navbar.dart';
 import '../widgets/hotel_card.dart';
 import '../widgets/sorting_bar.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'loading_page.dart';
+import 'package:frontend/pages/loading_page.dart';
 
 class FilterState {
   final RangeValues priceRange;
@@ -200,42 +200,44 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
                       Padding(
                         padding: EdgeInsets.symmetric(horizontal: 5.w),
                         child: hotels.isEmpty
-                          ? _buildEmptyState()
-                          : LayoutBuilder(
-                              builder: (context, constraints) {
-                                int crossAxisCount = 1;
-                                double childAspectRatio = 1.038;
-                                if (constraints.maxWidth >= 1200) {
-                                  crossAxisCount = 4;
-                                  childAspectRatio = 0.78;
-                                } else if (constraints.maxWidth >= 900) {
-                                  crossAxisCount = 3;
-                                  childAspectRatio = 0.82;
-                                } else if (constraints.maxWidth >= 600) {
-                                  crossAxisCount = 2;
-                                  childAspectRatio = 0.94;
-                                }
-                                return GridView.builder(
-                                  shrinkWrap: true,
-                                  physics: const NeverScrollableScrollPhysics(),
-                                  itemCount: hotels.length,
-                                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: crossAxisCount,
-                                    crossAxisSpacing: 16,
-                                    mainAxisSpacing: 16,
-                                    childAspectRatio: childAspectRatio,
-                                  ),
-                                  itemBuilder: (context, index) {
-                                    final hotel = hotels[index];
-                                    final badge = _hotelBadges[hotel.name];
-                                    return HotelCard(
-                                      hotel: hotel,
-                                      badge: badge,
-                                    );
-                                  },
-                                );
-                              },
-                            ),
+                            ? _buildEmptyState()
+                            : LayoutBuilder(
+                                builder: (context, constraints) {
+                                  int crossAxisCount = 1;
+                                  double childAspectRatio = 1.038;
+                                  if (constraints.maxWidth >= 1200) {
+                                    crossAxisCount = 4;
+                                    childAspectRatio = 0.78;
+                                  } else if (constraints.maxWidth >= 900) {
+                                    crossAxisCount = 3;
+                                    childAspectRatio = 0.82;
+                                  } else if (constraints.maxWidth >= 600) {
+                                    crossAxisCount = 2;
+                                    childAspectRatio = 0.94;
+                                  }
+                                  return GridView.builder(
+                                    shrinkWrap: true,
+                                    physics:
+                                        const NeverScrollableScrollPhysics(),
+                                    itemCount: hotels.length,
+                                    gridDelegate:
+                                        SliverGridDelegateWithFixedCrossAxisCount(
+                                          crossAxisCount: crossAxisCount,
+                                          crossAxisSpacing: 16,
+                                          mainAxisSpacing: 16,
+                                          childAspectRatio: childAspectRatio,
+                                        ),
+                                    itemBuilder: (context, index) {
+                                      final hotel = hotels[index];
+                                      final badge = _hotelBadges[hotel.name];
+                                      return HotelCard(
+                                        hotel: hotel,
+                                        badge: badge,
+                                      );
+                                    },
+                                  );
+                                },
+                              ),
                       ),
                     ],
                   ),

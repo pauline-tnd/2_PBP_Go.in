@@ -28,11 +28,12 @@ class WishlistController extends Controller
         
         $validated['user_id'] = Auth::user()->id;
 
-        $wishlist = Wishlist::create($validated);
+        $wishlist = Wishlist::firstOrCreate($validated);
+
         return response()->json([
-            'message' => 'Wishlist created',
+            'message' => $wishlist->wasRecentlyCreated ? 'Wishlist created' : 'Wishlist already exists',
             'data' => $wishlist
-        ], 201);
+        ], $wishlist->wasRecentlyCreated ? 201 : 200);
     }
 
     public function destroy(Wishlist $wishlist)

@@ -71,9 +71,6 @@ class _ActivityPageState extends State<ActivityPage> {
     // ── Status mapping ────────────────────────────────────────────
     final BookingStatus status;
     switch (b.status.toLowerCase()) {
-      case 'paid':
-        status = BookingStatus.paid;
-        break;
       case 'completed':
         status = BookingStatus.completed;
         break;
@@ -81,7 +78,7 @@ class _ActivityPageState extends State<ActivityPage> {
         status = BookingStatus.cancelled;
         break;
       default:
-        status = BookingStatus.pending;
+        status = BookingStatus.paid;
     }
 
     return BookingItem(
@@ -100,8 +97,6 @@ class _ActivityPageState extends State<ActivityPage> {
     if (_selectedFilter == ActivityFilter.all) return items;
     return items.where((item) {
       switch (_selectedFilter) {
-        case ActivityFilter.pending:
-          return item.status == BookingStatus.pending;
         case ActivityFilter.paid:
           return item.status == BookingStatus.paid;
         case ActivityFilter.completed:

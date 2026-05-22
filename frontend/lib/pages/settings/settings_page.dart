@@ -1,13 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../widgets/bottom_navbar.dart';
-import '../../widgets/settings/settings_group.dart';
-import '../../widgets/settings/settings_section_title.dart';
-import '../../widgets/common/logout_button.dart';
-import 'edit_profile_page.dart';
-import 'preferences_page.dart';
-import 'help_centre_page.dart';
-import 'contact_us_page.dart';
-import 'faq_page.dart';
+import 'package:frontend/widgets/bottom_navbar.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -18,8 +10,8 @@ class SettingsPage extends StatelessWidget {
     final isTablet = screenWidth >= 768;
     final isDesktop = screenWidth >= 1024;
     final horizontalPadding = isDesktop
-      ? screenWidth * 0.18
-      : isTablet
+        ? screenWidth * 0.18
+        : isTablet
         ? screenWidth * 0.1
         : 24.0;
     return Scaffold(
@@ -30,8 +22,8 @@ class SettingsPage extends StatelessWidget {
             children: [
               SizedBox(
                 height: isDesktop
-                  ? 300
-                  : isTablet
+                    ? 300
+                    : isTablet
                     ? 270
                     : 240,
                 child: Stack(
@@ -47,10 +39,7 @@ class SettingsPage extends StatelessWidget {
                           gradient: LinearGradient(
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
-                            colors: [
-                              Color(0xFF0E4399),
-                              Color(0xFF3B82F6),
-                            ],
+                            colors: [Color(0xFF0E4399), Color(0xFF3B82F6)],
                           ),
                         ),
                       ),
@@ -65,10 +54,7 @@ class SettingsPage extends StatelessWidget {
                           gradient: LinearGradient(
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
-                            colors: [
-                              Color(0xFF3B82F6),
-                              Color(0xFFF5F7F8),
-                            ],
+                            colors: [Color(0xFF3B82F6), Color(0xFFF5F7F8)],
                           ),
                         ),
                       ),
@@ -93,7 +79,9 @@ class SettingsPage extends StatelessWidget {
                       left: 0,
                       right: 0,
                       child: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: horizontalPadding,
+                        ),
                         child: _buildProfileCard(isTablet, isDesktop),
                       ),
                     ),
@@ -111,9 +99,7 @@ class SettingsPage extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const SettingsSectionTitle(
-                        title: 'ACCOUNT SETTINGS',
-                      ),
+                      const SettingsSectionTitle(title: 'ACCOUNT SETTINGS'),
                       const SizedBox(height: 12),
                       SettingsGroup(
                         items: [
@@ -144,9 +130,7 @@ class SettingsPage extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 28),
-                      const SettingsSectionTitle(
-                        title: 'SUPPORT & LEGAL',
-                      ),
+                      const SettingsSectionTitle(title: 'SUPPORT & LEGAL'),
                       const SizedBox(height: 12),
                       SettingsGroup(
                         items: [
@@ -189,7 +173,7 @@ class SettingsPage extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 28),
-                      const LogoutButton(),
+                      _LogoutButton(),
                       const SizedBox(height: 12),
                       const Center(
                         child: Text(
@@ -208,6 +192,7 @@ class SettingsPage extends StatelessWidget {
               ),
             ],
           ),
+          BottomNavbar(currentIndex: 3, onTap: (_) {}),
         ],
       ),
     );
@@ -309,17 +294,17 @@ class SettingsPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFEACD80).withAlpha(128),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: ShaderMask(
                     shaderCallback: (bounds) => const LinearGradient(
-                      colors: [
-                        Color(0xFFF59E0B),
-                        Color(0xFF8F5C06),
-                      ],
+                      colors: [Color(0xFFF59E0B), Color(0xFF8F5C06)],
                       stops: [0.0, 0.61],
                     ).createShader(bounds),
                     blendMode: BlendMode.srcIn,
@@ -335,6 +320,187 @@ class SettingsPage extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static Widget _buildSectionTitle(String title) {
+    return Text(
+      title,
+      style: const TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w600,
+        color: Color(0xFF94A3B8),
+        letterSpacing: 1.0,
+      ),
+    );
+  }
+
+  static Widget _buildSettingsCard(List<_SettingsItem> items) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFFFFF),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF1E293B).withAlpha(10),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: List.generate(items.length, (index) {
+          final item = items[index];
+          final isLast = index == items.length - 1;
+
+          return Column(
+            children: [
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () {},
+                  borderRadius: BorderRadius.vertical(
+                    top: index == 0 ? const Radius.circular(16) : Radius.zero,
+                    bottom: isLast ? const Radius.circular(16) : Radius.zero,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 18,
+                      vertical: 16,
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 38,
+                          height: 38,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF3B82F6).withAlpha(20),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Icon(
+                            item.icon,
+                            size: 20,
+                            color: const Color(0xFF3B82F6),
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Text(
+                            item.label,
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xFF1E293B),
+                            ),
+                          ),
+                        ),
+                        const Icon(
+                          Icons.chevron_right_rounded,
+                          size: 22,
+                          color: Color(0xFF94A3B8),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              if (!isLast)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 18),
+                  child: Container(height: 1, color: const Color(0xFFF1F5F9)),
+                ),
+            ],
+          );
+        }),
+      ),
+    );
+  }
+}
+
+class _SettingsItem {
+  final IconData icon;
+  final String label;
+
+  _SettingsItem({required this.icon, required this.label});
+}
+
+class _LogoutButton extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => _showLogoutDialog(context),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFFFFF),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF1E293B).withAlpha(10),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.logout_rounded, size: 20, color: Color(0xFFEF4444)),
+            SizedBox(width: 10),
+            Text(
+              'Logout Account',
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFFEF4444),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text(
+          'Logout',
+          style: TextStyle(
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF1E293B),
+          ),
+        ),
+        content: const Text(
+          'Are you sure you want to logout?',
+          style: TextStyle(color: Color(0xFF64748B)),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(
+                color: Color(0xFF94A3B8),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'Logout',
+              style: TextStyle(
+                color: Color(0xFFEF4444),
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
