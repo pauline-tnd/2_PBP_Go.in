@@ -1,3 +1,7 @@
+import 'package:flutter/widgets.dart';
+import 'package:frontend/models/addOn.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 class Room {
   final int id;
   final int hotelId;
@@ -6,6 +10,7 @@ class Room {
   final double price;
   final int capacity;
   final String roomSize;
+  final List<AddOnItem> addOns;
 
   Room({
     required this.id,
@@ -15,9 +20,12 @@ class Room {
     required this.price,
     required this.capacity,
     required this.roomSize,
+    required this.addOns,
   });
 
   factory Room.fromJson(Map<String, dynamic> json) {
+    final rawAddOns = json['hotel']?['add_ons'] as List<dynamic>? ?? [];
+
     return Room(
       id: json['id'] ?? 0,
       hotelId: json['hotel_id'] ?? 0,
@@ -26,6 +34,14 @@ class Room {
       price: json['price'] ?? 0.0,
       capacity: json['capacity'] ?? 0,
       roomSize: json['room_size'] ?? 'No Size',
+      addOns: rawAddOns
+          .map(
+            (e) => AddOnItem(
+              name: e['name'] ?? '',
+              price: double.tryParse(e['price'].toString()) ?? 0.0,
+            ),
+          )
+          .toList(),
     );
   }
 

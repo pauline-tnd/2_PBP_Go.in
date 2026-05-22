@@ -1,22 +1,22 @@
+import 'package:flutter/widgets.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 class Review {
   final int id;
   final int userId;
   final int roomId;
   final int bookingDetailId;
-  final int rating;
+  final double rating;
   final String description;
-  final String? image;
-  final String? createdAt;
+  final int capacity;
 
   Review({
     required this.id,
     required this.userId,
     required this.roomId,
     required this.bookingDetailId,
-    required this.rating,
-    required this.description,
-    this.image,
     this.createdAt,
+    required this.capacity,
   });
 
   factory Review.fromJson(Map<String, dynamic> json) {
@@ -27,11 +27,8 @@ class Review {
       bookingDetailId: json['booking_detail_id'] ?? 0,
       rating: json['rating'] ?? 0,
       description: json['description'] ?? '',
-      image: json['image'],
-      createdAt: json['created_at'],
     );
   }
-
   Map<String, dynamic> toJson() {
     return {
       'id': id,
