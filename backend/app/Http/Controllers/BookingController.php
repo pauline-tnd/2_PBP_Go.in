@@ -108,4 +108,29 @@ class BookingController extends Controller
             'message' => 'Booking berhasil dihapus'
         ]);
     }
+
+    public function reviewDetails($id)
+    {
+        $booking = Booking::with([
+            'bookingDetails.room.hotel.hotelImages',
+            'bookingDetails.room.hotel.hotelFacilities'
+        ])->find($id);
+        if (!$booking) {
+            return response()->json([
+                'message' => 'Booking tidak ditemukan'
+            ], 404);
+        }
+        $room = $booking->bookingDetails->first()->room ?? null;
+        return response()->json([
+            'data' => [
+                'hotel' => [
+                    'name' => $room->hotel->name ?? 'Unknown Hotel',
+                    'hotel_images' => $room->hotel->hotelImages ?? [],
+                    'hotel_facilities' => $room->hotel->hotelFacilities ?? [],
+                ],
+                'room_type' => $room->type ?? 'Standard Room',
+                'check_out' => $booking->check_out,
+            ]
+        ], 200);
+    }
 }
