@@ -1,9 +1,111 @@
 import 'package:flutter/material.dart';
+import 'package:calendar_date_picker2/calendar_date_picker2.dart';
+import 'package:intl/intl.dart';
 
-class HomeSearchCard extends StatelessWidget {
+class HomeSearchCard extends StatefulWidget {
   final VoidCallback? onSearch;
 
   const HomeSearchCard({super.key, this.onSearch});
+
+  @override
+  State<HomeSearchCard> createState() => _HomeSearchCardState();
+}
+
+class _HomeSearchCardState extends State<HomeSearchCard> {
+  List<DateTime?> _dates = [
+    DateTime.now(),
+    DateTime.now().add(const Duration(days: 1)),
+  ];
+
+  String _formatDate(DateTime? date) {
+    return date == null ? '' : DateFormat('EEE, d MMM yyyy').format(date);
+  }
+
+  String _getDateRangeText() {
+    return _dates.isEmpty || _dates[0] == null
+        ? 'Select dates'
+        : _dates.length < 2 || _dates[1] == null
+        ? _formatDate(_dates[0])
+        : '${_formatDate(_dates[0])} - ${_formatDate(_dates[1])}';
+  }
+
+  int _getNightCount() {
+    return _dates.length < 2 || _dates[0] == null || _dates[1] == null
+        ? 0
+        : _dates[1]!.difference(_dates[0]!).inDays;
+  }
+
+  void _showDatePicker() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) {
+        return Padding(
+          // padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CalendarDatePicker2(
+                config: CalendarDatePicker2Config(
+                  calendarType: CalendarDatePicker2Type.range,
+                  // Selected date (start & end date)
+                  selectedDayHighlightColor: const Color(0xFF3B82F6),
+
+                  // Selected days
+                  selectedDayTextStyle: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+
+                  // Days in range
+                  dayTextStyle: const TextStyle(color: Color(0xFF1E293B)),
+
+                  // Disabled days
+                  disabledDayTextStyle: const TextStyle(
+                    color: Color(0xFFCBD5E1),
+                  ),
+
+                  // Today
+                  todayTextStyle: const TextStyle(
+                    color: Color(0xFF3B82F6),
+                    fontWeight: FontWeight.bold,
+                  ),
+
+                  // Month & year header
+                  controlsTextStyle: const TextStyle(
+                    color: Color(0xFF1E293B),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                value: _dates,
+                onValueChanged: (dates) {
+                  setState(() => _dates = dates);
+                },
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF3B82F6),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                  ),
+                  child: const Text('Confirm'),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,61 +127,50 @@ class HomeSearchCard extends StatelessWidget {
         ),
         child: Column(
           children: [
-            // Search hotel input
             _buildSearchField(
               icon: Icons.search_rounded,
               text: 'Search hotel or location',
               isHint: true,
             ),
             const SizedBox(height: 12),
-            // Date range
-            _buildSearchField(
-              icon: Icons.calendar_today_rounded,
-              text: 'Tue, 3 Mar 2026 - Wed, 4 Mar 2026',
-              isHint: false,
+
+            // Date field — sekarang bisa di-tap
+            GestureDetector(
+              onTap: _showDatePicker,
+              child: _buildSearchField(
+                icon: Icons.calendar_today_rounded,
+                text: _getDateRangeText(),
+                isHint: false,
+              ),
             ),
-            const SizedBox(height: 12),
-            // Night count
-            Text('1 night', style: TextStyle(fontSize: 12)),
-            // _buildSearchField(
-            //   icon: Icons.nightlight_round,
-            //   text: '1 Night',
-            //   isHint: false,
-            // ),
+
+            const SizedBox(height: 8),
+            Text(
+              '${_getNightCount()} night(s)',
+              style: const TextStyle(fontSize: 12, color: Color(0xFF475569)),
+            ),
+
             const SizedBox(height: 16),
-            // Search button
             SizedBox(
               width: double.infinity,
               height: 48,
-              child: Container(
-                decoration: BoxDecoration(
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF1E293B).withAlpha(40),
-                      blurRadius: 10,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
+              child: ElevatedButton(
+                onPressed:
+                    widget.onSearch ??
+                    () {
+                      Navigator.pushNamed(context, '/search-results');
+                    },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF3B82F6),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  elevation: 0,
                 ),
-                child: ElevatedButton(
-                  onPressed:
-                      onSearch ??
-                      () {
-                        Navigator.pushNamed(context, '/search-results');
-                      },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF3B82F6),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    elevation: 0,
-                  ),
-
-                  child: const Text(
-                    'Search',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                  ),
+                child: const Text(
+                  'Search',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
               ),
             ),

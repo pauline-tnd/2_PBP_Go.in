@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/pages/wishlist_page.dart';
-import '../header.dart';
+import 'package:frontend/pages/main_shell.dart';
+import 'package:frontend/widgets/header.dart';
 
 class HomeHeader extends StatelessWidget {
   final Widget body;
@@ -22,14 +22,7 @@ class HomeHeader extends StatelessWidget {
         HeaderAction(
           icon: Icons.favorite_border_rounded,
           onTap: () {
-            // Buka wishlist
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) =>
-                    const WishlistPage(hotels: [], hotelBadges: {}),
-              ),
-            );
+            context.findAncestorStateOfType<MainShellState>()?.showWishlist();
           },
         ),
       ],

@@ -8,6 +8,7 @@ import 'preferences_page.dart';
 import 'help_centre_page.dart';
 import 'contact_us_page.dart';
 import 'faq_page.dart';
+import 'package:frontend/widgets/bottom_navbar.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -47,10 +48,7 @@ class SettingsPage extends StatelessWidget {
                           gradient: LinearGradient(
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
-                            colors: [
-                              Color(0xFF0E4399),
-                              Color(0xFF3B82F6),
-                            ],
+                            colors: [Color(0xFF0E4399), Color(0xFF3B82F6)],
                           ),
                         ),
                       ),
@@ -65,10 +63,7 @@ class SettingsPage extends StatelessWidget {
                           gradient: LinearGradient(
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
-                            colors: [
-                              Color(0xFF3B82F6),
-                              Color(0xFFF5F7F8),
-                            ],
+                            colors: [Color(0xFF3B82F6), Color(0xFFF5F7F8)],
                           ),
                         ),
                       ),
@@ -208,6 +203,7 @@ class SettingsPage extends StatelessWidget {
               ),
             ],
           ),
+          BottomNavbar(currentIndex: 3, onTap: (_) {}),
         ],
       ),
     );

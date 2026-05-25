@@ -4,16 +4,31 @@ import 'home_page.dart';
 import 'activity_page.dart';
 import 'promo_page.dart';
 import 'settings/settings_page.dart';
+import 'package:frontend/widgets/bottom_navbar.dart';
+import 'package:frontend/pages/home_page.dart';
+import 'package:frontend/pages/activity_page.dart';
+import 'package:frontend/pages/promo_page.dart';
+import 'package:frontend/pages/settings/settings_page.dart';
+import 'package:frontend/pages/wishlist_page.dart';
 
 class MainShell extends StatefulWidget {
-  const MainShell({super.key});
+  final int initialIndex;
+
+  const MainShell({super.key, this.initialIndex = 0});
 
   @override
-  State<MainShell> createState() => _MainShellState();
+  State<MainShell> createState() => MainShellState();
 }
 
-class _MainShellState extends State<MainShell> {
-  int _currentIndex = 0;
+class MainShellState extends State<MainShell> {
+  late int _currentIndex;
+  bool _showWishlist = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.initialIndex;
+  }
 
   final List<Widget> _pages = const [
     HomePage(),
@@ -22,26 +37,52 @@ class _MainShellState extends State<MainShell> {
     SettingsPage(),
   ];
 
+  void showWishlist() {
+    setState(() {
+      _showWishlist = true;
+    });
+  }
+
+  void _hideWishlist() {
+    setState(() {
+      _showWishlist = false;
+    });
+  }
+
+  void _handleNavTap(int index) {
+    setState(() {
+      _showWishlist = false;
+      _currentIndex = index;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
-        children: [
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 300),
-            transitionBuilder: (child, animation) {
-              return FadeTransition(opacity: animation, child: child);
-            },
-            child: KeyedSubtree(
-              key: ValueKey(_currentIndex),
-              child: _pages[_currentIndex],
+    return PopScope(
+      canPop: !_showWishlist,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop && _showWishlist) {
+          _hideWishlist();
+        }
+      },
+      child: Scaffold(
+        body: Stack(
+          children: [
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              transitionBuilder: (child, animation) {
+                return FadeTransition(opacity: animation, child: child);
+              },
+              child: KeyedSubtree(
+                key: ValueKey(_showWishlist ? 'wishlist' : _currentIndex),
+                child: _showWishlist
+                    ? WishlistPage(onBack: _hideWishlist)
+                    : _pages[_currentIndex],
+              ),
             ),
-          ),
-          BottomNavbar(
-            currentIndex: _currentIndex,
-            onTap: (index) => setState(() => _currentIndex = index),
-          ),
-        ],
+            BottomNavbar(currentIndex: _currentIndex, onTap: _handleNavTap),
+          ],
+        ),
       ),
     );
   }
