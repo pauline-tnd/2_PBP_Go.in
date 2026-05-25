@@ -27,7 +27,7 @@ class ApiService {
     return {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
-      'Authorization': 'Bearer 5|qFTHyhTKnuwNY9ltGuzEvTnPqWdBTG8L3unjjJPg42b3e5dd',
+      'Authorization': 'Bearer $token',
     };
   }
 
@@ -172,7 +172,7 @@ class ApiService {
       'PUT',
       Uri.parse('$baseUrl/user/profile'),
     );
-    request.headers['Authorization'] = 'Bearer 5|qFTHyhTKnuwNY9ltGuzEvTnPqWdBTG8L3unjjJPg42b3e5dd';
+    request.headers['Authorization'] = 'Bearer $token';
     request.headers['Accept'] = 'application/json';
     request.files.add(
       await http.MultipartFile.fromPath('profile_image', imageFile.path),
@@ -442,7 +442,7 @@ class ApiService {
       'POST',
       Uri.parse('$baseUrl/reviews'),
     );
-    request.headers['Authorization'] = 'Bearer 5|qFTHyhTKnuwNY9ltGuzEvTnPqWdBTG8L3unjjJPg42b3e5dd';
+    request.headers['Authorization'] = 'Bearer $token';
     request.headers['Accept'] = 'application/json';
 
     request.fields['user_id'] = userId.toString();
