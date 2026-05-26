@@ -90,6 +90,8 @@ class _ActivityPageState extends State<ActivityPage> {
       price: priceStr,
       status: status,
       imageUrl: b.roomImageUrl ?? '',
+      reviewRating: b.reviewRating,
+      hasReview: b.hasReview,
     );
   }
 
@@ -238,6 +240,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                   MaterialPageRoute(
                                     builder: (context) => ReviewPage(
                                       bookingId: item.id,
+                                      isReadOnly: item.hasReview,
                                     ),
                                   ),
                                 );

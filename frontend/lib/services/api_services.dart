@@ -10,6 +10,7 @@ import 'package:frontend/models/review.dart';
 import 'package:frontend/models/nominatim.dart';
 
 class ApiService {
+  // static const String baseUrl = 'http://ipv4hp:8000/api'; //ini buat jalanin di hp, ganti ke ipv4 hp kln
   static String get baseUrl {
     if (kIsWeb) return 'http://127.0.0.1:8000/api';
     if (Platform.isAndroid) return 'http://10.0.2.2:8000/api';
@@ -36,7 +37,7 @@ class ApiService {
 
   static Future<Map<String, String>> _authHeaders() async {
     // final token = await _getToken();
-    final token = "62uIBmFojnX96ZLrsJ783UEIMtaHnN13aocR4y1L0e30eb4f";
+    final token = "tokentempeldisini";
     return {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
@@ -529,7 +530,13 @@ class ApiService {
     request.fields['created_at'] = createdAt;
 
     if (image != null) {
-      request.files.add(await http.MultipartFile.fromPath('image', image.path));
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'image',
+          image.path,
+          filename: image.path.split('/').last,
+        ),
+      );
     }
 
     final streamedResponse = await request.send();
@@ -571,7 +578,13 @@ class ApiService {
     if (description != null) request.fields['description'] = description;
 
     if (image != null) {
-      request.files.add(await http.MultipartFile.fromPath('image', image.path));
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'image',
+          image.path,
+          filename: image.path.split('/').last,
+        ),
+      );
     }
 
     final streamedResponse = await request.send();
@@ -796,6 +809,20 @@ class ApiService {
       return jsonDecode(response.body);
     } else {
       throw Exception('Failed to delete booking detail: ${response.body}');
+    }
+  }
+
+  // GET /bookings/{booking}/review-details
+  static Future<Map<String, dynamic>> fetchReviewDetails(int bookingId) async {
+    final headers = await _authHeaders();
+    final response = await http.get(
+      Uri.parse('$baseUrl/bookings/$bookingId/review-details'),
+      headers: headers,
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to load review details: ${response.body}');
     }
   }
 

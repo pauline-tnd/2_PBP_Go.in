@@ -110,7 +110,7 @@ class ReviewController extends Controller
             'rating'            => 'required|integer|min:1|max:5',
             'description'       => 'required|string',
             'created_at'        => 'required|date',
-            'image'             => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'image'             => 'nullable|image|mimes:jpg,jpeg,png|max:20480',
         ]);
         if ($request->hasFile('image')) {
             $validated['image'] = $request->file('image')->store('reviews', 'public');
@@ -118,7 +118,10 @@ class ReviewController extends Controller
         $review = Review::create($validated);
         return response()->json([
             'message' => 'Review berhasil dibuat',
-            'review' => $review
+            'review' => [
+                ...$review->toArray(),
+                'image_url' => $review->image_url,
+            ]
         ], 201);
     }
 

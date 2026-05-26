@@ -16,7 +16,8 @@ class BookingController extends Controller
         $userId = Auth::user()->id;
         
         $bookings = Booking::with([
-            'bookingDetails.room.hotel'
+            'bookingDetails.room.hotel',
+            'bookingDetails.review'
         ])
         ->where('user_id', $userId)
         ->get();
@@ -112,15 +113,18 @@ class BookingController extends Controller
     public function reviewDetails($id)
     {
         $booking = Booking::with([
+            'bookingDetails.review',
             'bookingDetails.room.hotel.hotelImages',
-            'bookingDetails.room.hotel.hotelFacilities'
+            'bookingDetails.room.hotel.hotelFacilities.icon'
         ])->find($id);
         if (!$booking) {
             return response()->json([
                 'message' => 'Booking tidak ditemukan'
             ], 404);
         }
-        $room = $booking->bookingDetails->first()->room ?? null;
+        $bookingDetail = $booking->bookingDetails->first();
+        $room = $bookingDetail?->room;
+        $review = $bookingDetail?->review;
         return response()->json([
             'data' => [
                 'hotel' => [
@@ -130,6 +134,10 @@ class BookingController extends Controller
                 ],
                 'room_type' => $room->type ?? 'Standard Room',
                 'check_out' => $booking->check_out,
+                'user_id' => $booking->user_id,
+                'room_id' => $room->id,
+                'booking_detail_id' => $bookingDetail->id,
+                'review' => $review,
             ]
         ], 200);
     }
