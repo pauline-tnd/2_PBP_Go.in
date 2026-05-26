@@ -4,6 +4,7 @@ import 'package:frontend/services/api_services.dart';
 import 'package:frontend/widgets/activity/activity_header.dart';
 import 'package:frontend/widgets/activity/activity_card.dart';
 import 'package:frontend/widgets/activity/activity_filter_dropdown.dart';
+import 'package:frontend/pages/review_page.dart';
 
 // ── Helpers (no locale-data initialization required) ─────────────
 String _formatDate(String isoDate) {
@@ -221,15 +222,26 @@ class _ActivityPageState extends State<ActivityPage> {
                                   ),
                                 );
                               },
-                              onReview: (rating) {
-                                // TODO: send rating to backend
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      'Rating diberikan: $rating bintang',
+                              // onReview: (rating) {
+                              //   // TODO: send rating to backend
+                              //   ScaffoldMessenger.of(context).showSnackBar(
+                              //     SnackBar(
+                              //       content: Text(
+                              //         'Rating diberikan: $rating bintang',
+                              //       ),
+                              //     ),
+                              //   );
+                              // },
+                              onReview: (rating) async {
+                                await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => ReviewPage(
+                                      bookingId: item.id,
                                     ),
                                   ),
                                 );
+                                _refresh();
                               },
                             ),
                           ),
