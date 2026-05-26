@@ -7,6 +7,10 @@ import 'package:frontend/services/api_services.dart';
 import 'package:frontend/extensions/snackbar.dart';
 import 'package:frontend/models/facility.dart';
 import 'package:frontend/widgets/common/carousel.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class DetailHotelPage extends StatefulWidget {
   final Hotel hotel;
@@ -18,6 +22,8 @@ class DetailHotelPage extends StatefulWidget {
 }
 
 class _DetailHotelPageState extends State<DetailHotelPage> {
+  static const String _maptilerKey = 'E9ZFe6B1DmH71sbyAHar';
+
   bool _isWishlisted = false;
   bool _isWishlistLoading = false;
   bool _isExpanded = false;
@@ -26,6 +32,9 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
   List<Room> _rooms = [];
   bool _loading = true;
   String? _error;
+  final MapController _mapController = MapController();
+  LatLng _center = const LatLng(51.5071, -0.1417); // ganti plz
+  String _pickedAddress = '';
 
   @override
   void initState() {
@@ -33,11 +42,70 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
     _loadDetail();
   }
 
+  Future<void> _reverseGeocode(LatLng center) async {
+    final url =
+        'https://api.maptiler.com/geocoding/${center.longitude},${center.latitude}.json?key=$_maptilerKey';
+    try {
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final features = data['features'] as List;
+        if (features.isNotEmpty) {
+          setState(() {
+            _pickedAddress = features.first['place_name'] ?? '';
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint("Geocoding failed: $e");
+    }
+  }
+
+  Future<void> _getCoordinatesFromName(String query) async {
+    final encodedQuery = Uri.encodeComponent(query);
+    final url =
+        'https://api.maptiler.com/geocoding/$encodedQuery.json?key=$_maptilerKey';
+
+    try {
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final features = data['features'] as List;
+
+        if (features.isNotEmpty) {
+          final coords = features.first['center'] as List;
+          final lng = coords[0] as double;
+          final lat = coords[1] as double;
+
+          if (mounted) {
+            setState(() {
+              _center = LatLng(lat, lng);
+            });
+
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              try {
+                _mapController.move(_center, 16);
+              } catch (e) {
+                debugPrint("Map controller movement postponed: $e");
+              }
+            });
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint("Forward geocoding failed: $e");
+    }
+  }
+
   Future<void> _loadDetail() async {
     try {
       final data = await ApiService.fetchHotelDetail(widget.hotel.id);
       final hotelDetail = data['data'] as Map<String, dynamic>? ?? {};
       final roomsRaw = hotelDetail['rooms'] as List<dynamic>? ?? [];
+
+      final lat = double.tryParse(hotelDetail['latitude']?.toString() ?? '');
+      final lng = double.tryParse(hotelDetail['longitude']?.toString() ?? '');
+
       if (!mounted) return;
       setState(() {
         _hotelDetail = hotelDetail;
@@ -46,6 +114,15 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
             .whereType<Map<String, dynamic>>()
             .map((r) => Room.fromJson({...r, 'hotel': hotelDetail}))
             .toList();
+
+        if (lat != null && lng != null) {
+          _center = LatLng(lat, lng);
+        } else {
+          _getCoordinatesFromName(
+            '${widget.hotel.name} ${widget.hotel.location}',
+          );
+        }
+
         _loading = false;
       });
     } catch (e) {
@@ -294,16 +371,14 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
                             ],
                           ),
 
-                          const SizedBox(height: 8),
-                          Container(height: 1, color: const Color(0xFFF1F5F9)),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 12),
 
                           GestureDetector(
                             onTap: () {},
                             child: Row(
                               children: [
                                 const Icon(
-                                  Icons.location_on,
+                                  Icons.location_on_outlined,
                                   size: 15,
                                   color: Color(0xFF3B82F6),
                                 ),
@@ -330,10 +405,14 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
                           ),
 
                           const SizedBox(height: 12),
+                          Container(height: 1, color: const Color(0xFFF1F5F9)),
+                          const SizedBox(height: 10),
 
                           Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
                             children: [
                               Container(
+                                alignment: Alignment.topRight,
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 12,
                                   vertical: 7,
@@ -345,7 +424,7 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
                                 child: Row(
                                   children: [
                                     const Icon(
-                                      Icons.star_rounded,
+                                      Icons.star_outline_rounded,
                                       color: Color(0xFFF59E0B),
                                       size: 16,
                                     ),
@@ -428,8 +507,6 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 4),
-                    Container(height: 1, color: const Color(0xFFF1F5F9)),
                     const SizedBox(height: 20),
 
                     const Text(
@@ -466,8 +543,6 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
                       ),
 
                     const SizedBox(height: 20),
-                    Container(height: 1, color: const Color(0xFFF1F5F9)),
-                    const SizedBox(height: 20),
 
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -477,7 +552,7 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFF3B82F6),
+                            color: Color(0xFF1E293B),
                           ),
                         ),
                         if (hasMoreFacilities)
@@ -516,8 +591,6 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
                       ),
 
                     const SizedBox(height: 20),
-                    Container(height: 1, color: const Color(0xFFF1F5F9)),
-                    const SizedBox(height: 20),
 
                     const Text(
                       'Available Rooms',
@@ -547,29 +620,52 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
                       }),
 
                     const SizedBox(height: 20),
-                    Container(height: 1, color: const Color(0xFFF1F5F9)),
-                    const SizedBox(height: 20),
 
                     const Text(
                       'Locations',
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: 20,
                         fontWeight: FontWeight.w700,
                         color: Color(0xFF1E293B),
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
                     ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Container(
-                        height: 180,
-                        color: const Color(0xFFE2E8F0),
-                        child: const Center(
-                          child: Icon(
-                            Icons.map_outlined,
-                            color: Color(0xFF94A3B8),
-                            size: 40,
+                      borderRadius: BorderRadius.circular(16),
+                      child: SizedBox(
+                        height: 220,
+                        child: FlutterMap(
+                          mapController: _mapController,
+                          options: MapOptions(
+                            initialCenter: _center,
+                            initialZoom: 16,
+                            interactionOptions: const InteractionOptions(
+                              flags:
+                                  InteractiveFlag.all & ~InteractiveFlag.rotate,
+                            ),
                           ),
+                          children: [
+                            TileLayer(
+                              urlTemplate:
+                                  'https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=$_maptilerKey',
+                              userAgentPackageName: 'com.example.frontend',
+                            ),
+                            MarkerLayer(
+                              markers: [
+                                Marker(
+                                  point: _center,
+                                  width: 50,
+                                  height: 50,
+                                  alignment: Alignment.topCenter,
+                                  child: const Icon(
+                                    Icons.location_on,
+                                    color: Color(0xFFEF4444),
+                                    size: 45,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
                     ),

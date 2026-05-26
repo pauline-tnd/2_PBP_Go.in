@@ -20,6 +20,9 @@ dependencies:
   flutter:
     sdk: flutter
   calendar_date_picker2: ^3.0.0
+  flutter_map: ^7.0.0
+  latlong2: ^0.9.1
+  url_launcher: ^6.1.7
 
 dev_dependencies:
   flutter_test: 
