@@ -28,6 +28,9 @@ dependencies:
   permission_handler: ^11.3.1 # GPS permission
   provider: ^6.1.2
 
+  # qr generator
+  qr_flutter: ^4.1.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
