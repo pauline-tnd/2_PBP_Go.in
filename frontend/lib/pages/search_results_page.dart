@@ -80,12 +80,14 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
         return Hotel.fromMap(item as Map<String, dynamic>);
       }).toList();
 
+      if (!mounted) return;
       setState(() {
         _allHotels = fetchedHotels;
         _hotelBadges = assignBadges(_allHotels);
         _isLoading = false;
       });
     } catch (error) {
+      if (!mounted) return;
       setState(() {
         _isLoading = false;
       });

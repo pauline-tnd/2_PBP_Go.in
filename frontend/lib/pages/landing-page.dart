@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:frontend/utils/app_responsive.dart';
 
 import 'login.dart';
 
@@ -73,7 +74,12 @@ class _LandingPageState extends State<LandingPage>
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final middleLayerWidth = screenWidth * 0.25;
+    final isDesktop = AppResponsive.isDesktop(context);
+    final isTablet = AppResponsive.isTablet(context);
+    final middleLayerWidth = screenWidth * (isDesktop ? 0.2 : 0.25);
+    final fullLogoWidth = isDesktop ? 360.0 : isTablet ? 320.0 : 280.0;
+    final iconWidth = isDesktop ? 132.0 : isTablet ? 118.0 : 106.0;
+    final rightMaskInset = isDesktop ? screenWidth * 0.22 : 200.0;
 
     return Scaffold(
       backgroundColor: const Color(0xFFDBEAFE),
@@ -91,7 +97,7 @@ class _LandingPageState extends State<LandingPage>
                     offset: Offset(_fullLogoSlideAnimation.value, 0),
                     child: Image.asset(
                       'assets/images/Go.in-Logo.png',
-                      width: 280,
+                      width: fullLogoWidth,
                       fit: BoxFit.contain,
                     ),
                   ),
@@ -101,7 +107,7 @@ class _LandingPageState extends State<LandingPage>
                 left: 0,
                 top: 0,
                 bottom: 0,
-                right: 200,
+                right: rightMaskInset,
                 child: Container(
                   width: middleLayerWidth,
                   color: const Color(0xFFDBEAFE),
@@ -112,7 +118,7 @@ class _LandingPageState extends State<LandingPage>
                   offset: Offset(_iconSlideAnimation.value, 0),
                   child: Image.asset(
                     'assets/images/logo.png',
-                    width: 106,
+                    width: iconWidth,
                     fit: BoxFit.contain,
                   ),
                 ),

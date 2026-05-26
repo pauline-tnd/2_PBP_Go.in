@@ -1,12 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/pages/login.dart';
+import 'package:frontend/services/api_services.dart';
 
-class LogoutButton extends StatelessWidget {
+class LogoutButton extends StatefulWidget {
   const LogoutButton({super.key});
+
+  @override
+  State<LogoutButton> createState() => _LogoutButtonState();
+}
+
+class _LogoutButtonState extends State<LogoutButton> {
+  bool _isSubmitting = false;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => _showLogoutDialog(context),
+      onTap: _isSubmitting ? null : () => _showLogoutDialog(context),
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 16),
@@ -21,18 +30,27 @@ class LogoutButton extends StatelessWidget {
             ),
           ],
         ),
-        child: const Row(
+        child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.logout_rounded,
-              size: 20,
-              color: Color(0xFFEF4444),
-            ),
-            SizedBox(width: 10),
+            _isSubmitting
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.2,
+                      color: Color(0xFFEF4444),
+                    ),
+                  )
+                : const Icon(
+                    Icons.logout_rounded,
+                    size: 20,
+                    color: Color(0xFFEF4444),
+                  ),
+            const SizedBox(width: 10),
             Text(
-              'Logout Account',
-              style: TextStyle(
+              _isSubmitting ? 'Logging out...' : 'Logout Account',
+              style: const TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
                 color: Color(0xFFEF4444),
@@ -47,7 +65,7 @@ class LogoutButton extends StatelessWidget {
   void _showLogoutDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
@@ -66,7 +84,7 @@ class LogoutButton extends StatelessWidget {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: _isSubmitting ? null : () => Navigator.pop(dialogContext),
             child: const Text(
               'Cancel',
               style: TextStyle(
@@ -76,7 +94,12 @@ class LogoutButton extends StatelessWidget {
             ),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: _isSubmitting
+                ? null
+                : () async {
+                    Navigator.pop(dialogContext);
+                    await _handleLogout(context);
+                  },
             child: const Text(
               'Logout',
               style: TextStyle(
@@ -87,6 +110,25 @@ class LogoutButton extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Future<void> _handleLogout(BuildContext context) async {
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    try {
+      await ApiService.logout();
+    } catch (_) {
+      await ApiService.clearToken();
+    }
+
+    if (!mounted) return;
+
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const LoginPage()),
+      (route) => false,
     );
   }
 }

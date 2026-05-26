@@ -5,9 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 
-import 'home_page.dart';
 import 'login.dart';
+import 'main_shell.dart';
 import '../services/app_config.dart';
+import '../services/api_services.dart';
+import '../utils/app_responsive.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -128,11 +130,20 @@ class _RegisterPageState extends State<RegisterPage> {
           body: {'email': email, 'password': password},
         ).timeout(const Duration(seconds: 10));
 
+        final Map<String, dynamic>? loginData = loginResponse.body.isNotEmpty
+            ? jsonDecode(loginResponse.body) as Map<String, dynamic>
+            : null;
+
         if (!mounted) return;
 
         if (loginResponse.statusCode == 200) {
+          final token = loginData?['token']?.toString();
+          if (token != null && token.isNotEmpty) {
+            await ApiService.saveToken(token);
+          }
+
           Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (_) => const HomePage()),
+            MaterialPageRoute(builder: (_) => const MainShell()),
             (route) => false,
           );
           return;
@@ -251,7 +262,21 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
-    final panelTopSpacing = screenHeight * 0.25;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isTablet = AppResponsive.isTablet(context);
+    final isDesktop = AppResponsive.isDesktop(context);
+    final panelTopSpacing = screenHeight * (isDesktop ? 0.18 : isTablet ? 0.22 : 0.25);
+    final panelMaxWidth = AppResponsive.contentMaxWidth(
+      context,
+      mobile: 420,
+      tablet: 520,
+      desktop: 560,
+    );
+    final panelPadding = isDesktop ? 36.0 : isTablet ? 32.0 : 28.0;
+    final logoShellSize = isDesktop ? 138.0 : isTablet ? 130.0 : 122.0;
+    final logoShellPadding = isDesktop ? 18.0 : 16.0;
+    final titleFontSize = isDesktop ? 24.0 : isTablet ? 23.0 : 22.0;
+    final actionFontSize = isDesktop ? 19.0 : 18.0;
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
@@ -291,13 +316,18 @@ class _RegisterPageState extends State<RegisterPage> {
               child: SingleChildScrollView(
                 padding: EdgeInsets.only(top: panelTopSpacing),
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 420),
+                  constraints: BoxConstraints(maxWidth: panelMaxWidth),
                   child: Container(
-                    width: double.infinity,
+                    width: screenWidth,
                     constraints: BoxConstraints(
                       minHeight: screenHeight - panelTopSpacing,
                     ),
-                    padding: const EdgeInsets.fromLTRB(28, 82, 28, 28),
+                    padding: EdgeInsets.fromLTRB(
+                      panelPadding,
+                      isDesktop ? 90 : 82,
+                      panelPadding,
+                      panelPadding,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xE6FFFFFF),
                       borderRadius: const BorderRadius.only(
@@ -338,13 +368,13 @@ class _RegisterPageState extends State<RegisterPage> {
                           right: 0,
                           child: Center(
                             child: Container(
-                              width: 122,
-                              height: 122,
+                              width: logoShellSize,
+                              height: logoShellSize,
                               decoration: const BoxDecoration(
                                 color: Color(0xE6FFFFFF),
                                 shape: BoxShape.circle,
                               ),
-                              padding: const EdgeInsets.all(16),
+                              padding: EdgeInsets.all(logoShellPadding),
                               child: Image.asset(
                                 'assets/images/logo.png',
                                 fit: BoxFit.contain,
@@ -356,11 +386,11 @@ class _RegisterPageState extends State<RegisterPage> {
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             const SizedBox(height: 8),
-                            const Text(
+                            Text(
                               'Create Your Account!',
                               textAlign: TextAlign.center,
                               style: TextStyle(
-                                fontSize: 22,
+                                fontSize: titleFontSize,
                                 fontWeight: FontWeight.w700,
                                 color: Color(0xFF25324B),
                               ),
@@ -466,10 +496,10 @@ class _RegisterPageState extends State<RegisterPage> {
                                               ),
                                         ),
                                       )
-                                    : const Text(
+                                    : Text(
                                         'Sign Up',
                                         style: TextStyle(
-                                          fontSize: 18,
+                                          fontSize: actionFontSize,
                                           fontWeight: FontWeight.w600,
                                         ),
                                     ),
@@ -528,11 +558,11 @@ class _RegisterPageState extends State<RegisterPage> {
                                     fit: BoxFit.contain,
                                   ),
                                   const SizedBox(width: 14),
-                                  const Text(
+                                  Text(
                                     'Sign up with Google',
                                     style: TextStyle(
                                       color: Color(0xFF25324B),
-                                      fontSize: 18,
+                                      fontSize: actionFontSize,
                                       fontWeight: FontWeight.w500,
                                     ),
                                   ),

@@ -5,6 +5,7 @@ import 'package:frontend/widgets/activity/activity_header.dart';
 import 'package:frontend/widgets/activity/activity_card.dart';
 import 'package:frontend/widgets/activity/activity_filter_dropdown.dart';
 import 'package:frontend/pages/review_page.dart';
+import 'package:frontend/utils/app_responsive.dart';
 
 // ── Helpers (no locale-data initialization required) ─────────────
 String _formatDate(String isoDate) {
@@ -112,6 +113,14 @@ class _ActivityPageState extends State<ActivityPage> {
 
   @override
   Widget build(BuildContext context) {
+    final horizontalPadding = AppResponsive.horizontalPadding(context);
+    final contentMaxWidth = AppResponsive.contentMaxWidth(
+      context,
+      mobile: 640,
+      tablet: 860,
+      desktop: 1080,
+    );
+
     return Scaffold(
       backgroundColor: const Color(0xFFF0F4F8),
       body: ActivityHeader(
@@ -187,9 +196,17 @@ class _ActivityPageState extends State<ActivityPage> {
 
             return SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(24, 0, 24, 0),
-                child: Column(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: contentMaxWidth),
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      horizontalPadding,
+                      0,
+                      horizontalPadding,
+                      0,
+                    ),
+                    child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Container(
@@ -278,6 +295,8 @@ class _ActivityPageState extends State<ActivityPage> {
                       ),
                     ),
                   ],
+                ),
+                  ),
                 ),
               ),
             );

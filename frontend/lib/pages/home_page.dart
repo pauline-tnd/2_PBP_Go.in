@@ -41,6 +41,7 @@ class _HomePageState extends State<HomePage> {
         return Hotel.fromMap(item as Map<String, dynamic>);
       }).toList();
 
+      if (!mounted) return;
       setState(() {
         _allHotels = fetchedHotels;
         _hotelBadges = assignBadges(_allHotels);
@@ -48,6 +49,7 @@ class _HomePageState extends State<HomePage> {
         _isLoading = false;
       });
     } catch (error) {
+      if (!mounted) return;
       setState(() {
         _isLoading = false;
       });

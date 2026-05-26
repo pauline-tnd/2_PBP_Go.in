@@ -6,15 +6,20 @@ import 'package:frontend/models/room.dart';
 import 'package:frontend/models/booking.dart';
 import 'package:frontend/models/wishlist.dart';
 import 'package:frontend/models/review.dart';
+import 'package:frontend/services/app_config.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://127.0.0.1:8000/api';
+  static String get baseUrl => AppConfig.apiBaseUrl;
 
   // ── Token Helpers ─────────────────────────────────────────────
 
   static Future<void> _saveToken(String token) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('token', token);
+  }
+
+  static Future<void> saveToken(String token) async {
+    await _saveToken(token);
   }
 
   static Future<String> _getToken() async {
@@ -98,6 +103,11 @@ class ApiService {
     } else {
       throw Exception('Logout gagal: ${response.body}');
     }
+  }
+
+  static Future<void> clearToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('token');
   }
 
   // ── User Profile ──────────────────────────────────────────────
