@@ -244,6 +244,7 @@ class _GradientScrollHeaderState extends State<GradientScrollHeader> {
                     right: 0,
                     child: _GradientHeaderBackground(
                       height: widget.expandedHeight,
+                      width: double.infinity,
                       gradientColors: widget.gradientColors,
                       gradientStops: widget.gradientStops,
                       topPadding: topPadding,
@@ -329,6 +330,7 @@ class _GradientScrollHeaderState extends State<GradientScrollHeader> {
 class _GradientHeaderBackground extends StatelessWidget {
   const _GradientHeaderBackground({
     required this.height,
+    required this.width,
     required this.gradientColors,
     required this.gradientStops,
     required this.topPadding,
@@ -338,6 +340,7 @@ class _GradientHeaderBackground extends StatelessWidget {
   });
 
   final double height;
+  final double width;
   final List<Color> gradientColors;
   final List<double> gradientStops;
   final double topPadding;
