@@ -1,9 +1,4 @@
 import 'package:flutter/material.dart';
-import '../widgets/bottom_navbar.dart';
-import 'home_page.dart';
-import 'activity_page.dart';
-import 'promo_page.dart';
-import 'settings/settings_page.dart';
 import 'package:frontend/widgets/bottom_navbar.dart';
 import 'package:frontend/pages/home_page.dart';
 import 'package:frontend/pages/activity_page.dart';
