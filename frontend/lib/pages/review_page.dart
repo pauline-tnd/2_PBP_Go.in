@@ -1,13 +1,45 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:dotted_border/dotted_border.dart';
+import 'package:frontend/services/api_services.dart';
 import 'package:http/http.dart' as http;
+
+class Facility {
+  final String name;
+  final String icon;
+
+  Facility({
+    required this.name,
+    required this.icon,
+  });
+
+  static final Map<String, IconData> iconMap = {
+    'wifi_rounded': Icons.wifi_rounded,
+    'spa_rounded': Icons.spa_rounded,
+    'restaurant_rounded': Icons.restaurant_rounded,
+    'local_laundry_service_rounded': Icons.local_laundry_service_rounded,
+    'pool_rounded': Icons.pool_rounded,
+    'local_parking_rounded': Icons.local_parking_rounded,
+    'airport_shuttle_rounded': Icons.airport_shuttle_rounded,
+    'fitness_center_rounded': Icons.fitness_center_rounded,
+    'pets_rounded': Icons.pets_rounded,
+    'hot_tub_rounded': Icons.hot_tub_rounded,
+  };
+
+  factory Facility.fromJson(Map<String, dynamic> json) {
+    return Facility(
+      name: json['name'] ?? '',
+      icon: json['icon']?['icon']?.toString().trim() ?? '',
+    );
+  }
+}
 
 class HotelReviewDetail {
   final String hotelName;
   final String roomType;
   final String imageName;
   final DateTime checkOutDate;
-  final List<String> facilities;
+  final List<Facility> facilities;
 
   HotelReviewDetail({
     required this.hotelName,
@@ -19,9 +51,9 @@ class HotelReviewDetail {
 
   factory HotelReviewDetail.fromJson(Map<String, dynamic> json) {
     var facilityList = json['hotel']['hotel_facilities'] as List? ?? [];
-    List<String> parsedFacilities = facilityList
-      .map((f) => f['name'].toString())
-      .toList();
+      List<Facility> parsedFacilities = facilityList
+          .map((f) => Facility.fromJson(f))
+          .toList();
 
     var imageList = json['hotel']['hotel_images'] as List? ?? [];
     String img = '';
@@ -72,24 +104,10 @@ class _ReviewPageState extends State<ReviewPage> {
     _hotelDetailFuture = _fetchHotelDetail();
   }
   Future<HotelReviewDetail> _fetchHotelDetail() async {
-    final String apiUrl = "http://localhost:8000/api/bookings/${widget.bookingId}/review-details";
-    try {
-      final response = await http.get(Uri.parse(apiUrl), headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Authorization': 'Bearer 5|qFTHyhTKnuwNY9ltGuzEvTnPqWdBTG8L3unjjJPg42b3e5dd' // kalau pakai auth
-      });
-      print("STATUS CODE: ${response.statusCode}");
-      print("RAW RESPONSE: ${response.body}");
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        return HotelReviewDetail.fromJson(data['data']);
-      } else {
-        throw Exception("Server gagal merespon dengan kode ${response.statusCode}");
-      }
-    } catch (e) {
-      throw Exception("Gagal terhubung ke server: $e");
-    }
+    final response = await ApiService.fetchReviewDetails(
+      int.parse(widget.bookingId),
+    );
+    return HotelReviewDetail.fromJson(response['data']);
   }
 
   void submitReview() async {
@@ -288,7 +306,7 @@ class _ReviewPageState extends State<ReviewPage> {
                                       starValue <= selectedRating ? Icons.star_rounded : Icons.star_border_rounded,
                                       size: 38,
                                       color: starValue <= selectedRating 
-                                          ? const Color(0xFFFFB800)
+                                          ? const Color(0xFF3B82F6)
                                           : const Color(0xFF94A3B8).withOpacity(0.75),
                                     ),
                                   ),
@@ -348,7 +366,7 @@ class _ReviewPageState extends State<ReviewPage> {
                             Align(
                               alignment: Alignment.bottomRight,
                               child: Text(
-                                "Maximum 500 characters",
+                                "${500 - reviewController.text.length} characters left",
                                 style: TextStyle(
                                   fontFamily: 'Plus Jakarta Sans',
                                   fontWeight: FontWeight.w400,
@@ -371,29 +389,39 @@ class _ReviewPageState extends State<ReviewPage> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      Container(
-                        width: 96,
-                        height: 96,
-                        decoration: BoxDecoration(
-                          border: Border.all(color: const Color(0xFFCBD5E1), width: 2),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: const Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.camera_alt_outlined, color: Color(0xFF94A3B8), size: 28),
-                            SizedBox(height: 6),
-                            Text(
-                              "CAMERA/\nGALLERY",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontFamily: 'Rubik',
-                                fontWeight: FontWeight.w600,
-                                fontSize: 10,
+                      DottedBorder(
+                        color: const Color(0xFFCBD5E1),
+                        strokeWidth: 2,
+                        borderType: BorderType.RRect,
+                        radius: const Radius.circular(16),
+                        dashPattern: const [8, 8],
+                        child: Container(
+                          width: 96,
+                          height: 96,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: const Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.camera_alt_outlined,
                                 color: Color(0xFF94A3B8),
+                                size: 28,
                               ),
-                            )
-                          ],
+                              SizedBox(height: 6),
+                              Text(
+                                "CAMERA/\nGALLERY",
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontFamily: 'Rubik',
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 10,
+                                  color: Color(0xFF94A3B8),
+                                ),
+                              )
+                            ],
+                          ),
                         ),
                       ),
                       const SizedBox(height: 24),
@@ -411,16 +439,24 @@ class _ReviewPageState extends State<ReviewPage> {
                         spacing: 10,
                         runSpacing: 10,
                         children: hotel.facilities.map((facility) {
-                          final isSelected = selectedHighlights.contains(facility);
+                          final isSelected = selectedHighlights.contains(facility.name);
+                          IconData facilityIcon = Facility.iconMap[facility.icon] ?? Icons.check_circle;
                           return FilterChip(
-                            label: Text(facility),
+                            avatar: Icon(
+                              facilityIcon,
+                              size: 18,
+                              color: isSelected
+                                  ? Colors.white
+                                  : const Color(0xFF3B82F6),
+                            ),
+                            label: Text(facility.name),
                             selected: isSelected,
                             onSelected: (value) {
                               setState(() {
                                 if (value) {
-                                  selectedHighlights.add(facility);
+                                  selectedHighlights.add(facility.name);
                                 } else {
-                                  selectedHighlights.remove(facility);
+                                  selectedHighlights.remove(facility.name);
                                 }
                               });
                             },
@@ -428,14 +464,18 @@ class _ReviewPageState extends State<ReviewPage> {
                               fontFamily: 'Plus Jakarta Sans',
                               fontWeight: FontWeight.w500,
                               fontSize: 14,
-                              color: isSelected ? Colors.white : const Color(0xFF3B82F6).withOpacity(0.88),
+                              color: isSelected
+                                  ? Colors.white
+                                  : const Color(0xFF3B82F6).withOpacity(0.88),
                             ),
                             backgroundColor: Colors.white,
                             selectedColor: const Color(0xFF3B82F6),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16),
                               side: BorderSide(
-                                color: isSelected ? const Color(0xFF3B82F6) : const Color(0xFF3B82F6).withOpacity(0.38),
+                                color: isSelected
+                                    ? const Color(0xFF3B82F6)
+                                    : const Color(0xFF3B82F6).withOpacity(0.38),
                               ),
                             ),
                             showCheckmark: false,

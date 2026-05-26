@@ -113,7 +113,7 @@ class BookingController extends Controller
     {
         $booking = Booking::with([
             'bookingDetails.room.hotel.hotelImages',
-            'bookingDetails.room.hotel.hotelFacilities'
+            'bookingDetails.room.hotel.hotelFacilities.icon'
         ])->find($id);
         if (!$booking) {
             return response()->json([

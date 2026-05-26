@@ -27,7 +27,7 @@ class ApiService {
     return {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
-      'Authorization': 'Bearer $token',
+      'Authorization': 'Bearer 9|7aXsoJcYckeDyurYydRyiE5g8Vzbg6PDntM5fLOa77c4d11f',
     };
   }
 
@@ -172,7 +172,7 @@ class ApiService {
       'PUT',
       Uri.parse('$baseUrl/user/profile'),
     );
-    request.headers['Authorization'] = 'Bearer $token';
+    request.headers['Authorization'] = 'Bearer 9|7aXsoJcYckeDyurYydRyiE5g8Vzbg6PDntM5fLOa77c4d11f';
     request.headers['Accept'] = 'application/json';
     request.files.add(
       await http.MultipartFile.fromPath('profile_image', imageFile.path),
@@ -442,7 +442,7 @@ class ApiService {
       'POST',
       Uri.parse('$baseUrl/reviews'),
     );
-    request.headers['Authorization'] = 'Bearer $token';
+    request.headers['Authorization'] = 'Bearer 9|7aXsoJcYckeDyurYydRyiE5g8Vzbg6PDntM5fLOa77c4d11f';
     request.headers['Accept'] = 'application/json';
 
     request.fields['user_id'] = userId.toString();
@@ -483,7 +483,7 @@ class ApiService {
     );
     // Laravel doesn't support PUT multipart natively, use _method override
     request.fields['_method'] = 'PUT';
-    request.headers['Authorization'] = 'Bearer $token';
+    request.headers['Authorization'] = 'Bearer 9|7aXsoJcYckeDyurYydRyiE5g8Vzbg6PDntM5fLOa77c4d11f';
     request.headers['Accept'] = 'application/json';
 
     if (userId != null) request.fields['user_id'] = userId.toString();
@@ -720,6 +720,20 @@ class ApiService {
       return jsonDecode(response.body);
     } else {
       throw Exception('Failed to delete booking detail: ${response.body}');
+    }
+  }
+
+  // GET /bookings/{booking}/review-details
+  static Future<Map<String, dynamic>> fetchReviewDetails(int bookingId) async {
+    final headers = await _authHeaders();
+    final response = await http.get(
+      Uri.parse('$baseUrl/bookings/$bookingId/review-details'),
+      headers: headers,
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to load review details: ${response.body}');
     }
   }
 
