@@ -10,8 +10,11 @@ class BookingDetail extends Model
     use HasFactory;
 
     protected $table = 'booking_details';
+
     protected $primaryKey = 'id';
+
     public $incrementing = true;
+
     protected $keyType = 'int';
 
     protected $fillable = [

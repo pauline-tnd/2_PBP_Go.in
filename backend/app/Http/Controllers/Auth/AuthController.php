@@ -35,7 +35,7 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        if (!Auth::attempt($validated)) {
+        if (! Auth::attempt($validated)) {
             return response()->json([
                 'message' => 'Email or Password incorrect.',
             ], 401);
@@ -44,7 +44,7 @@ class AuthController extends Controller
         $user = $request->user();
 
         $user->tokens()->delete();
-        
+
         $token = $user->createToken('Personal Access Token')->plainTextToken;
 
         return response()->json([
@@ -127,20 +127,21 @@ class AuthController extends Controller
         ], 200);
     }
 
-    public function logout() {
+    public function logout()
+    {
 
         $user = Auth::user();
 
-        if(!$user){
+        if (! $user) {
             return response()->json([
                 'message' => 'Not authorized',
             ], 401);
         }
 
         $user->currentAccessToken()->delete();
-        
+
         return response()->json([
-            'message'=> 'Logged out successfully',
+            'message' => 'Logged out successfully',
         ], 200);
     }
 

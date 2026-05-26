@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Room;
-use Illuminate\Http\Request;
 
 class RoomController extends Controller
 {
@@ -24,17 +23,17 @@ class RoomController extends Controller
         $room = Room::where('hotel_id', $hotelId)->with([
             'roomImages',
             'roomFacilities.icon', // facilities and icon
-            'hotel.addOns.icon' // get add on from hotel
+            'hotel.addOns.icon', // get add on from hotel
         ])->find($id);
 
-        if (!$room) { // invalid id
+        if (! $room) { // invalid id
             return response()->json([
                 'message' => 'Room not found',
             ], 404);
         }
 
         return response()->json([ // success
-            'data' => $room
+            'data' => $room,
         ], 200);
     }
 }

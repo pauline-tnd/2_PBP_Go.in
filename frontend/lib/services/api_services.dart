@@ -6,9 +6,10 @@ import 'package:frontend/models/room.dart';
 import 'package:frontend/models/booking.dart';
 import 'package:frontend/models/wishlist.dart';
 import 'package:frontend/models/review.dart';
+import 'package:frontend/services/app_config.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://127.0.0.1:8000/api';
+  static String get baseUrl => AppConfig.apiBaseUrl;
 
   // ── Token Helpers ─────────────────────────────────────────────
 
@@ -24,11 +25,16 @@ class ApiService {
 
   static Future<Map<String, String>> _authHeaders() async {
     final token = await _getToken();
-    return {
+    final headers = <String, String>{
       'Content-Type': 'application/json',
       'Accept': 'application/json',
-      'Authorization': 'Bearer $token',
     };
+
+    if (token.isNotEmpty) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+
+    return headers;
   }
 
   // ── Authentication ────────────────────────────────────────────

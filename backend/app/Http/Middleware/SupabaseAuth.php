@@ -3,10 +3,10 @@
 namespace App\Http\Middleware;
 
 use Closure;
-use Illuminate\Http\Request;
+use Firebase\JWT\ExpiredException;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
-use Firebase\JWT\ExpiredException;
+use Illuminate\Http\Request;
 
 class SupabaseAuth
 {
@@ -14,7 +14,7 @@ class SupabaseAuth
     {
         $token = $request->bearerToken();
 
-        if (!$token) {
+        if (! $token) {
             return response()->json(['error' => 'No token provided'], 401);
         }
 
@@ -27,8 +27,8 @@ class SupabaseAuth
             // Attach user data to request
             $request->merge([
                 'supabase_user_id' => $decoded->sub,
-                'supabase_email'   => $decoded->email ?? null,
-                'supabase_role'    => $decoded->role ?? 'anon',
+                'supabase_email' => $decoded->email ?? null,
+                'supabase_role' => $decoded->role ?? 'anon',
             ]);
 
         } catch (ExpiredException $e) {

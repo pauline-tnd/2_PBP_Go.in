@@ -18,7 +18,7 @@ class Room extends Model
         'price',
         'capacity',
         'bed_type',
-        'room_size'
+        'room_size',
     ];
 
     protected $casts = [

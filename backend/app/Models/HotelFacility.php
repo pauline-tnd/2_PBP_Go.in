@@ -18,7 +18,7 @@ class HotelFacility extends Model
     ];
 
     protected $casts = [
-        'name' => 'string'
+        'name' => 'string',
     ];
 
     public function hotel()
