@@ -7,15 +7,39 @@ import 'package:intl/intl.dart';
 class HotelCard extends StatefulWidget {
   final Hotel hotel;
   final HotelBadge? badge;
+  final bool initialIsWishlisted;
+  final bool isFavoriteLoading;
+  final VoidCallback? onFavoriteTap;
 
-  const HotelCard({super.key, required this.hotel, this.badge});
+  const HotelCard({
+    super.key,
+    required this.hotel,
+    this.badge,
+    this.initialIsWishlisted = false,
+    this.isFavoriteLoading = false,
+    this.onFavoriteTap,
+  });
 
   @override
   State<HotelCard> createState() => _HotelCardState();
 }
 
 class _HotelCardState extends State<HotelCard> {
-  bool _isWishlisted = false;
+  late bool _isWishlisted;
+
+  @override
+  void initState() {
+    super.initState();
+    _isWishlisted = widget.initialIsWishlisted;
+  }
+
+  @override
+  void didUpdateWidget(covariant HotelCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.initialIsWishlisted != widget.initialIsWishlisted) {
+      _isWishlisted = widget.initialIsWishlisted;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +79,10 @@ class _HotelCardState extends State<HotelCard> {
                   top: 12,
                   left: 12,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 5,
+                    ),
                     decoration: BoxDecoration(
                       color: hotel.badgeColor(badge),
                       borderRadius: BorderRadius.circular(12),
@@ -86,10 +113,16 @@ class _HotelCardState extends State<HotelCard> {
                 top: 12,
                 right: 12,
                 child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
                   onTap: () {
-                    setState(() {
-                      _isWishlisted = !_isWishlisted;
-                    });
+                    if (widget.isFavoriteLoading) return;
+                    if (widget.onFavoriteTap != null) {
+                      widget.onFavoriteTap!();
+                    } else {
+                      setState(() {
+                        _isWishlisted = !_isWishlisted;
+                      });
+                    }
                   },
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(20),
@@ -106,15 +139,24 @@ class _HotelCardState extends State<HotelCard> {
                             width: 0.5,
                           ),
                         ),
-                        child: Icon(
-                          _isWishlisted
-                              ? Icons.favorite_rounded
-                              : Icons.favorite_border_rounded,
-                          size: 20,
-                          color: _isWishlisted
-                              ? const Color(0xFFEF4444)
-                              : Colors.white,
-                        ),
+                        child: widget.isFavoriteLoading
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : Icon(
+                                _isWishlisted
+                                    ? Icons.favorite_rounded
+                                    : Icons.favorite_border_rounded,
+                                size: 20,
+                                color: _isWishlisted
+                                    ? const Color(0xFFEF4444)
+                                    : Colors.white,
+                              ),
                       ),
                     ),
                   ),
@@ -184,10 +226,7 @@ class _HotelCardState extends State<HotelCard> {
                   ],
                 ),
                 const SizedBox(height: 12),
-                Container(
-                  height: 1,
-                  color: const Color(0xFFF1F5F9),
-                ),
+                Container(height: 1, color: const Color(0xFFF1F5F9)),
                 const SizedBox(height: 12),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
