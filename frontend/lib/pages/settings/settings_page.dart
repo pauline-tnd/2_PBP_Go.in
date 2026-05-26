@@ -1,5 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/pages/settings/contact_us_page.dart';
+import 'package:frontend/pages/settings/edit_profile_page.dart';
+import 'package:frontend/pages/settings/faq_page.dart';
+import 'package:frontend/pages/settings/help_centre_page.dart';
+import 'package:frontend/pages/settings/preferences_page.dart';
 import 'package:frontend/widgets/bottom_navbar.dart';
+import 'package:frontend/widgets/settings/settings_group.dart';
+import 'package:frontend/widgets/settings/settings_section_title.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});

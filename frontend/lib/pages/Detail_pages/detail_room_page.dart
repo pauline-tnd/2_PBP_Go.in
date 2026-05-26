@@ -424,9 +424,6 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
 
                       const SizedBox(height: 12),
 
-                      final Map<String, dynamic> review;
-                      const _ReviewCard({required this.review});
-
                       SizedBox(
                         height: 120,
                         child: ListView.separated(

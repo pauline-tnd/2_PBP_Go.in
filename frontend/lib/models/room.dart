@@ -1,6 +1,5 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:frontend/models/addOn.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class Room {
   final int id;
@@ -24,21 +23,32 @@ class Room {
   });
 
   factory Room.fromJson(Map<String, dynamic> json) {
+    int parseInt(dynamic value) {
+      if (value is int) return value;
+      return int.tryParse(value?.toString() ?? '') ?? 0;
+    }
+
+    double parseDouble(dynamic value) {
+      if (value is num) return value.toDouble();
+      return double.tryParse(value?.toString() ?? '') ?? 0.0;
+    }
+
     final rawAddOns = json['hotel']?['add_ons'] as List<dynamic>? ?? [];
 
     return Room(
-      id: json['id'] ?? 0,
-      hotelId: json['hotel_id'] ?? 0,
+      id: parseInt(json['id']),
+      hotelId: parseInt(json['hotel_id']),
       type: json['type'] ?? 'No Type',
       description: json['description'] ?? 'No Description',
-      price: json['price'] ?? 0.0,
-      capacity: json['capacity'] ?? 0,
-      roomSize: json['room_size'] ?? 'No Size',
+      price: parseDouble(json['price']),
+      capacity: parseInt(json['capacity']),
+      roomSize: json['room_size']?.toString() ?? 'No Size',
       addOns: rawAddOns
           .map(
             (e) => AddOnItem(
               name: e['name'] ?? '',
               price: double.tryParse(e['price'].toString()) ?? 0.0,
+              icon: Icons.add_circle_outline_rounded,
             ),
           )
           .toList(),

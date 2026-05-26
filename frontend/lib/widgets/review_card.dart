@@ -5,6 +5,10 @@ import 'hotel_image.dart';
 import 'package:intl/intl.dart';
 
 class ReviewCard extends StatelessWidget {
+  final Map<String, dynamic> review;
+
+  const ReviewCard({super.key, required this.review});
+
   @override
   Widget build(BuildContext context) {
     final rating = (review['rating'] as num? ?? 0).toInt();

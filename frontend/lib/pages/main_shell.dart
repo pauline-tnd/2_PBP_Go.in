@@ -3,7 +3,7 @@ import 'package:frontend/widgets/bottom_navbar.dart';
 import 'package:frontend/pages/home_page.dart';
 import 'package:frontend/pages/activity_page.dart';
 import 'package:frontend/pages/promo_page.dart';
-import 'package:frontend/pages/settings_page.dart';
+import 'package:frontend/pages/settings/settings_page.dart';
 import 'package:frontend/pages/wishlist_page.dart';
 
 class MainShell extends StatefulWidget {

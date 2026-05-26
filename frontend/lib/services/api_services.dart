@@ -347,6 +347,27 @@ class ApiService {
     }
   }
 
+  static Future<Map<String, dynamic>> deleteWishlistByHotelId(
+    int hotelId,
+  ) async {
+    final wishlists = await fetchWishlists();
+    Object? lastError;
+
+    for (final wishlist in wishlists) {
+      if (wishlist.hotelId == hotelId) {
+        try {
+          return await deleteWishlist(wishlist.id);
+        } catch (error) {
+          lastError = error;
+        }
+      }
+    }
+
+    throw Exception(
+      lastError?.toString() ?? 'Wishlist not found for this hotel',
+    );
+  }
+
   // ── Reviews ───────────────────────────────────────────────────
   // GET /reviews
   static Future<List<Review>> fetchReviews() async {

@@ -6,17 +6,20 @@ class Review {
   final int userId;
   final int roomId;
   final int bookingDetailId;
-  final double rating;
+  final int rating;
   final String description;
-  final int capacity;
+  final String? image;
+  final String? createdAt;
 
   Review({
     required this.id,
     required this.userId,
     required this.roomId,
     required this.bookingDetailId,
+    required this.rating,
+    required this.description,
+    this.image,
     this.createdAt,
-    required this.capacity,
   });
 
   factory Review.fromJson(Map<String, dynamic> json) {
@@ -25,10 +28,13 @@ class Review {
       userId: json['user_id'] ?? 0,
       roomId: json['room_id'] ?? 0,
       bookingDetailId: json['booking_detail_id'] ?? 0,
-      rating: json['rating'] ?? 0,
+      rating: (json['rating'] as num?)?.toInt() ?? 0,
       description: json['description'] ?? '',
+      image: json['image'],
+      createdAt: json['created_at'],
     );
   }
+
   Map<String, dynamic> toJson() {
     return {
       'id': id,
