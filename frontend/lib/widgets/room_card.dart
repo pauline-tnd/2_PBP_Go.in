@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:frontend/pages/Detail_pages/detail_room_page.dart';
 
 import '../models/room.dart';
-import 'room_image.dart';
+import 'package:frontend/widgets/common/carousel.dart';
 
 class RoomCard extends StatefulWidget {
   final Room room;
@@ -35,7 +35,9 @@ class RoomCard extends StatefulWidget {
 
 class _RoomCardState extends State<RoomCard> {
   void _openDetailRoomPage() {
-    final imageUrls = widget.imageUrls.isNotEmpty
+    final imageUrls = widget.room.roomImages.isNotEmpty
+        ? widget.room.roomImages
+        : widget.imageUrls.isNotEmpty
         ? widget.imageUrls
         : [if (widget.imageUrl != null) widget.imageUrl!];
     final addOns =
@@ -60,17 +62,22 @@ class _RoomCardState extends State<RoomCard> {
   @override
   Widget build(BuildContext context) {
     final room = widget.room;
-    final imageUrl = widget.imageUrl;
+
+    final images = room.roomImages.isNotEmpty
+        ? room.roomImages
+        : widget.imageUrls.isNotEmpty
+        ? widget.imageUrls
+        : [if (widget.imageUrl != null) widget.imageUrl!];
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFFFFF),
-        borderRadius: BorderRadius.circular(16),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF1E293B).withAlpha(15),
-            blurRadius: 16,
+            color: const Color(0xFF1E293B).withAlpha(13),
+            blurRadius: 20,
             offset: const Offset(0, 4),
           ),
         ],
@@ -78,49 +85,63 @@ class _RoomCardState extends State<RoomCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          RoomImage(
-            imagePath: imageUrl,
-            placeholderColor: const Color(0xFF94A3B8),
-            width: double.infinity,
-            height: 180,
+          ClipRRect(
             borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(16),
-              topRight: Radius.circular(16),
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
             ),
+            child: images.isEmpty
+                ? Container(
+                    width: double.infinity,
+                    height: 200,
+                    color: const Color(0xFF94A3B8),
+                    child: Icon(
+                      Icons.meeting_room_rounded,
+                      color: Colors.white.withValues(alpha: 0.3),
+                      size: 48,
+                    ),
+                  )
+                : Carousel(imageUrls: images, height: 200),
           ),
+
           Padding(
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      room.type,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF1E293B),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            room.type,
+                            style: const TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF1E293B),
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${room.roomSize} m²',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: Color(0xFF94A3B8),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    Text(
-                      '${room.roomSize} m²',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w400,
-                        color: Color(0xFF94A3B8),
-                      ),
-                    ),
-                    const Spacer(),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text(
                           'Rp ${NumberFormat('#,###', 'id_ID').format(room.price.toInt())}',
                           style: const TextStyle(
-                            fontSize: 16,
+                            fontSize: 17,
                             fontWeight: FontWeight.w700,
                             color: Color(0xFF3B82F6),
                           ),
@@ -128,16 +149,17 @@ class _RoomCardState extends State<RoomCard> {
                         const Text(
                           '/night',
                           style: TextStyle(
-                            fontSize: 11,
+                            fontSize: 12,
                             color: Color(0xFF94A3B8),
-                            fontWeight: FontWeight.w400,
                           ),
                         ),
                       ],
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+
+                const SizedBox(height: 10),
+
                 Row(
                   children: [
                     const Icon(
@@ -153,7 +175,7 @@ class _RoomCardState extends State<RoomCard> {
                         color: Color(0xFF64748B),
                       ),
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: 20),
                     const Icon(
                       Icons.bed_outlined,
                       size: 16,
@@ -161,7 +183,7 @@ class _RoomCardState extends State<RoomCard> {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      room.type,
+                      '1 ${room.type} bed',
                       style: const TextStyle(
                         fontSize: 13,
                         color: Color(0xFF64748B),
@@ -169,7 +191,9 @@ class _RoomCardState extends State<RoomCard> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 14),
+
+                const SizedBox(height: 16),
+
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
@@ -177,9 +201,9 @@ class _RoomCardState extends State<RoomCard> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF3B82F6),
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(50),
                       ),
                       elevation: 0,
                     ),

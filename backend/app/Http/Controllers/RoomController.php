@@ -9,7 +9,7 @@ class RoomController extends Controller
     public function index($hotelId) // all rooms in hotel
     {
         $rooms = Room::where('hotel_id', $hotelId)->with([
-            'roomImage',
+            'roomImages',
             'roomFacilities.icon', // king bed, size ?
         ])->get();
 

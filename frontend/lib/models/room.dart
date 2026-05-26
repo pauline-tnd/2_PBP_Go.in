@@ -10,6 +10,7 @@ class Room {
   final int capacity;
   final String roomSize;
   final List<AddOnItem> addOns;
+  final List<String> roomImages;
 
   Room({
     required this.id,
@@ -20,6 +21,7 @@ class Room {
     required this.capacity,
     required this.roomSize,
     required this.addOns,
+    required this.roomImages,
   });
 
   factory Room.fromJson(Map<String, dynamic> json) {
@@ -51,6 +53,10 @@ class Room {
               icon: Icons.add_circle_outline_rounded,
             ),
           )
+          .toList(),
+      roomImages: (json['room_images'] as List<dynamic>? ?? [])
+          .map((e) => e['image']?.toString() ?? '')
+          .where((s) => s.isNotEmpty)
           .toList(),
     );
   }
