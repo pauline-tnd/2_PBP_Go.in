@@ -29,12 +29,10 @@ class _LandingPageState extends State<LandingPage>
       duration: const Duration(milliseconds: 1300),
     );
 
-    // logo.png: mulai dari tengah, lalu bergerak ke kiri
     _iconSlideAnimation = Tween<double>(begin: 0, end: -50).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOutCubic),
     );
 
-    // Go.in-Logo.png: mulai dari kiri, lalu bergerak ke kanan
     _fullLogoSlideAnimation = Tween<double>(begin: -70, end: 70).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOutCubic),
     );
@@ -84,8 +82,6 @@ class _LandingPageState extends State<LandingPage>
         builder: (context, _) {
           return Stack(
             children: [
-              // Layer 1: Go.in-Logo.png
-              // Posisi awal: kiri layar, tapi tengah secara vertikal
               Positioned(
                 left: 0,
                 top: 0,
@@ -101,9 +97,6 @@ class _LandingPageState extends State<LandingPage>
                   ),
                 ),
               ),
-
-              // Layer 2: layer tengah
-              // Tetap ada meskipun animasi sudah selesai
               Positioned(
                 left: 0,
                 top: 0,
@@ -114,9 +107,6 @@ class _LandingPageState extends State<LandingPage>
                   color: const Color(0xFFDBEAFE),
                 ),
               ),
-
-              // Layer 3: logo.png
-              // Posisi awal: tengah layar
               Center(
                 child: Transform.translate(
                   offset: Offset(_iconSlideAnimation.value, 0),

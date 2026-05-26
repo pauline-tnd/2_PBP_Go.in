@@ -4,8 +4,8 @@ import '../models/hotel.dart';
 import '../widgets/bottom_navbar.dart';
 import '../widgets/hotel_card.dart';
 import '../widgets/sorting_bar.dart';
+import '../widgets/skeleton_loader.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'loading_page.dart';
 
 class FilterState {
   final RangeValues priceRange;
@@ -170,7 +170,7 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return const SearchResultsSkeletonPage();
     }
     final hotels = _filteredAndSortedHotels;
 

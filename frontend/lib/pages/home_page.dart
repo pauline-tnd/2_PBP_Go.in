@@ -6,6 +6,7 @@ import '../widgets/home/home_search_card.dart';
 import '../widgets/home/home_promo_banner.dart';
 import '../widgets/home/home_recommended_section.dart';
 import '../widgets/home/home_you_might_like.dart';
+import '../widgets/skeleton_loader.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -73,28 +74,19 @@ class _HomePageState extends State<HomePage> {
 
             // Recommended For You section
             _isLoading
-                ? const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 40),
-                    child: Center(
-                      child: CircularProgressIndicator(
-                        color: Color(0xFF3B82F6),
-                        strokeWidth: 2.5,
+                ? const HomeDataSkeleton()
+                : Column(
+                    children: [
+                      HomeRecommendedSection(
+                        hotels: _allHotels,
+                        hotelBadges: _hotelBadges,
                       ),
-                    ),
-                  )
-                : HomeRecommendedSection(
-                    hotels: _allHotels,
-                    hotelBadges: _hotelBadges,
-                  ),
-
-            const SizedBox(height: 8),
-
-            // You Might Like section
-            _isLoading
-                ? const SizedBox.shrink()
-                : HomeYouMightLike(
-                    hotels: _allHotels,
-                    hotelBadges: _hotelBadges,
+                      const SizedBox(height: 8),
+                      HomeYouMightLike(
+                        hotels: _allHotels,
+                        hotelBadges: _hotelBadges,
+                      ),
+                    ],
                   ),
 
             // Bottom padding for navbar

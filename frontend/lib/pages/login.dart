@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -7,7 +8,6 @@ import 'package:http/http.dart' as http;
 import 'home_page.dart';
 import 'register.dart';
 import '../services/app_config.dart';
-import '../services/google_auth_service.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -27,7 +27,7 @@ class _LoginPageState extends State<LoginPage> {
   String? _passwordError;
   String? _generalError;
 
-  String get _apiBaseUrl => AppConfig.apiBaseUrl;
+  String get _authBaseUrl => AppConfig.mobileAuthBaseUrl;
 
   @override
   void dispose() {
@@ -75,10 +75,10 @@ class _LoginPageState extends State<LoginPage> {
 
     try {
       final response = await http.post(
-        Uri.parse('$_apiBaseUrl/login'),
+        Uri.parse('$_authBaseUrl/login'),
         headers: {'Accept': 'application/json'},
         body: {'email': email, 'password': password},
-      );
+      ).timeout(const Duration(seconds: 10));
 
       final Map<String, dynamic>? data = response.body.isNotEmpty
           ? jsonDecode(response.body) as Map<String, dynamic>
@@ -108,13 +108,21 @@ class _LoginPageState extends State<LoginPage> {
         setState(() {
           _emailError = _extractFirstError(errors, 'email');
           _passwordError = _extractFirstError(errors, 'password');
-          _generalError = backendMessage;
+          _generalError =
+              _extractAnyError(errors) ??
+              backendMessage;
         });
       } else {
         setState(() {
           _generalError = backendMessage;
         });
       }
+    } on TimeoutException {
+      if (!mounted) return;
+      setState(() {
+        _generalError =
+            'The login request timed out. Check your backend connection.';
+      });
     } catch (_) {
       if (!mounted) return;
       setState(() {
@@ -130,35 +138,6 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  Future<void> _handleGoogleSignIn() async {
-    FocusScope.of(context).unfocus();
-    setState(() {
-      _generalError = null;
-      _emailError = null;
-      _passwordError = null;
-      _isSubmitting = true;
-    });
-
-    final result = await GoogleAuthService.signInWithGoogle(_apiBaseUrl);
-
-    if (!mounted) return;
-
-    if (result.isSuccess) {
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const HomePage()),
-        (route) => false,
-      );
-      return;
-    }
-
-    setState(() {
-      _generalError = result.wasCancelled
-          ? null
-          : result.message ?? 'Google sign-in failed. Please try again.';
-      _isSubmitting = false;
-    });
-  }
-
   String? _extractFirstError(dynamic errors, String field) {
     if (errors is Map<String, dynamic> && errors[field] is List) {
       final fieldErrors = errors[field] as List<dynamic>;
@@ -167,6 +146,30 @@ class _LoginPageState extends State<LoginPage> {
       }
     }
     return null;
+  }
+
+  String? _extractAnyError(dynamic errors) {
+    if (errors is Map<String, dynamic>) {
+      for (final value in errors.values) {
+        if (value is List && value.isNotEmpty) {
+          return value.first.toString();
+        }
+      }
+    }
+    return null;
+  }
+
+  Future<void> _handleGoogleSignIn() async {
+    FocusScope.of(context).unfocus();
+    setState(() {
+      _generalError = null;
+      _emailError = null;
+      _passwordError = null;
+    });
+
+    setState(() {
+      _generalError = 'Google sign-in is currently unavailable.';
+    });
   }
 
   @override
@@ -389,7 +392,7 @@ class _LoginPageState extends State<LoginPage> {
                                           fontSize: 18,
                                           fontWeight: FontWeight.w600,
                                         ),
-                                      ),
+                                    ),
                               ),
                             ),
                             const SizedBox(height: 20),
@@ -445,7 +448,7 @@ class _LoginPageState extends State<LoginPage> {
                                     fit: BoxFit.contain,
                                   ),
                                   const SizedBox(width: 14),
-                                  Text(
+                                  const Text(
                                     'Sign in with Google',
                                     style: TextStyle(
                                       color: Color(0xFF25324B),

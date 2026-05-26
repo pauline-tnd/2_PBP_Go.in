@@ -36,7 +36,9 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF3B82F6)),
       ),
       home: const LandingPage(),
-      routes: {'/search-results': (context) => const SearchResultsPage()},
+      routes: {
+        '/search-results': (context) => const SearchResultsPage(),
+      },
     );
   }
 }

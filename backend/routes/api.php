@@ -18,6 +18,12 @@ use App\Http\Controllers\{
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/google-login', [AuthController::class, 'googleLogin']);
+Route::prefix('mobile-auth')->group(function () {
+    Route::get('/ping', fn () => response()->json(['message' => 'ok'], 200));
+    Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/google-login', [AuthController::class, 'googleLogin']);
+});
 
 // Protected Route
 Route::middleware('auth:sanctum')->group(function () {
