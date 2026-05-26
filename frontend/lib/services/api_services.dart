@@ -8,7 +8,7 @@ import 'package:frontend/models/wishlist.dart';
 import 'package:frontend/models/review.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://127.0.0.1:8000/api';
+  static const String baseUrl = 'http://192.168.18.135:8000/api';
 
   // ── Token Helpers ─────────────────────────────────────────────
 
@@ -27,7 +27,7 @@ class ApiService {
     return {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
-      'Authorization': 'Bearer 9|7aXsoJcYckeDyurYydRyiE5g8Vzbg6PDntM5fLOa77c4d11f',
+      'Authorization': 'Bearer $token',
     };
   }
 
@@ -172,7 +172,7 @@ class ApiService {
       'PUT',
       Uri.parse('$baseUrl/user/profile'),
     );
-    request.headers['Authorization'] = 'Bearer 9|7aXsoJcYckeDyurYydRyiE5g8Vzbg6PDntM5fLOa77c4d11f';
+    request.headers['Authorization'] = 'Bearer $token';
     request.headers['Accept'] = 'application/json';
     request.files.add(
       await http.MultipartFile.fromPath('profile_image', imageFile.path),
@@ -442,7 +442,7 @@ class ApiService {
       'POST',
       Uri.parse('$baseUrl/reviews'),
     );
-    request.headers['Authorization'] = 'Bearer 9|7aXsoJcYckeDyurYydRyiE5g8Vzbg6PDntM5fLOa77c4d11f';
+    request.headers['Authorization'] = 'Bearer $token';
     request.headers['Accept'] = 'application/json';
 
     request.fields['user_id'] = userId.toString();
@@ -453,7 +453,13 @@ class ApiService {
     request.fields['created_at'] = createdAt;
 
     if (image != null) {
-      request.files.add(await http.MultipartFile.fromPath('image', image.path));
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'image',
+          image.path,
+          filename: image.path.split('/').last,
+        ),
+      );
     }
 
     final streamedResponse = await request.send();
@@ -483,7 +489,7 @@ class ApiService {
     );
     // Laravel doesn't support PUT multipart natively, use _method override
     request.fields['_method'] = 'PUT';
-    request.headers['Authorization'] = 'Bearer 9|7aXsoJcYckeDyurYydRyiE5g8Vzbg6PDntM5fLOa77c4d11f';
+    request.headers['Authorization'] = 'Bearer $token';
     request.headers['Accept'] = 'application/json';
 
     if (userId != null) request.fields['user_id'] = userId.toString();
@@ -495,7 +501,13 @@ class ApiService {
     if (description != null) request.fields['description'] = description;
 
     if (image != null) {
-      request.files.add(await http.MultipartFile.fromPath('image', image.path));
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'image',
+          image.path,
+          filename: image.path.split('/').last,
+        ),
+      );
     }
 
     final streamedResponse = await request.send();
