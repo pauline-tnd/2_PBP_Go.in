@@ -37,7 +37,7 @@ class ApiService {
 
   static Future<Map<String, String>> _authHeaders() async {
     // final token = await _getToken();
-    final token = "62uIBmFojnX96ZLrsJ783UEIMtaHnN13aocR4y1L0e30eb4f";
+    final token = "tokentempeldisini";
     return {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
