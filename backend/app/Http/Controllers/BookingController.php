@@ -8,19 +8,22 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Http;
 
 class BookingController extends Controller
 {
     public function index()
     {
         $userId = Auth::user()->id;
-        
+
         $bookings = Booking::with([
             'bookingDetails.room.hotel',
+            'bookingDetails.addOns.addOn',
+        ,
             'bookingDetails.review'
         ])
-        ->where('user_id', $userId)
-        ->get();
+            ->where('user_id', $userId)
+            ->get();
         if ($bookings->isEmpty()) {
             return response()->json([
                 'message' => 'User belum memiliki booking'
@@ -31,7 +34,10 @@ class BookingController extends Controller
 
     public function show(Booking $booking)
     {
-        $booking->load(['bookingDetails.room.hotel']);
+        $booking->load([
+            'bookingDetails.room.hotel',
+            'bookingDetails.addOns.addOn',
+        ]);
 
         if (!$booking) {
             return response()->json([
@@ -64,13 +70,19 @@ class BookingController extends Controller
             'check_in' => 'required|date|after_or_equal:today',
             'check_out' => 'required|date|after:check_in',
             'total_price' => 'required|numeric|min:0',
-            'status' => ['nullable', Rule::in(['paid','completed','cancelled'])],
+            'status' => ['required', Rule::in(['paid', 'completed', 'cancelled'])],
         ]);
-        
+
         $validated['user_id'] = Auth::user()->id;
-        
-        $validated['booking_number'] = 'BK-' . strtoupper(Str::random(8));
-        $validated['status'] = $validated['status'] ?? 'pending';
+        // $validated['status'] = $validated['status'] ?? 'paid';
+
+        if ($validated['status'] != "cancelled") {
+            $validated['booking_number'] = 'BK-' . strtoupper(Str::random(8));
+
+            [$qrCode] = $this->generateQrCodes($validated['booking_number']);
+            $validated['qr_code'] = $qrCode;
+        }
+
         $booking = Booking::create($validated);
         return response()->json([
             'message' => 'Booking berhasil dibuat',
@@ -84,7 +96,7 @@ class BookingController extends Controller
             // 'check_in' => 'date',
             // 'check_out' => 'date|after:check_in',
             // 'total_price' => 'numeric|min:0',
-            'status' => [Rule::in(['paid','completed','cancelled'])],
+            'status' => [Rule::in(['paid', 'completed', 'cancelled'])],
         ]);
 
         $validated['user_id'] = Auth::user()->id;
@@ -103,7 +115,7 @@ class BookingController extends Controller
                 'message' => 'Anda tidak memiliki akses untuk menghapus booking ini'
             ], 403);
         }
-        
+
         $booking->delete();
         return response()->json([
             'message' => 'Booking berhasil dihapus'
@@ -140,5 +152,23 @@ class BookingController extends Controller
                 'review' => $review,
             ]
         ], 200);
+    }
+
+    private function generateQrCodes(
+        string $bookingNumber
+    ) {
+        $qrBookingNumber = "Kode Booking {$bookingNumber}";
+
+        $qrCode = null;
+
+        try {
+            $qrResponse = Http::timeout(10)->get('https://api.qrserver.com/v1/create-qr-code/?size=150x150&margin=2&data=' . urlencode($qrBookingNumber));
+            if ($qrResponse->successful()) {
+                $qrCode = base64_encode($qrResponse->body());
+            }
+        } catch (\Exception) {
+        }
+
+        return [$qrCode];
     }
 }

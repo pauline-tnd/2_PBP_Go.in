@@ -4,6 +4,7 @@ import 'package:frontend/services/api_services.dart';
 import 'package:frontend/widgets/activity/activity_header.dart';
 import 'package:frontend/widgets/activity/activity_card.dart';
 import 'package:frontend/widgets/activity/activity_filter_dropdown.dart';
+import 'package:frontend/pages/booking_detail_page.dart';
 import 'package:frontend/pages/review_page.dart';
 
 // ── Helpers (no locale-data initialization required) ─────────────
@@ -184,7 +185,11 @@ class _ActivityPageState extends State<ActivityPage> {
             }
 
             // ── Success ──────────────────────────────────────────
-            final allItems = (snapshot.data ?? []).map(_toBookingItem).toList();
+            final bookings = snapshot.data ?? [];
+            final bookingsById = {
+              for (final booking in bookings) booking.id.toString(): booking,
+            };
+            final allItems = bookings.map(_toBookingItem).toList();
             final filteredItems = _filterItems(allItems);
 
             return SingleChildScrollView(
@@ -213,27 +218,21 @@ class _ActivityPageState extends State<ActivityPage> {
                           const SizedBox(height: 16),
 
                           // Booking cards
-                          ...filteredItems.map(
-                            (item) => ActivityCard(
+                          ...filteredItems.map((item) {
+                            final booking = bookingsById[item.id];
+
+                            return ActivityCard(
                               item: item,
                               onBookingDetail: () {
-                                // TODO: navigate to booking detail page
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text('Detail booking: ${item.id}'),
+                                if (booking == null) return;
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        BookingDetailPage(booking: booking),
                                   ),
                                 );
                               },
-                              // onReview: (rating) {
-                              //   // TODO: send rating to backend
-                              //   ScaffoldMessenger.of(context).showSnackBar(
-                              //     SnackBar(
-                              //       content: Text(
-                              //         'Rating diberikan: $rating bintang',
-                              //       ),
-                              //     ),
-                              //   );
-                              // },
                               onReview: (rating) async {
                                 await Navigator.push(
                                   context,
@@ -246,8 +245,8 @@ class _ActivityPageState extends State<ActivityPage> {
                                 );
                                 _refresh();
                               },
-                            ),
-                          ),
+                            );
+                          }),
 
                           // Empty state
                           if (filteredItems.isEmpty)
