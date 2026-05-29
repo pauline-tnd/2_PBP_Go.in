@@ -37,7 +37,7 @@ class ApiService {
 
   static Future<Map<String, String>> _authHeaders() async {
     // final token = await _getToken();
-    final token = "0a1CX3KlQZxRciFNNBKEjlkoD1hJa5bPDgfxnR1X1981cec2";
+    final token = "copasTokenDisini";
     return {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
@@ -126,7 +126,7 @@ class ApiService {
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
-       print(response.body);
+      print(response.body);
       throw Exception('Failed to load user: ${response.body}');
     }
   }

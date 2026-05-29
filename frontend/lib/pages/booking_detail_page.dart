@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/models/booking.dart';
+import 'package:frontend/pages/receipt_download.dart' show showReceiptPreview;
 import 'package:qr_flutter/qr_flutter.dart';
 
 class BookingDetailPage extends StatelessWidget {
@@ -148,15 +149,7 @@ class BookingDetailPage extends StatelessWidget {
                     SizedBox(
                       height: 52,
                       child: ElevatedButton.icon(
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'Receipt download is not available yet',
-                              ),
-                            ),
-                          );
-                        },
+                        onPressed: () => showReceiptPreview(context, booking),
                         icon: const Icon(
                           Icons.file_download_outlined,
                           size: 22,
@@ -258,44 +251,6 @@ class _ReceiptAppBar extends StatelessWidget {
           onPressed: onBack,
         ),
       ),
-      // Row(
-      //   children: [
-      //     GestureDetector(
-      //       onTap: () => Navigator.pop(context),
-      //       child: const SizedBox(
-      //         width: 32,
-      //         height: 40,
-      //         child: Align(
-      //           alignment: Alignment.centerLeft,
-      //           child: Icon(
-      //             Icons.arrow_back_ios_rounded,
-      //             size: 22,
-      //             color: Color(0xFF1E293B),
-      //           ),
-      //         ),
-      //       ),
-      //     ),
-      //     // Positioned(
-      //     //   left: 12,
-      //     //   child: IconButton(
-      //     //     onPressed: onBack,
-      //     //     icon: const Icon(
-      //     //       Icons.chevron_left_rounded,
-      //     //       color: Color(0xFF0F172A),
-      //     //       size: 32,
-      //     //     ),
-      //     //   ),
-      //     // ),
-      //     const Text(
-      //       'Receipt Details',
-      //       style: TextStyle(
-      //         color: Colors.black,
-      //         fontSize: 18,
-      //         fontWeight: FontWeight.w500,
-      //       ),
-      //     ),
-      //   ],
-      // ),
     );
   }
 }

@@ -265,8 +265,8 @@ class _ActivityPageState extends State<ActivityPage> {
                                     const SizedBox(height: 12),
                                     Text(
                                       allItems.isEmpty
-                                          ? 'Belum ada booking'
-                                          : 'Tidak ada booking dengan status ini',
+                                          ? 'There is no booking yet'
+                                          : 'There is no booking with this status',
                                       style: const TextStyle(
                                         color: Color(0xFF9098A3),
                                         fontSize: 14,
