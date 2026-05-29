@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/pages/settings/change_password_page.dart';
 
 class PasswordSecurityPage extends StatefulWidget {
   const PasswordSecurityPage({super.key});
@@ -144,34 +145,47 @@ class _PasswordSecurityPageState extends State<PasswordSecurityPage> {
             const SizedBox(height: 52),
             sectionTitle('LOGIN CREDENTIALS'),
             const SizedBox(height: 12),
-            Container(
-              height: 70,
-              padding: const EdgeInsets.symmetric(horizontal: 22),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(25),
-              ),
-              child: Row(
-                children: [
-                  iconContainer(Icons.lock_reset_rounded),
-                  const SizedBox(width: 20),
-                  const Expanded(
-                    child: Text(
-                      'Change Password',
-                      style: TextStyle(
-                        fontFamily: 'Plus Jakarta Sans',
-                        fontSize: 16,
-                        fontWeight: FontWeight.w400,
-                        color: Color(0xFF1E293B),
+            InkWell(
+              borderRadius: BorderRadius.circular(25),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const ChangePasswordPage(),
+                  ),
+                );
+              },
+              child: Container(
+                height: 70,
+                padding: const EdgeInsets.symmetric(horizontal: 22),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(25),
+                ),
+                child: Row(
+                  children: [
+                    iconContainer(Icons.lock_reset_rounded),
+                    const SizedBox(width: 20),
+
+                    const Expanded(
+                      child: Text(
+                        'Change Password',
+                        style: TextStyle(
+                          fontFamily: 'Plus Jakarta Sans',
+                          fontSize: 16,
+                          fontWeight: FontWeight.w400,
+                          color: Color(0xFF1E293B),
+                        ),
                       ),
                     ),
-                  ),
-                  const Icon(
-                    Icons.chevron_right_rounded,
-                    color: Color(0xFF94A3B8),
-                    size: 24,
-                  ),
-                ],
+
+                    const Icon(
+                      Icons.chevron_right_rounded,
+                      color: Color(0xFF94A3B8),
+                      size: 24,
+                    ),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 30),
