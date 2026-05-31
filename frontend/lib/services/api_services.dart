@@ -36,14 +36,14 @@ class ApiService {
   }
 
   static Future<Map<String, String>> _authHeaders() async {
-    // final token = await _getToken();
-    final token = "copasTokenDisini";
-    return {'Content-Type': 'application/json', 'Accept': 'application/json'};
-
+    final token = await _getToken();
+    final headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
     if (token.isNotEmpty) {
       headers['Authorization'] = 'Bearer $token';
     }
-
     return headers;
   }
 
