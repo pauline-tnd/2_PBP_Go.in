@@ -11,6 +11,7 @@ class Room {
   final String roomSize;
   final List<AddOnItem> addOns;
   final List<String> roomImages;
+  final List<Map<String, dynamic>> roomFacilities;
 
   Room({
     required this.id,
@@ -22,6 +23,7 @@ class Room {
     required this.roomSize,
     required this.addOns,
     required this.roomImages,
+    this.roomFacilities = const [],
   });
 
   factory Room.fromJson(Map<String, dynamic> json) {
@@ -36,6 +38,7 @@ class Room {
     }
 
     final rawAddOns = json['hotel']?['add_ons'] as List<dynamic>? ?? [];
+    final rawFacilities = json['room_facilities'] as List<dynamic>? ?? [];
 
     return Room(
       id: parseInt(json['id']),
@@ -57,6 +60,14 @@ class Room {
       roomImages: (json['room_images'] as List<dynamic>? ?? [])
           .map((e) => e['image']?.toString() ?? '')
           .where((s) => s.isNotEmpty)
+          .toList(),
+      roomFacilities: rawFacilities
+          .map(
+            (f) => {
+              'name': f['name'] ?? '',
+              'icon': Icons.check_circle_outline,
+            },
+          )
           .toList(),
     );
   }

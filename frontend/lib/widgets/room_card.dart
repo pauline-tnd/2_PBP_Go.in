@@ -50,6 +50,7 @@ class _RoomCardState extends State<RoomCard> {
           room: widget.room,
           imageUrls: imageUrls,
           facilities: widget.facilities,
+          roomAmenities: widget.room.roomFacilities ?? [],
           addOns: addOns,
           reviews: widget.reviews,
           hotelName: widget.hotelName,

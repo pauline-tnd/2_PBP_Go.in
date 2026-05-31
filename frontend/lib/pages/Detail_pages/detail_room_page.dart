@@ -4,12 +4,14 @@ import 'package:frontend/models/room.dart';
 import 'package:frontend/widgets/room_image.dart';
 import 'package:frontend/widgets/review_card.dart';
 import 'package:frontend/widgets/add_on_pop_up.dart';
+import 'package:frontend/pages/review_page.dart';
 
 class DetailRoomPage extends StatefulWidget {
   final Room room;
   final List<String> imageUrls;
   final List<Map<String, dynamic>> facilities;
   final List<String> addOns;
+  final List<Map<String, dynamic>> roomAmenities;
   final List<Map<String, dynamic>> reviews;
   final String hotelName;
   final double reviewScore;
@@ -20,6 +22,7 @@ class DetailRoomPage extends StatefulWidget {
     required this.imageUrls,
     required this.facilities,
     required this.addOns,
+    required this.roomAmenities,
     required this.reviews,
     required this.hotelName,
     required this.reviewScore,
@@ -32,6 +35,32 @@ class DetailRoomPage extends StatefulWidget {
 class _DetailRoomPageState extends State<DetailRoomPage> {
   int _currentImageIndex = 0;
   final PageController _pageController = PageController();
+
+  List<Map<String, dynamic>> _getMainAmenities() {
+    const mainAmenitiesList = [
+      'Free WiFi',
+      'Housekeeping',
+      '24-hour room service',
+      'Telephone',
+      'Non-smoking room',
+    ];
+    return widget.facilities
+        .where((f) => mainAmenitiesList.contains(f['name']))
+        .toList();
+  }
+
+  List<Map<String, dynamic>> _getRoomAmenities() {
+    const mainAmenitiesList = [
+      'Free WiFi',
+      'Housekeeping',
+      '24-hour room service',
+      'Telephone',
+      'Non-smoking room',
+    ];
+    return widget.roomAmenities
+        .where((f) => !mainAmenitiesList.contains(f['name']))
+        .toList();
+  }
 
   @override
   void dispose() {
@@ -282,24 +311,22 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      ...widget.facilities
-                          .take(5)
-                          .map(
-                            (f) => _FacilityRow(
-                              icon: f['icon'] as IconData,
-                              name: f['name'] as String,
-                            ),
-                          ),
-                      const SizedBox(height: 20),
-
-                      const Text(
-                        'Room Amenities',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF1E293B),
+                      ..._getMainAmenities().map(
+                        (f) => _FacilityRow(
+                          icon: f['icon'] as IconData,
+                          name: f['name'] as String,
                         ),
                       ),
+                      const SizedBox(height: 20),
+
+                      // const Text(
+                      //   'Room Amenities',
+                      //   style: TextStyle(
+                      //     fontSize: 16,
+                      //     fontWeight: FontWeight.w700,
+                      //     color: Color(0xFF1E293B),
+                      //   ),
+                      // ),
                       // ...[
                       //   'Television',
                       //   'Desk',
@@ -325,6 +352,54 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                       //     ),
                       //   ),
                       // ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Room Amenities',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF1E293B),
+                            ),
+                          ),
+                          if (_getRoomAmenities().length > 4)
+                            GestureDetector(
+                              onTap: () {},
+                              child: const Text(
+                                'See all',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Color(0xFF3B82F6),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      ..._getRoomAmenities()
+                          .take(4)
+                          .map(
+                            (item) => Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 3),
+                              child: Row(
+                                children: [
+                                  const Text(
+                                    '• ',
+                                    style: TextStyle(color: Color(0xFF64748B)),
+                                  ),
+                                  Text(
+                                    item['name'] ?? item,
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      color: Color(0xFF64748B),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                       const SizedBox(height: 24),
 
                       const Text(
@@ -400,7 +475,15 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                           ),
                           const Spacer(),
                           GestureDetector(
-                            onTap: () {},
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      ReviewPage(bookingId: room.id.toString()),
+                                ),
+                              );
+                            },
                             child: Row(
                               children: const [
                                 Text(
@@ -430,8 +513,18 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                           scrollDirection: Axis.horizontal,
                           itemCount: widget.reviews.length,
                           separatorBuilder: (_, _) => const SizedBox(width: 12),
-                          itemBuilder: (context, index) =>
-                              ReviewCard(review: widget.reviews[index]),
+                          itemBuilder: (context, index) => GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      ReviewPage(bookingId: room.id.toString()),
+                                ),
+                              );
+                            },
+                            child: ReviewCard(review: widget.reviews[index]),
+                          ),
                         ),
                       ),
 
