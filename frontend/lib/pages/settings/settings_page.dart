@@ -9,9 +9,40 @@ import 'help_centre_page.dart';
 import 'contact_us_page.dart';
 import 'faq_page.dart';
 import 'package:frontend/widgets/bottom_navbar.dart';
+import 'package:frontend/services/api_services.dart';
 
-class SettingsPage extends StatelessWidget {
+class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
+
+  @override
+  State<SettingsPage> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends State<SettingsPage> {
+  String username = '';
+  String email = '';
+
+  @override
+  void initState() {
+    super.initState();
+    fetchUser();
+  }
+
+  Future<void> fetchUser() async {
+    try {
+      final response = await ApiService.getUser();
+      final user = response['data'];
+
+      if (!mounted) return;
+
+      setState(() {
+        username = user['username'] ?? '';
+        email = user['email'] ?? '';
+      });
+    } catch (e) {
+      debugPrint("Error fetch user: $e");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -91,7 +122,12 @@ class SettingsPage extends StatelessWidget {
                         padding: EdgeInsets.symmetric(
                           horizontal: horizontalPadding,
                         ),
-                        child: _buildProfileCard(isTablet, isDesktop),
+                        child: _buildProfileCard(
+                          isTablet,
+                          isDesktop,
+                          username,
+                          email,
+                        ),
                       ),
                     ),
                   ],
@@ -207,7 +243,12 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  static Widget _buildProfileCard(bool isTablet, bool isDesktop) {
+  static Widget _buildProfileCard(
+    bool isTablet,
+    bool isDesktop,
+    String username,
+    String email,
+  ) {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(isTablet ? 24 : 20),
@@ -281,7 +322,7 @@ class SettingsPage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Shinnosuke Nohara',
+                  username,
                   style: TextStyle(
                     fontSize: isTablet ? 18 : 16,
                     fontWeight: FontWeight.w700,
@@ -292,7 +333,7 @@ class SettingsPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  'shin@gmail.com',
+                  email,
                   style: TextStyle(
                     fontSize: isTablet ? 14 : 13,
                     fontWeight: FontWeight.w400,

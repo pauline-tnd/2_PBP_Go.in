@@ -49,4 +49,8 @@ class BookingDetail extends Model
     {
         return $this->hasMany(BookingDetailAddOn::class, 'booking_detail_id');
     }
+    public function review()
+    {
+        return $this->hasOne(Review::class, 'booking_detail_id');
+    }
 }

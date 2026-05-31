@@ -2,6 +2,12 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<!-- For location permission -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Enable location to find nearby hotels</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Enable location to find nearby hotels</string>
+
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>
