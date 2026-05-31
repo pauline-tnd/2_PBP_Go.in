@@ -4,7 +4,6 @@ import 'package:frontend/services/api_services.dart';
 import 'package:frontend/widgets/activity/activity_header.dart';
 import 'package:frontend/widgets/activity/activity_card.dart';
 import 'package:frontend/widgets/activity/activity_filter_dropdown.dart';
-import 'package:frontend/pages/booking_detail_page.dart';
 import 'package:frontend/pages/review_page.dart';
 
 // ── Helpers (no locale-data initialization required) ─────────────
@@ -91,8 +90,6 @@ class _ActivityPageState extends State<ActivityPage> {
       price: priceStr,
       status: status,
       imageUrl: b.roomImageUrl ?? '',
-      reviewRating: b.reviewRating,
-      hasReview: b.hasReview,
     );
   }
 
@@ -185,11 +182,7 @@ class _ActivityPageState extends State<ActivityPage> {
             }
 
             // ── Success ──────────────────────────────────────────
-            final bookings = snapshot.data ?? [];
-            final bookingsById = {
-              for (final booking in bookings) booking.id.toString(): booking,
-            };
-            final allItems = bookings.map(_toBookingItem).toList();
+            final allItems = (snapshot.data ?? []).map(_toBookingItem).toList();
             final filteredItems = _filterItems(allItems);
 
             return SingleChildScrollView(
@@ -218,35 +211,40 @@ class _ActivityPageState extends State<ActivityPage> {
                           const SizedBox(height: 16),
 
                           // Booking cards
-                          ...filteredItems.map((item) {
-                            final booking = bookingsById[item.id];
-
-                            return ActivityCard(
+                          ...filteredItems.map(
+                            (item) => ActivityCard(
                               item: item,
                               onBookingDetail: () {
-                                if (booking == null) return;
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        BookingDetailPage(booking: booking),
+                                // TODO: navigate to booking detail page
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Detail booking: ${item.id}'),
                                   ),
                                 );
                               },
+                              // onReview: (rating) {
+                              //   // TODO: send rating to backend
+                              //   ScaffoldMessenger.of(context).showSnackBar(
+                              //     SnackBar(
+                              //       content: Text(
+                              //         'Rating diberikan: $rating bintang',
+                              //       ),
+                              //     ),
+                              //   );
+                              // },
                               onReview: (rating) async {
                                 await Navigator.push(
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) => ReviewPage(
                                       bookingId: item.id,
-                                      isReadOnly: item.hasReview,
                                     ),
                                   ),
                                 );
                                 _refresh();
                               },
-                            );
-                          }),
+                            ),
+                          ),
 
                           // Empty state
                           if (filteredItems.isEmpty)
@@ -265,8 +263,8 @@ class _ActivityPageState extends State<ActivityPage> {
                                     const SizedBox(height: 12),
                                     Text(
                                       allItems.isEmpty
-                                          ? 'There is no booking yet'
-                                          : 'There is no booking with this status',
+                                          ? 'Belum ada booking'
+                                          : 'Tidak ada booking dengan status ini',
                                       style: const TextStyle(
                                         color: Color(0xFF9098A3),
                                         fontSize: 14,

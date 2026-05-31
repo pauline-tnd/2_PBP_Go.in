@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/services/api_services.dart';
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});
@@ -9,97 +8,43 @@ class EditProfilePage extends StatefulWidget {
 }
 
 class _EditProfilePageState extends State<EditProfilePage> {
-  final TextEditingController nameController = TextEditingController();
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController phoneController = TextEditingController();
-  bool isLoading = true;
-  bool isSaving = false;
+  final TextEditingController nameController = TextEditingController(text: "Shinnosuke Nohara");
+  final TextEditingController cityController = TextEditingController(text: "Tokyo");
+  final TextEditingController emailController = TextEditingController(text: "shin@gmail.com");
+  final TextEditingController phoneController = TextEditingController(text: "12345678901");
+  DateTime? selectedDate = DateTime(2000, 5, 5);
+  String gender = "Male";
 
-  @override
-  void initState() {
-    super.initState();
-    loadUser();
-  }
+  Future<void> pickDate() async {
+    DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: selectedDate!,
+      firstDate: DateTime(1950),
+      lastDate: DateTime.now(),
+    );
 
-  Future<void> loadUser() async {
-    try {
-      final response = await ApiService.getUser();
-      final user = response['data'];
-      nameController.text = user['username'] ?? '';
-      emailController.text = user['email'] ?? '';
-      phoneController.text = user['phone'] ?? '';
+    if (picked != null) {
       setState(() {
-        isLoading = false;
+        selectedDate = picked;
       });
-    } catch (e) {
-      setState(() {
-        isLoading = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
-      );
     }
   }
 
-  Future<void> saveProfile() async {
-    setState(() {
-      isSaving = true;
-    });
-
-    try {
-      await ApiService.updateUser(
-        username: nameController.text,
-        email: emailController.text,
-        phone: phoneController.text,
-      );
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Profile updated successfully'),
-        ),
-      );
-      Navigator.pop(context, true);
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
-      );
-    } finally {
-      if (mounted) {
-        setState(() {
-          isSaving = false;
-        });
-      }
-    }
-  }
-
-  @override
-  void dispose() {
-    nameController.dispose();
-    emailController.dispose();
-    phoneController.dispose();
-    super.dispose();
+  String formatDate(DateTime date) {
+    return "${date.day.toString().padLeft(2, '0')}/"
+      "${date.month.toString().padLeft(2, '0')}/"
+      "${date.year}";
   }
 
   @override
   Widget build(BuildContext context) {
-    if (isLoading) {
-      return const Scaffold(
-        backgroundColor: Color(0xFFF5F7F8),
-        body: Center(
-          child: CircularProgressIndicator(
-            color: Color(0xFF3B82F6),
-          ),
-        ),
-      );
-    }
-
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7F8),
       appBar: AppBar(
         backgroundColor: const Color(0xFFF5F7F8),
         elevation: 0,
         scrolledUnderElevation: 0,
-        toolbarHeight: 60,
+        toolbarHeight: 90,
         centerTitle: true,
         leading: Padding(
           padding: const EdgeInsets.only(left: 12),
@@ -174,6 +119,91 @@ class _EditProfilePageState extends State<EditProfilePage> {
               Column(
                 children: [
                   buildTextField("Full Name", nameController),
+                  const SizedBox(height: 16),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        "Date of Birth",
+                        style: TextStyle(
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xFF64748B),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      GestureDetector(
+                        onTap: pickDate,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 14, vertical: 14),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF1F5F9),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  formatDate(selectedDate!),
+                                  style: const TextStyle(fontSize: 15),
+                                ),
+                              ),
+                              const Icon(
+                                Icons.calendar_today_rounded,
+                                size: 18, color: Color(0xFF64748B),
+                              )
+                            ],
+                          ),
+                        ),
+                      )
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Gender",
+                          style: TextStyle(
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF64748B),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(horizontal: 14),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF1F5F9),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              isExpanded: true, // penting supaya full width
+                              value: gender,
+                              items: ["Male", "Female"]
+                                  .map(
+                                    (e) => DropdownMenuItem(
+                                      value: e,
+                                      child: Text(e),
+                                    ),
+                                  )
+                                  .toList(),
+                              onChanged: (value) {
+                                setState(() {
+                                  gender = value!;
+                                });
+                              },
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  buildTextField("City of Residence", cityController),
                 ],
               ),
             ),
@@ -201,9 +231,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         children: [
                           Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 14,
-                            ),
+                                horizontal: 16, vertical: 14),
                             decoration: BoxDecoration(
                               color: const Color(0xFFF1F5F9),
                               borderRadius: BorderRadius.circular(12),
@@ -231,26 +259,34 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 ],
               ),
             ),
+            const SizedBox(height: 20),
+            buildCard(
+              Row(
+                children: [
+                  Image.network(
+                    "https://cdn-icons-png.flaticon.com/512/300/300221.png",
+                    width: 26,
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Text(
+                      "Google",
+                      style:
+                          TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                    ),
+                  ),
+                  Icon(Icons.check_circle_outline, color: Colors.green, size: 22)
+                ],
+              ),
+            ),
             const SizedBox(height: 30),
             SizedBox(
               width: 365,
               child: ElevatedButton.icon(
-                icon: isSaving
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2,
-                        ),
-                      )
-                    : const Icon(
-                        Icons.save_as_outlined,
-                        color: Colors.white,
-                      ),
-                label: Text(
-                  isSaving ? "Saving..." : "Save Changes",
-                  style: const TextStyle(color: Colors.white),
+                icon: const Icon(Icons.save_as_outlined, color: Colors.white),
+                label: const Text(
+                  "Save Changes",
+                  style: TextStyle(color: Colors.white),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF3B82F6),
@@ -259,7 +295,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     borderRadius: BorderRadius.circular(20),
                   ),
                 ),
-                onPressed: isSaving ? null : saveProfile,
+                onPressed: () {},
               ),
             ),
             const SizedBox(height: 30),

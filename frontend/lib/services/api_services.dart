@@ -1,27 +1,15 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:frontend/models/room.dart';
 import 'package:frontend/models/booking.dart';
 import 'package:frontend/models/wishlist.dart';
 import 'package:frontend/models/review.dart';
-import 'package:frontend/models/nominatim.dart';
+import 'package:frontend/services/app_config.dart';
 
 class ApiService {
-  // static const String baseUrl = 'http://ipv4hp:8000/api'; //ini buat jalanin di hp, ganti ke ipv4 hp kln
-  static String get baseUrl {
-    if (kIsWeb) return 'http://127.0.0.1:8000/api';
-    if (Platform.isAndroid) return 'http://10.0.2.2:8000/api';
-    return 'http://localhost:8000/api';
-  }
-
-  static const String nominatimUrl = 'https://nominatim.openstreetmap.org';
-  static const Map<String, String> headersNominatim = {
-    'User-Agent': 'GoInApp/1.0',
-    'Accept-Language': 'id',
-  };
+  static String get baseUrl => AppConfig.apiBaseUrl;
 
   // ── Token Helpers ─────────────────────────────────────────────
 
@@ -36,9 +24,12 @@ class ApiService {
   }
 
   static Future<Map<String, String>> _authHeaders() async {
+    final String token = "sif4frDV9i3iGvGCMenEsQluMWUgsDpoCvvuHiYqd5869818";
     // final token = await _getToken();
-    final token = "copasTokenDisini";
-    return {'Content-Type': 'application/json', 'Accept': 'application/json'};
+    final headers = <String, String>{
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
 
     if (token.isNotEmpty) {
       headers['Authorization'] = 'Bearer $token';
@@ -72,7 +63,7 @@ class ApiService {
     if (response.statusCode == 201) {
       return jsonDecode(response.body);
     } else {
-      throw Exception('Register failed: ${response.body}');
+      throw Exception('Register gagal: ${response.body}');
     }
   }
 
@@ -95,7 +86,7 @@ class ApiService {
       await _saveToken(data['token']);
       return data;
     } else {
-      throw Exception('Login failed: ${response.body}');
+      throw Exception('Login gagal: ${response.body}');
     }
   }
 
@@ -112,7 +103,7 @@ class ApiService {
       await prefs.remove('token');
       return jsonDecode(response.body);
     } else {
-      throw Exception('Logout failed: ${response.body}');
+      throw Exception('Logout gagal: ${response.body}');
     }
   }
 
@@ -128,7 +119,6 @@ class ApiService {
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
-      print(response.body);
       throw Exception('Failed to load user: ${response.body}');
     }
   }
@@ -174,25 +164,23 @@ class ApiService {
         'new_password_confirmation': newPasswordConfirmation,
       }),
     );
-    print("STATUS: ${response.statusCode}");
-    print("BODY: ${response.body}");
+
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
-      throw Exception(response.body);
+      throw Exception('Failed to update password: ${response.body}');
     }
   }
 
   // PUT /user/profile (multipart - file upload)
   static Future<Map<String, dynamic>> updateProfileImage(File imageFile) async {
-    final headers = await _authHeaders();
+    final token = await _getToken();
     final request = http.MultipartRequest(
       'PUT',
       Uri.parse('$baseUrl/user/profile'),
     );
-
-    request.headers.addAll(headers);
-
+    request.headers['Authorization'] = 'Bearer $token';
+    request.headers['Accept'] = 'application/json';
     request.files.add(
       await http.MultipartFile.fromPath('profile_image', imageFile.path),
     );
@@ -224,70 +212,6 @@ class ApiService {
     }
   }
 
-  // ── Location ──────────────────────────────────────────────────
-  // Search location helper
-  static Future<List<NominatimResult>> search(String query) async {
-    if (query.trim().isEmpty) return [];
-
-    final response = await http.get(
-      Uri.parse('$nominatimUrl/search').replace(
-        queryParameters: {
-          'q': query,
-          'format': 'json',
-          'limit': '5',
-          'addressdetails': '1',
-          'countrycodes': 'id', // Indonesia only
-        },
-      ),
-      headers: headersNominatim,
-    );
-
-    if (response.statusCode == 200) {
-      final List data = jsonDecode(response.body);
-      return data.map((e) => NominatimResult.fromJson(e)).toList();
-    } else {
-      throw Exception('Failed to load location: ${response.body}');
-    }
-  }
-
-  // Coord -> address name
-  static Future<String> reverseGeocode(double lat, double lon) async {
-    final response = await http.get(
-      Uri.parse('$nominatimUrl/reverse').replace(
-        queryParameters: {
-          'lat': lat.toString(),
-          'lon': lon.toString(),
-          'format': 'json',
-          'addressdetails': '1',
-        },
-      ),
-      headers: headersNominatim,
-    );
-
-    String formatAddress(Map<String, dynamic> addr) {
-      final parts = <String>[];
-
-      if (addr['road'] != null) parts.add(addr['road']);
-      if (addr['suburb'] != null) parts.add(addr['suburb']);
-      if (addr['city'] != null) {
-        parts.add(addr['city']);
-      } else if (addr['town'] != null) {
-        parts.add(addr['town']);
-      } else if (addr['county'] != null) {
-        parts.add(addr['county']);
-      }
-
-      return parts.isNotEmpty ? parts.join(', ') : 'Selected location';
-    }
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      return formatAddress(data['address']);
-    } else {
-      throw Exception('Location unknown: ${response.body}');
-    }
-  }
-
   // ── Hotels ────────────────────────────────────────────────────
   // GET /hotels
   static Future<Map<String, dynamic>> fetchHotels({
@@ -302,30 +226,31 @@ class ApiService {
     String? cursor,
   }) async {
     final headers = await _authHeaders();
-    final queryParameters = <String, dynamic>{};
+    final queryParts = <String>[];
 
-    if (search != null && search.trim().isNotEmpty) {
-      queryParameters['search'] = search.trim();
+    if (search != null) queryParts.add('search=$search');
+    if (minPrice != null) queryParts.add('min_price=$minPrice');
+    if (maxPrice != null) queryParts.add('max_price=$maxPrice');
+    if (sortBy != null) queryParts.add('sort_by=$sortBy');
+    if (userLat != null) queryParts.add('user_lat=$userLat');
+    if (userLng != null) queryParts.add('user_lng=$userLng');
+    if (cursor != null) queryParts.add('cursor=$cursor');
+    if (star != null) {
+      for (var s in star) {
+        queryParts.add('star[]=$s');
+      }
     }
-    if (minPrice != null) queryParameters['min_price'] = minPrice.toString();
-    if (maxPrice != null) queryParameters['max_price'] = maxPrice.toString();
-    if (sortBy != null) queryParameters['sort_by'] = sortBy;
-    if (userLat != null) queryParameters['user_lat'] = userLat.toString();
-    if (userLng != null) queryParameters['user_lng'] = userLng.toString();
-    if (cursor != null) queryParameters['cursor'] = cursor;
-    if (star != null && star.isNotEmpty) {
-      queryParameters['star[]'] = star.map((s) => s.toString()).toList();
-    }
-    if (amenities != null && amenities.isNotEmpty) {
-      queryParameters['amenities[]'] = amenities
-          .map((a) => a.toString())
-          .toList();
+    if (amenities != null) {
+      for (var a in amenities) {
+        queryParts.add('amenities[]=$a');
+      }
     }
 
-    final uri = Uri.parse(
-      '$baseUrl/hotels',
-    ).replace(queryParameters: queryParameters);
-    final response = await http.get(uri, headers: headers);
+    final queryString = queryParts.isNotEmpty ? '?${queryParts.join('&')}' : '';
+    final response = await http.get(
+      Uri.parse('$baseUrl/hotels$queryString'),
+      headers: headers,
+    );
 
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
@@ -532,7 +457,7 @@ class ApiService {
 
   // POST /reviews (multipart - supports image upload)
   static Future<Map<String, dynamic>> storeReview({
-    // required int userId,
+    required int userId,
     required int roomId,
     required int bookingDetailId,
     required int rating,
@@ -540,15 +465,15 @@ class ApiService {
     required String createdAt,
     File? image,
   }) async {
-    final headers = await _authHeaders();
+    final token = await _getToken();
     final request = http.MultipartRequest(
       'POST',
       Uri.parse('$baseUrl/reviews'),
     );
+    request.headers['Authorization'] = 'Bearer $token';
+    request.headers['Accept'] = 'application/json';
 
-    request.headers.addAll(headers);
-
-    // request.fields['user_id'] = userId.toString();
+    request.fields['user_id'] = userId.toString();
     request.fields['room_id'] = roomId.toString();
     request.fields['booking_detail_id'] = bookingDetailId.toString();
     request.fields['rating'] = rating.toString();
@@ -556,13 +481,7 @@ class ApiService {
     request.fields['created_at'] = createdAt;
 
     if (image != null) {
-      request.files.add(
-        await http.MultipartFile.fromPath(
-          'image',
-          image.path,
-          filename: image.path.split('/').last,
-        ),
-      );
+      request.files.add(await http.MultipartFile.fromPath('image', image.path));
     }
 
     final streamedResponse = await request.send();
@@ -585,14 +504,15 @@ class ApiService {
     String? description,
     File? image,
   }) async {
-    final headers = await _authHeaders();
+    final token = await _getToken();
     final request = http.MultipartRequest(
       'POST',
       Uri.parse('$baseUrl/reviews/$reviewId'),
     );
     // Laravel doesn't support PUT multipart natively, use _method override
     request.fields['_method'] = 'PUT';
-    request.headers.addAll(headers);
+    request.headers['Authorization'] = 'Bearer $token';
+    request.headers['Accept'] = 'application/json';
 
     if (userId != null) request.fields['user_id'] = userId.toString();
     if (roomId != null) request.fields['room_id'] = roomId.toString();
@@ -603,13 +523,7 @@ class ApiService {
     if (description != null) request.fields['description'] = description;
 
     if (image != null) {
-      request.files.add(
-        await http.MultipartFile.fromPath(
-          'image',
-          image.path,
-          filename: image.path.split('/').last,
-        ),
-      );
+      request.files.add(await http.MultipartFile.fromPath('image', image.path));
     }
 
     final streamedResponse = await request.send();
@@ -673,10 +587,15 @@ class ApiService {
   static Future<Map<String, dynamic>> storeBooking({
     required String checkIn,
     required String checkOut,
+    required double totalPrice,
     String? status,
   }) async {
     final headers = await _authHeaders();
-    final body = <String, dynamic>{'check_in': checkIn, 'check_out': checkOut};
+    final body = <String, dynamic>{
+      'check_in': checkIn,
+      'check_out': checkOut,
+      'total_price': totalPrice,
+    };
     if (status != null) body['status'] = status;
 
     final response = await http.post(
@@ -762,6 +681,7 @@ class ApiService {
     required int bookingId,
     required int roomId,
     required int totalRoom,
+    required double subTotal,
     String? notes,
   }) async {
     final headers = await _authHeaders();
@@ -769,6 +689,7 @@ class ApiService {
       'booking_id': bookingId,
       'room_id': roomId,
       'total_room': totalRoom,
+      'sub_total': subTotal,
     };
     if (notes != null) body['notes'] = notes;
 
@@ -791,6 +712,7 @@ class ApiService {
     int? bookingId,
     int? roomId,
     int? totalRoom,
+    double? subTotal,
     String? notes,
   }) async {
     final headers = await _authHeaders();
@@ -798,6 +720,7 @@ class ApiService {
     if (bookingId != null) body['booking_id'] = bookingId;
     if (roomId != null) body['room_id'] = roomId;
     if (totalRoom != null) body['total_room'] = totalRoom;
+    if (subTotal != null) body['sub_total'] = subTotal;
     if (notes != null) body['notes'] = notes;
 
     final response = await http.put(
@@ -825,20 +748,6 @@ class ApiService {
       return jsonDecode(response.body);
     } else {
       throw Exception('Failed to delete booking detail: ${response.body}');
-    }
-  }
-
-  // GET /bookings/{booking}/review-details
-  static Future<Map<String, dynamic>> fetchReviewDetails(int bookingId) async {
-    final headers = await _authHeaders();
-    final response = await http.get(
-      Uri.parse('$baseUrl/bookings/$bookingId/review-details'),
-      headers: headers,
-    );
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body);
-    } else {
-      throw Exception('Failed to load review details: ${response.body}');
     }
   }
 

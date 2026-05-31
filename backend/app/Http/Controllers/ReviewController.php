@@ -4,9 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Review;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
-use Illuminate\Validation\Rule;
 
 class ReviewController extends Controller
 {
@@ -107,16 +104,14 @@ class ReviewController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'room_id'           => 'required|exists:rooms,id',
+            'user_id' => 'required|exists:users,id',
+            'room_id' => 'required|exists:rooms,id',
             'booking_detail_id' => 'required|exists:booking_details,id',
-            'rating'            => 'required|integer|min:1|max:5',
-            'description'       => 'required|string',
-            'created_at'        => 'required|date',
-            'image'             => 'nullable|image|mimes:jpg,jpeg,png|max:20480',
+            'rating' => 'required|integer|min:1|max:5',
+            'description' => 'required|string',
+            'created_at' => 'required|date',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
-
-        $validated['user_id'] = Auth::user()->id;
-
         if ($request->hasFile('image')) {
             $validated['image'] = $request->file('image')->store('reviews', 'public');
         }
@@ -124,10 +119,7 @@ class ReviewController extends Controller
 
         return response()->json([
             'message' => 'Review berhasil dibuat',
-            'review' => [
-                ...$review->toArray(),
-                'image_url' => $review->image_url,
-            ]
+            'review' => $review,
         ], 201);
     }
 
@@ -140,15 +132,13 @@ class ReviewController extends Controller
             ], 404);
         }
         $validated = $request->validate([
-            'room_id'           => 'exists:rooms,id',
+            'user_id' => 'exists:users,id',
+            'room_id' => 'exists:rooms,id',
             'booking_detail_id' => 'exists:booking_details,id',
             'rating' => 'integer|min:1|max:5',
             'description' => 'string',
             'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
-
-        $validated['user_id'] = Auth::user()->id;
-
         if ($request->hasFile('image')) {
             $validated['image'] = $request->file('image')->store('reviews', 'public');
         }

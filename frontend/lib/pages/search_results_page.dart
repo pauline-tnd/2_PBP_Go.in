@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
+import '../models/hotel.dart';
+import '../widgets/bottom_navbar.dart';
+import '../widgets/hotel_card.dart';
+import '../widgets/sorting_bar.dart';
 import 'package:frontend/models/hotel.dart';
 import 'package:frontend/widgets/bottom_navbar.dart';
 import 'package:frontend/widgets/hotel_card.dart';
 import 'package:frontend/widgets/sorting_bar.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:frontend/pages/loading_page.dart';
 
 class FilterState {
   final RangeValues priceRange;
@@ -43,9 +48,7 @@ class FilterState {
 }
 
 class SearchResultsPage extends StatefulWidget {
-  final String? initialQuery;
-
-  const SearchResultsPage({super.key, this.initialQuery});
+  const SearchResultsPage({super.key});
 
   @override
   State<SearchResultsPage> createState() => _SearchResultsPageState();
@@ -94,16 +97,7 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
   }
 
   List<Hotel> get _filteredAndSortedHotels {
-    final query = widget.initialQuery?.trim().toLowerCase();
-
     List<Hotel> result = _allHotels.where((hotel) {
-      if (query != null &&
-          query.isNotEmpty &&
-          !hotel.name.toLowerCase().contains(query) &&
-          !hotel.location.toLowerCase().contains(query)) {
-        return false;
-      }
-
       if (hotel.pricePerNight < _filterState.priceRange.start ||
           hotel.pricePerNight > _filterState.priceRange.end) {
         return false;

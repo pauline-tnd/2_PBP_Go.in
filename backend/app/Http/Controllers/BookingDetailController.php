@@ -2,9 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\BookingController;
 use App\Models\BookingDetail;
-use App\Models\Room;
 use Illuminate\Http\Request;
 
 class BookingDetailController extends Controller
@@ -46,21 +44,15 @@ class BookingDetailController extends Controller
             'booking_id' => 'required|exists:bookings,id',
             'room_id' => 'required|exists:rooms,id',
             'total_room' => 'required|integer|min:1',
-            'notes' => 'nullable|string'
+            'sub_total' => 'required|numeric|min:0',
+            'notes' => 'nullable|string',
         ]);
-        
-        $room = Room::find($validated['room_id']);
-        $validated['sub_total'] = $room->price * $validated['total_room'];
-
         $detail = BookingDetail::create($validated);
-
-        BookingController::calculateTotal($detail->booking_id);
 
         return response()->json([
             'message' => 'Booking Detail Created',
             'detail' => $detail,
         ], 201);
-
     }
 
     public function update(Request $request, $id)
@@ -80,13 +72,10 @@ class BookingDetailController extends Controller
         ]);
         $detail->update($validated);
 
-        BookingController::calculateTotal($detail->booking_id);
-
         return response()->json([
             'message' => 'Booking Detail Updated',
-            'detail' => $detail->fresh()
+            'detail' => $detail,
         ]);
-
     }
 
     public function destroy($id)
@@ -97,14 +86,10 @@ class BookingDetailController extends Controller
                 'message' => 'Booking Detail tidak ditemukan',
             ], 404);
         }
-        $bookingId = $detail->booking_id;
         $detail->delete();
-
-        BookingController::calculateTotal($bookingId);
 
         return response()->json([
             'message' => 'Booking Detail berhasil dihapus',
         ]);
-
     }
 }

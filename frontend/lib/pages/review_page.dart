@@ -1,35 +1,13 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:dotted_border/dotted_border.dart';
-import 'package:frontend/services/api_services.dart';
-import 'dart:io';
-import 'package:image_picker/image_picker.dart';
-
-class Facility {
-  final String name;
-  final String icon;
-
-  Facility({required this.name, required this.icon});
-
-  factory Facility.fromJson(Map<String, dynamic> json) {
-    return Facility(
-      name: json['name'] ?? '',
-      icon: json['icon']?['icon']?.toString().trim() ?? '',
-    );
-  }
-}
+import 'package:http/http.dart' as http;
 
 class HotelReviewDetail {
   final String hotelName;
   final String roomType;
   final String imageName;
   final DateTime checkOutDate;
-  final List<Facility> facilities;
-  final int? roomId;
-  final int? bookingDetailId;
-  // final int? userId;
-  final int? reviewRating;
-  final String? reviewDescription;
-  final String? reviewImage;
+  final List<String> facilities;
 
   HotelReviewDetail({
     required this.hotelName,
@@ -37,40 +15,25 @@ class HotelReviewDetail {
     required this.imageName,
     required this.checkOutDate,
     required this.facilities,
-    required this.roomId,
-    required this.bookingDetailId,
-    // required this.userId,
-    this.reviewRating,
-    this.reviewDescription,
-    this.reviewImage,
   });
 
   factory HotelReviewDetail.fromJson(Map<String, dynamic> json) {
     var facilityList = json['hotel']['hotel_facilities'] as List? ?? [];
-    List<Facility> parsedFacilities = facilityList
-        .map((f) => Facility.fromJson(f))
+    List<String> parsedFacilities = facilityList
+        .map((f) => f['name'].toString())
         .toList();
+
     var imageList = json['hotel']['hotel_images'] as List? ?? [];
     String img = '';
     if (imageList.isNotEmpty && imageList[0]['image'] != null) {
       img = imageList[0]['image'].toString();
     }
-    final review = json['review'];
     return HotelReviewDetail(
       hotelName: json['hotel']['name'] ?? 'Unknown Hotel',
       roomType: json['room_type'] ?? 'Standard Room',
+      imageName: img,
+      checkOutDate: DateTime.parse(json['check_out']),
       facilities: parsedFacilities,
-          ? json['room_id']
-          : int.tryParse(json['room_id']?.toString() ?? ''),
-      bookingDetailId: json['booking_detail_id'] is int
-          ? json['booking_detail_id']
-          : int.tryParse(json['booking_detail_id']?.toString() ?? ''),
-      // userId: json['user_id'] is int
-      //     ? json['user_id']
-      //     : int.tryParse(json['user_id']?.toString() ?? ''),
-      reviewRating: review?['rating'],
-      reviewDescription: review?['description'],
-      reviewImage: review?['image_url'],
     );
   }
 
@@ -95,281 +58,85 @@ class HotelReviewDetail {
 
 class ReviewPage extends StatefulWidget {
   final String bookingId;
-  final bool isReadOnly;
-  const ReviewPage({
-    super.key,
-    required this.bookingId,
-    this.isReadOnly = false,
-  });
+  const ReviewPage({super.key, required this.bookingId});
   @override
   State<ReviewPage> createState() => _ReviewPageState();
 }
 
 class _ReviewPageState extends State<ReviewPage> {
-  bool _isDisposed = false;
-  final ImagePicker _picker = ImagePicker();
-  File? selectedImage;
-  String? reviewImageUrl;
   int selectedRating = 0;
   final TextEditingController reviewController = TextEditingController();
   bool isAnonymous = false;
   bool isSubmitting = false;
   final Set<String> selectedHighlights = {};
   late Future<HotelReviewDetail> _hotelDetailFuture;
-  HotelReviewDetail? hotelDetail;
   @override
   void initState() {
     super.initState();
-    _hotelDetailFuture = Future.microtask(() => _fetchHotelDetail());
+    _hotelDetailFuture = _fetchHotelDetail();
   }
-
-  @override
-  void dispose() {
-    _isDisposed = true;
-    reviewController.dispose();
-    super.dispose();
-  }
-
-  void safeSetState(VoidCallback fn) {
-    if (mounted && !_isDisposed) {
-      setState(fn);
-    }
-  }
-
-  void _showImagePreview(String imageUrl) {
-    showDialog(
-      context: context,
-      barrierColor: Colors.black.withOpacity(0.9),
-      builder: (context) {
-        return GestureDetector(
-          onTap: () => Navigator.pop(context),
-          child: Scaffold(
-            backgroundColor: Colors.transparent,
-            body: Stack(
-              children: [
-                Center(
-                  child: InteractiveViewer(
-                    child: Image.network(imageUrl, fit: BoxFit.contain),
-                  ),
-                ),
-                // tombol close
-                Positioned(
-                  top: 40,
-                  right: 20,
-                  child: GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.6),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.close,
-                        color: Colors.white,
-                        size: 22,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
+  // In _ReviewPageState class:
 
   Future<HotelReviewDetail> _fetchHotelDetail() async {
+    // Get from bookings endpoint instead
+    final String apiUrl =
+        "http://localhost:8000/api/bookings/${widget.bookingId}";
     try {
-      final response = await ApiService.fetchReviewDetails(
-        int.parse(widget.bookingId),
+      final response = await http.get(
+        Uri.parse(apiUrl),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer YOUR_TOKEN',
+        },
       );
-      if (_isDisposed || !mounted) {
-        throw Exception("Disposed");
-      }
-      final detail = HotelReviewDetail.fromJson(response['data']);
-      if (!_isDisposed && mounted) {
-        if (_isDisposed || !mounted) return detail;
-        setState(() {
-          hotelDetail = detail;
 
-          if (widget.isReadOnly) {
-            selectedRating = detail.reviewRating ?? 0;
-            reviewController.text = detail.reviewDescription ?? '';
-            reviewImageUrl = detail.reviewImage;
-          }
-        });
+      if (response.statusCode == 200) {
+        final bookingData = jsonDecode(response.body)['data'];
+        return HotelReviewDetail.fromJson(bookingData);
       }
-      return detail;
+      throw Exception("Failed ${response.statusCode}");
     } catch (e) {
-      if (_isDisposed) rethrow;
-      rethrow;
+      throw Exception("Connection failed: $e");
     }
   }
 
-  Widget _buildPickerOption({
-    required String title,
-    required IconData icon,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(24),
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                title,
-                style: const TextStyle(
-                  fontFamily: 'Plus Jakarta Sans',
-                  fontSize: 18,
-                  fontWeight: FontWeight.w500,
-                  color: Color(0xFF0F172A),
-                ),
-              ),
-            ),
-            Icon(icon, size: 28, color: const Color(0xFF0F172A)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showImagePickerOptions(TapDownDetails details) async {
-    final RenderBox overlay =
-        Overlay.of(context).context.findRenderObject() as RenderBox;
-
-    final selected = await showMenu(
-      context: context,
-      position: RelativeRect.fromRect(
-        Rect.fromLTWH(
-          details.globalPosition.dx,
-          details.globalPosition.dy,
-          0,
-          0,
-        ),
-        Offset.zero & overlay.size,
-      ),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      color: Colors.white,
-      elevation: 8,
-      items: [
-        PopupMenuItem(
-          value: 'gallery',
-          child: Row(
-            children: [
-              const Expanded(
-                child: Text(
-                  'Gallery',
-                  style: TextStyle(
-                    fontFamily: 'Plus Jakarta Sans',
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-              Icon(
-                Icons.photo_library_outlined,
-                color: const Color(0xFF0F172A),
-              ),
-            ],
-          ),
-        ),
-
-        PopupMenuItem(
-          value: 'camera',
-          child: Row(
-            children: [
-              const Expanded(
-                child: Text(
-                  'Camera',
-                  style: TextStyle(
-                    fontFamily: 'Plus Jakarta Sans',
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-              Icon(Icons.camera_alt_outlined, color: const Color(0xFF0F172A)),
-            ],
-          ),
-        ),
-      ],
-    );
-
-    if (selected == 'gallery') {
-      final XFile? image = await _picker.pickImage(
-        source: ImageSource.gallery,
-        imageQuality: 80,
-      );
-
-      if (image != null && mounted) {
-        safeSetState(() {
-          selectedImage = File(image.path);
-        });
-      }
-    }
-
-    if (selected == 'camera') {
-      final XFile? image = await _picker.pickImage(
-        source: ImageSource.camera,
-        imageQuality: 80,
-      );
-
-      if (image != null && mounted) {
-        safeSetState(() {
-          selectedImage = File(image.path);
-        });
-      }
-    }
-  }
-
-  Future<void> submitReview() async {
+  void submitReview() async {
     if (selectedRating == 0) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text("Select rating first")));
       return;
     }
-    if (hotelDetail == null) return;
-    if (
-    // hotelDetail?.userId == null ||
-    hotelDetail?.roomId == null || hotelDetail?.bookingDetailId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Data review tidak lengkap")),
-      );
-      return;
-    }
-    if (!mounted) return;
-    if (isSubmitting) return;
+
     setState(() => isSubmitting = true);
 
     try {
-      await ApiService.storeReview(
-        // userId: hotelDetail!.userId!,
-        roomId: hotelDetail!.roomId!,
-        bookingDetailId: hotelDetail!.bookingDetailId!,
-        rating: selectedRating,
-        description: reviewController.text,
-        createdAt: DateTime.now().toIso8601String(),
-        image: selectedImage,
+      final payload = {
+        'user_id': 1,
+        'room_id': 1,
+        'booking_detail_id': int.parse(widget.bookingId),
+        'rating': selectedRating,
+        'description': reviewController.text,
+        'created_at': DateTime.now().toIso8601String(),
+      };
+
+      final response = await http.post(
+        Uri.parse("http://localhost:8000/api/reviews"),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(payload),
       );
 
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Review berhasil dikirim!")));
-      if (!mounted) return;
-      if (Navigator.of(context).canPop()) {
-        Navigator.of(context).pop();
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("Review submitted!")));
+        Navigator.pop(context);
+      } else {
+        throw Exception("Save failed");
       }
     } catch (e) {
-      if (!mounted) return;
-
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text("Error: $e")));
@@ -386,7 +153,7 @@ class _ReviewPageState extends State<ReviewPage> {
         backgroundColor: const Color(0xFFF5F7F8),
         elevation: 0,
         scrolledUnderElevation: 0,
-        toolbarHeight: 60,
+        toolbarHeight: 90,
         centerTitle: true,
         leading: Padding(
           padding: const EdgeInsets.only(left: 12),
@@ -399,8 +166,8 @@ class _ReviewPageState extends State<ReviewPage> {
             onPressed: () => Navigator.pop(context),
           ),
         ),
-        title: Text(
-          widget.isReadOnly ? 'Your Review' : 'Write a Review',
+        title: const Text(
+          'Write a Review',
           style: TextStyle(
             fontFamily: 'Plus Jakarta Sans',
             fontSize: 18,
@@ -428,9 +195,6 @@ class _ReviewPageState extends State<ReviewPage> {
                 child: Text("${snapshot.error}", textAlign: TextAlign.center),
               ),
             );
-          }
-          if (!mounted || snapshot.data == null) {
-            return const SizedBox();
           }
           final hotel = snapshot.data!;
           return Column(
@@ -532,13 +296,9 @@ class _ReviewPageState extends State<ReviewPage> {
                               children: List.generate(5, (index) {
                                 int starValue = index + 1;
                                 return GestureDetector(
-                                  onTap: widget.isReadOnly
-                                      ? null
-                                      : () {
-                                          setState(
-                                            () => selectedRating = starValue,
-                                          );
-                                        },
+                                  onTap: () {
+                                    setState(() => selectedRating = starValue);
+                                  },
                                   child: Padding(
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 4,
@@ -549,7 +309,7 @@ class _ReviewPageState extends State<ReviewPage> {
                                           : Icons.star_border_rounded,
                                       size: 38,
                                       color: starValue <= selectedRating
-                                          ? const Color(0xFF3B82F6)
+                                          ? const Color(0xFFFFB800)
                                           : const Color(
                                               0xFF94A3B8,
                                             ).withOpacity(0.75),
@@ -575,7 +335,7 @@ class _ReviewPageState extends State<ReviewPage> {
                       ),
                       const SizedBox(height: 32),
                       const Text(
-                        "Your Experience *",
+                        "Share your experience *",
                         style: TextStyle(
                           fontFamily: 'Plus Jakarta Sans',
                           fontWeight: FontWeight.w500,
@@ -613,12 +373,11 @@ class _ReviewPageState extends State<ReviewPage> {
                                 counterText: "",
                               ),
                               onChanged: (text) => setState(() {}),
-                              enabled: !widget.isReadOnly,
                             ),
                             Align(
                               alignment: Alignment.bottomRight,
                               child: Text(
-                                "${500 - reviewController.text.length} characters left",
+                                "Maximum 500 characters",
                                 style: TextStyle(
                                   fontFamily: 'Plus Jakarta Sans',
                                   fontWeight: FontWeight.w400,
@@ -634,7 +393,7 @@ class _ReviewPageState extends State<ReviewPage> {
                       ),
                       const SizedBox(height: 24),
                       const Text(
-                        "Photos (Optional)",
+                        "Add photos (Optional)",
                         style: TextStyle(
                           fontFamily: 'Plus Jakarta Sans',
                           fontWeight: FontWeight.w500,
@@ -643,108 +402,89 @@ class _ReviewPageState extends State<ReviewPage> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      GestureDetector(
-                        onTapDown: (selectedImage == null && !widget.isReadOnly)
-                            ? _showImagePickerOptions
-                            : null,
-                        child: Stack(
+                      Container(
+                        width: 96,
+                        height: 96,
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: const Color(0xFFCBD5E1),
+                            width: 2,
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: const Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            DottedBorder(
-                              color: const Color(0xFFCBD5E1),
-                              strokeWidth: 2,
-                              borderType: BorderType.RRect,
-                              radius: const Radius.circular(16),
-                              dashPattern: const [8, 8],
-                              child: Container(
-                                width: 96,
-                                height: 96,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                child:
-                                    (selectedImage != null ||
-                                        reviewImageUrl != null)
-                                    ? ClipRRect(
-                                        borderRadius: BorderRadius.circular(16),
-                                        child: widget.isReadOnly
-                                            ? GestureDetector(
-                                                onTap: () {
-                                                  if (reviewImageUrl != null &&
-                                                      reviewImageUrl!
-                                                          .isNotEmpty) {
-                                                    _showImagePreview(
-                                                      reviewImageUrl!,
-                                                    );
-                                                  }
-                                                },
-                                                child: Image.network(
-                                                  reviewImageUrl ?? '',
-                                                  fit: BoxFit.cover,
-                                                  width: double.infinity,
-                                                  height: double.infinity,
-                                                ),
-                                              )
-                                            : Image.file(
-                                                selectedImage!,
-                                                fit: BoxFit.cover,
-                                                width: double.infinity,
-                                                height: double.infinity,
-                                              ),
-                                      )
-                                    : const Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          Icon(
-                                            Icons.camera_alt_outlined,
-                                            color: Color(0xFF94A3B8),
-                                            size: 28,
-                                          ),
-                                          SizedBox(height: 6),
-                                          Text(
-                                            "CAMERA/\nGALLERY",
-                                            textAlign: TextAlign.center,
-                                            style: TextStyle(
-                                              fontFamily: 'Rubik',
-                                              fontWeight: FontWeight.w600,
-                                              fontSize: 10,
-                                              color: Color(0xFF94A3B8),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
+                            Icon(
+                              Icons.camera_alt_outlined,
+                              color: Color(0xFF94A3B8),
+                              size: 28,
+                            ),
+                            SizedBox(height: 6),
+                            Text(
+                              "CAMERA/\nGALLERY",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontFamily: 'Rubik',
+                                fontWeight: FontWeight.w600,
+                                fontSize: 10,
+                                color: Color(0xFF94A3B8),
                               ),
                             ),
-
-                            // ICON EDIT
-                            if (selectedImage != null && !widget.isReadOnly)
-                              Positioned(
-                                top: 4,
-                                right: 4,
-                                child: GestureDetector(
-                                  onTapDown: _showImagePickerOptions,
-                                  child: Container(
-                                    padding: const EdgeInsets.all(6),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      shape: BoxShape.circle,
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withOpacity(0.15),
-                                          blurRadius: 6,
-                                        ),
-                                      ],
-                                    ),
-                                    child: const Icon(
-                                      Icons.edit_rounded,
-                                      size: 16,
-                                      color: Color(0xFF0F172A),
-                                    ),
-                                  ),
-                                ),
-                              ),
                           ],
                         ),
+                      ),
+                      const SizedBox(height: 24),
+                      const Text(
+                        "What did you love most?",
+                        style: TextStyle(
+                          fontFamily: 'Plus Jakarta Sans',
+                          fontWeight: FontWeight.w500,
+                          fontSize: 14,
+                          color: Color(0xFF000000),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Wrap(
+                        spacing: 10,
+                        runSpacing: 10,
+                        children: hotel.facilities.map((facility) {
+                          final isSelected = selectedHighlights.contains(
+                            facility,
+                          );
+                          return FilterChip(
+                            label: Text(facility),
+                            selected: isSelected,
+                            onSelected: (value) {
+                              setState(() {
+                                if (value) {
+                                  selectedHighlights.add(facility);
+                                } else {
+                                  selectedHighlights.remove(facility);
+                                }
+                              });
+                            },
+                            labelStyle: TextStyle(
+                              fontFamily: 'Plus Jakarta Sans',
+                              fontWeight: FontWeight.w500,
+                              fontSize: 14,
+                              color: isSelected
+                                  ? Colors.white
+                                  : const Color(0xFF3B82F6).withOpacity(0.88),
+                            ),
+                            backgroundColor: Colors.white,
+                            selectedColor: const Color(0xFF3B82F6),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              side: BorderSide(
+                                color: isSelected
+                                    ? const Color(0xFF3B82F6)
+                                    : const Color(0xFF3B82F6).withOpacity(0.38),
+                              ),
+                            ),
+                            showCheckmark: false,
+                          );
+                        }).toList(),
                       ),
                       const SizedBox(height: 40),
                     ],
@@ -764,141 +504,73 @@ class _ReviewPageState extends State<ReviewPage> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const SizedBox(height: 16),
-                      if (!widget.isReadOnly)
-                        SizedBox(
-                          width: double.infinity,
-                          height: 48,
-                          child: ElevatedButton(
-                            onPressed: (isSubmitting || widget.isReadOnly)
-                                ? null
-                                : () async {
-                                    if (!mounted) return;
-                                    final confirm = await showDialog<bool>(
-                                      context: context,
-                                      barrierDismissible: false,
-                                      builder: (dialogContext) {
-                                        return AlertDialog(
-                                          backgroundColor: Colors.white,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              24,
-                                            ),
-                                          ),
-                                          title: const Text(
-                                            "Confirm Submit Review",
-                                            style: TextStyle(
-                                              fontFamily: 'Plus Jakarta Sans',
-                                              fontWeight: FontWeight.w600,
-                                              fontSize: 20,
-                                              color: Color(0xFF0F172A),
-                                            ),
-                                          ),
-                                          content: const Text(
-                                            "Are you sure you want to submit this review?",
-                                            style: TextStyle(
-                                              fontFamily: 'Plus Jakarta Sans',
-                                              fontSize: 14,
-                                              color: Color(0xFF64748B),
-                                            ),
-                                          ),
-                                          actionsPadding:
-                                              const EdgeInsets.fromLTRB(
-                                                20,
-                                                0,
-                                                20,
-                                                20,
-                                              ),
-                                          actions: [
-                                            TextButton(
-                                              onPressed: () {
-                                                Navigator.pop(
-                                                  dialogContext,
-                                                  false,
-                                                );
-                                              },
-                                              child: const Text(
-                                                "CANCEL",
-                                                style: TextStyle(
-                                                  color: Colors.red,
-                                                  fontWeight: FontWeight.w600,
-                                                  fontFamily:
-                                                      'Plus Jakarta Sans',
-                                                ),
-                                              ),
-                                            ),
-                                            ElevatedButton(
-                                              onPressed: () {
-                                                Navigator.pop(
-                                                  dialogContext,
-                                                  true,
-                                                );
-                                              },
-                                              style: ElevatedButton.styleFrom(
-                                                backgroundColor: const Color(
-                                                  0xFF3B82F6,
-                                                ),
-                                                foregroundColor: Colors.white,
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(20),
-                                                ),
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                      horizontal: 24,
-                                                      vertical: 10,
-                                                    ),
-                                              ),
-                                              child: const Text(
-                                                "CONFIRM",
-                                                style: TextStyle(
-                                                  fontFamily:
-                                                      'Plus Jakarta Sans',
-                                                  fontWeight: FontWeight.w600,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        );
-                                      },
-                                    );
-                                    if (confirm == true && mounted) {
-                                      submitReview();
-                                    }
-                                  },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF3B82F6),
-                              foregroundColor: Colors.white,
-                              disabledBackgroundColor: const Color(
-                                0xFF3B82F6,
-                              ).withOpacity(0.6),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(25),
-                              ),
-                              elevation: 3,
-                              shadowColor: Colors.black.withOpacity(0.25),
+                      GestureDetector(
+                        onTap: () => setState(() => isAnonymous = !isAnonymous),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(
+                              isAnonymous
+                                  ? Icons.check_circle
+                                  : Icons.radio_button_unchecked,
+                              color: isAnonymous
+                                  ? const Color(0xFF3B82F6)
+                                  : const Color(0xFF94A3B8),
+                              size: 20,
                             ),
-                            child: isSubmitting
-                                ? const SizedBox(
-                                    width: 24,
-                                    height: 24,
-                                    child: CircularProgressIndicator(
-                                      color: Colors.white,
-                                      strokeWidth: 2.5,
-                                    ),
-                                  )
-                                : Text(
-                                    widget.isReadOnly
-                                        ? "Your Review"
-                                        : "Submit Review",
-                                    style: const TextStyle(
-                                      fontFamily: 'Plus Jakarta Sans',
-                                      fontWeight: FontWeight.w500,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                          ),
+                            const SizedBox(width: 8),
+                            const Expanded(
+                              child: Text(
+                                "Keep my review anonymous. My profile picture and name will be censored from other travelers",
+                                style: TextStyle(
+                                  fontFamily: 'Plus Jakarta Sans',
+                                  fontWeight: FontWeight.w400,
+                                  fontSize: 12,
+                                  color: Color(0xFF94A3B8),
+                                  height: 1.25,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
+                      ),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 48,
+                        child: ElevatedButton(
+                          onPressed: isSubmitting ? null : submitReview,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF3B82F6),
+                            foregroundColor: Colors.white,
+                            disabledBackgroundColor: const Color(
+                              0xFF3B82F6,
+                            ).withOpacity(0.6),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(25),
+                            ),
+                            elevation: 3,
+                            shadowColor: Colors.black.withOpacity(0.25),
+                          ),
+                          child: isSubmitting
+                              ? const SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2.5,
+                                  ),
+                                )
+                              : const Text(
+                                  "Submit Review",
+                                  style: TextStyle(
+                                    fontFamily: 'Plus Jakarta Sans',
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                        ),
+                      ),
                     ],
                   ),
                 ),
