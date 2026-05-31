@@ -20,14 +20,14 @@ class HotelReviewDetail {
   factory HotelReviewDetail.fromJson(Map<String, dynamic> json) {
     var facilityList = json['hotel']['hotel_facilities'] as List? ?? [];
     List<String> parsedFacilities = facilityList
-      .map((f) => f['name'].toString())
-      .toList();
+        .map((f) => f['name'].toString())
+        .toList();
 
     var imageList = json['hotel']['hotel_images'] as List? ?? [];
     String img = '';
-      if (imageList.isNotEmpty && imageList[0]['image'] != null) {
-        img = imageList[0]['image'].toString();
-      }
+    if (imageList.isNotEmpty && imageList[0]['image'] != null) {
+      img = imageList[0]['image'].toString();
+    }
     return HotelReviewDetail(
       hotelName: json['hotel']['name'] ?? 'Unknown Hotel',
       roomType: json['room_type'] ?? 'Standard Room',
@@ -40,7 +40,11 @@ class HotelReviewDetail {
   String get relativeTime {
     final today = DateTime.now();
     final cleanToday = DateTime(today.year, today.month, today.day);
-    final cleanCheckOut = DateTime(checkOutDate.year, checkOutDate.month, checkOutDate.day);
+    final cleanCheckOut = DateTime(
+      checkOutDate.year,
+      checkOutDate.month,
+      checkOutDate.day,
+    );
     final difference = cleanToday.difference(cleanCheckOut).inDays;
     if (difference <= 0) {
       return "STAYED TODAY";
@@ -71,65 +75,73 @@ class _ReviewPageState extends State<ReviewPage> {
     super.initState();
     _hotelDetailFuture = _fetchHotelDetail();
   }
+  // In _ReviewPageState class:
+
   Future<HotelReviewDetail> _fetchHotelDetail() async {
-    final String apiUrl = "http://localhost:8000/api/bookings/${widget.bookingId}/review-details";
+    // Get from bookings endpoint instead
+    final String apiUrl =
+        "http://localhost:8000/api/bookings/${widget.bookingId}";
     try {
-      final response = await http.get(Uri.parse(apiUrl), headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Authorization': 'Bearer 5|qFTHyhTKnuwNY9ltGuzEvTnPqWdBTG8L3unjjJPg42b3e5dd' // kalau pakai auth
-      });
-      print("STATUS CODE: ${response.statusCode}");
-      print("RAW RESPONSE: ${response.body}");
+      final response = await http.get(
+        Uri.parse(apiUrl),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer YOUR_TOKEN',
+        },
+      );
+
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        return HotelReviewDetail.fromJson(data['data']);
-      } else {
-        throw Exception("Server gagal merespon dengan kode ${response.statusCode}");
+        final bookingData = jsonDecode(response.body)['data'];
+        return HotelReviewDetail.fromJson(bookingData);
       }
+      throw Exception("Failed ${response.statusCode}");
     } catch (e) {
-      throw Exception("Gagal terhubung ke server: $e");
+      throw Exception("Connection failed: $e");
     }
   }
 
   void submitReview() async {
     if (selectedRating == 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Silakan pilih rating terlebih dahulu")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Select rating first")));
       return;
     }
+
     setState(() => isSubmitting = true);
+
     try {
       final payload = {
-        'booking_id': widget.bookingId,
+        'user_id': 1,
+        'room_id': 1,
+        'booking_detail_id': int.parse(widget.bookingId),
         'rating': selectedRating,
-        'review_text': reviewController.text,
-        'is_anonymous': isAnonymous,
-        'tags': selectedHighlights.toList(), 
+        'description': reviewController.text,
+        'created_at': DateTime.now().toIso8601String(),
       };
+
       final response = await http.post(
         Uri.parse("http://localhost:8000/api/reviews"),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(payload),
       );
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Review berhasil dikirim!")),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("Review submitted!")));
         Navigator.pop(context);
       } else {
-        throw Exception("Gagal menyimpan review ke database.");
+        throw Exception("Save failed");
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: $e")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Error: $e")));
     } finally {
-      if (mounted) {
-        setState(() => isSubmitting = false);
-      }
+      if (mounted) setState(() => isSubmitting = false);
     }
   }
 
@@ -165,18 +177,16 @@ class _ReviewPageState extends State<ReviewPage> {
         ),
         bottom: const PreferredSize(
           preferredSize: Size.fromHeight(1),
-          child: Divider(
-            height: 1,
-            thickness: 1,
-            color: Color(0xFFE2E8F0),
-          ),
+          child: Divider(height: 1, thickness: 1, color: Color(0xFFE2E8F0)),
         ),
       ),
       body: FutureBuilder<HotelReviewDetail>(
         future: _hotelDetailFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator(color: Color(0xFF3B82F6)));
+            return const Center(
+              child: CircularProgressIndicator(color: Color(0xFF3B82F6)),
+            );
           }
           if (snapshot.hasError) {
             return Center(
@@ -192,7 +202,10 @@ class _ReviewPageState extends State<ReviewPage> {
               Expanded(
                 child: SingleChildScrollView(
                   physics: const BouncingScrollPhysics(),
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 20,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -212,13 +225,17 @@ class _ReviewPageState extends State<ReviewPage> {
                                 width: 74,
                                 height: 74,
                                 fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) => Container(
-                                  width: 74,
-                                  height: 74,
-                                  color: const Color(0xFFD9D9D9),
-                                  child: const Icon(Icons.hotel_rounded, color: Colors.grey),
-                                ),
-                              )
+                                errorBuilder: (context, error, stackTrace) =>
+                                    Container(
+                                      width: 74,
+                                      height: 74,
+                                      color: const Color(0xFFD9D9D9),
+                                      child: const Icon(
+                                        Icons.hotel_rounded,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                              ),
                             ),
                             const SizedBox(width: 16),
                             Expanded(
@@ -256,7 +273,7 @@ class _ReviewPageState extends State<ReviewPage> {
                                   ),
                                 ],
                               ),
-                            )
+                            ),
                           ],
                         ),
                       ),
@@ -283,13 +300,19 @@ class _ReviewPageState extends State<ReviewPage> {
                                     setState(() => selectedRating = starValue);
                                   },
                                   child: Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 4,
+                                    ),
                                     child: Icon(
-                                      starValue <= selectedRating ? Icons.star_rounded : Icons.star_border_rounded,
+                                      starValue <= selectedRating
+                                          ? Icons.star_rounded
+                                          : Icons.star_border_rounded,
                                       size: 38,
-                                      color: starValue <= selectedRating 
+                                      color: starValue <= selectedRating
                                           ? const Color(0xFFFFB800)
-                                          : const Color(0xFF94A3B8).withOpacity(0.75),
+                                          : const Color(
+                                              0xFF94A3B8,
+                                            ).withOpacity(0.75),
                                     ),
                                   ),
                                 );
@@ -297,7 +320,9 @@ class _ReviewPageState extends State<ReviewPage> {
                             ),
                             const SizedBox(height: 12),
                             Text(
-                              selectedRating == 0 ? "Select Rating" : "$selectedRating Stars Selected",
+                              selectedRating == 0
+                                  ? "Select Rating"
+                                  : "$selectedRating Stars Selected",
                               style: const TextStyle(
                                 fontFamily: 'Plus Jakarta Sans',
                                 fontWeight: FontWeight.w400,
@@ -325,7 +350,10 @@ class _ReviewPageState extends State<ReviewPage> {
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(color: const Color(0xFFE2E8F0)),
                         ),
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
                         child: Column(
                           children: [
                             TextField(
@@ -338,7 +366,8 @@ class _ReviewPageState extends State<ReviewPage> {
                                 color: Colors.black,
                               ),
                               decoration: const InputDecoration(
-                                hintText: "Tell us about the service, rooms, and location...",
+                                hintText:
+                                    "Tell us about the service, rooms, and location...",
                                 hintStyle: TextStyle(color: Color(0xFF94A3B8)),
                                 border: InputBorder.none,
                                 counterText: "",
@@ -353,7 +382,9 @@ class _ReviewPageState extends State<ReviewPage> {
                                   fontFamily: 'Plus Jakarta Sans',
                                   fontWeight: FontWeight.w400,
                                   fontSize: 12,
-                                  color: const Color(0xFF94A3B8).withOpacity(0.75),
+                                  color: const Color(
+                                    0xFF94A3B8,
+                                  ).withOpacity(0.75),
                                 ),
                               ),
                             ),
@@ -375,13 +406,20 @@ class _ReviewPageState extends State<ReviewPage> {
                         width: 96,
                         height: 96,
                         decoration: BoxDecoration(
-                          border: Border.all(color: const Color(0xFFCBD5E1), width: 2),
+                          border: Border.all(
+                            color: const Color(0xFFCBD5E1),
+                            width: 2,
+                          ),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: const Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.camera_alt_outlined, color: Color(0xFF94A3B8), size: 28),
+                            Icon(
+                              Icons.camera_alt_outlined,
+                              color: Color(0xFF94A3B8),
+                              size: 28,
+                            ),
                             SizedBox(height: 6),
                             Text(
                               "CAMERA/\nGALLERY",
@@ -392,7 +430,7 @@ class _ReviewPageState extends State<ReviewPage> {
                                 fontSize: 10,
                                 color: Color(0xFF94A3B8),
                               ),
-                            )
+                            ),
                           ],
                         ),
                       ),
@@ -411,7 +449,9 @@ class _ReviewPageState extends State<ReviewPage> {
                         spacing: 10,
                         runSpacing: 10,
                         children: hotel.facilities.map((facility) {
-                          final isSelected = selectedHighlights.contains(facility);
+                          final isSelected = selectedHighlights.contains(
+                            facility,
+                          );
                           return FilterChip(
                             label: Text(facility),
                             selected: isSelected,
@@ -428,14 +468,18 @@ class _ReviewPageState extends State<ReviewPage> {
                               fontFamily: 'Plus Jakarta Sans',
                               fontWeight: FontWeight.w500,
                               fontSize: 14,
-                              color: isSelected ? Colors.white : const Color(0xFF3B82F6).withOpacity(0.88),
+                              color: isSelected
+                                  ? Colors.white
+                                  : const Color(0xFF3B82F6).withOpacity(0.88),
                             ),
                             backgroundColor: Colors.white,
                             selectedColor: const Color(0xFF3B82F6),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16),
                               side: BorderSide(
-                                color: isSelected ? const Color(0xFF3B82F6) : const Color(0xFF3B82F6).withOpacity(0.38),
+                                color: isSelected
+                                    ? const Color(0xFF3B82F6)
+                                    : const Color(0xFF3B82F6).withOpacity(0.38),
                               ),
                             ),
                             showCheckmark: false,
@@ -448,7 +492,10 @@ class _ReviewPageState extends State<ReviewPage> {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 16,
+                ),
                 decoration: const BoxDecoration(
                   color: Color(0xFFF5F7F8),
                   border: Border(top: BorderSide(color: Color(0xFFE2E8F0))),
@@ -463,8 +510,12 @@ class _ReviewPageState extends State<ReviewPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Icon(
-                              isAnonymous ? Icons.check_circle : Icons.radio_button_unchecked,
-                              color: isAnonymous ? const Color(0xFF3B82F6) : const Color(0xFF94A3B8),
+                              isAnonymous
+                                  ? Icons.check_circle
+                                  : Icons.radio_button_unchecked,
+                              color: isAnonymous
+                                  ? const Color(0xFF3B82F6)
+                                  : const Color(0xFF94A3B8),
                               size: 20,
                             ),
                             const SizedBox(width: 8),
@@ -492,7 +543,9 @@ class _ReviewPageState extends State<ReviewPage> {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF3B82F6),
                             foregroundColor: Colors.white,
-                            disabledBackgroundColor: const Color(0xFF3B82F6).withOpacity(0.6),
+                            disabledBackgroundColor: const Color(
+                              0xFF3B82F6,
+                            ).withOpacity(0.6),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(25),
                             ),
@@ -500,19 +553,22 @@ class _ReviewPageState extends State<ReviewPage> {
                             shadowColor: Colors.black.withOpacity(0.25),
                           ),
                           child: isSubmitting
-                            ? const SizedBox(
-                                width: 24,
-                                height: 24,
-                                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
-                              )
-                            : const Text(
-                                "Submit Review",
-                                style: TextStyle(
-                                  fontFamily: 'Plus Jakarta Sans',
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 14,
+                              ? const SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2.5,
+                                  ),
+                                )
+                              : const Text(
+                                  "Submit Review",
+                                  style: TextStyle(
+                                    fontFamily: 'Plus Jakarta Sans',
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 14,
+                                  ),
                                 ),
-                              ),
                         ),
                       ),
                     ],

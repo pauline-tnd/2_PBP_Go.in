@@ -3,10 +3,12 @@ import 'package:frontend/models/hotel.dart';
 import 'package:frontend/models/room.dart';
 import 'package:frontend/widgets/room_card.dart';
 import 'package:frontend/widgets/hotel_image.dart';
+import 'package:frontend/widgets/header.dart';
 import 'package:frontend/services/api_services.dart';
 import 'package:frontend/extensions/snackbar.dart';
 import 'package:frontend/models/facility.dart';
 import 'package:frontend/widgets/common/carousel.dart';
+import 'package:frontend/pages/review_page.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'dart:convert';
@@ -33,7 +35,9 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
   bool _loading = true;
   String? _error;
   final MapController _mapController = MapController();
-  LatLng _center = const LatLng(51.5071, -0.1417); // ganti plz
+  final ScrollController _scrollController = ScrollController();
+  final GlobalKey _mapKey = GlobalKey();
+  LatLng _center = const LatLng(51.5071, -0.1417);
   String _pickedAddress = '';
 
   @override
@@ -65,23 +69,19 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
     final encodedQuery = Uri.encodeComponent(query);
     final url =
         'https://api.maptiler.com/geocoding/$encodedQuery.json?key=$_maptilerKey';
-
     try {
       final response = await http.get(Uri.parse(url));
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         final features = data['features'] as List;
-
         if (features.isNotEmpty) {
           final coords = features.first['center'] as List;
           final lng = coords[0] as double;
           final lat = coords[1] as double;
-
           if (mounted) {
             setState(() {
               _center = LatLng(lat, lng);
             });
-
             WidgetsBinding.instance.addPostFrameCallback((_) {
               try {
                 _mapController.move(_center, 16);
@@ -169,15 +169,92 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
 
   @override
   Widget build(BuildContext context) {
-    final hotel = widget.hotel;
+    if (_loading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    if (_error != null) {
+      return Scaffold(body: Center(child: Text('Error: $_error')));
+    }
 
     return Scaffold(
       backgroundColor: Colors.white,
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : _error != null
-          ? Center(child: Text('Error: $_error'))
-          : _buildBody(hotel),
+      body: CustomScrollView(
+        controller: _scrollController,
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 280, // photo height
+            pinned: true,
+            backgroundColor: const Color(0xFF0E4399),
+            elevation: 0,
+            automaticallyImplyLeading: false,
+            flexibleSpace: FlexibleSpaceBar(
+              background: Stack(
+                fit: StackFit.expand,
+                children: [
+                  // hotel photo fills header
+                  widget.hotel.imagePath != null
+                      ? Image.network(
+                          widget.hotel.imagePath!,
+                          fit: BoxFit.cover,
+                        )
+                      : Container(color: const Color(0xFF1E3A5F)),
+                  // transparent-to-dark gradient overlay
+                  const DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [Colors.transparent, Colors.black26],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            leading: GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: Container(
+                margin: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.black26,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.chevron_left_rounded,
+                      color: Colors.white,
+                      size: 26,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            title: const Text(
+              'Hotel Detail',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            actions: [
+              IconButton(
+                icon: Icon(
+                  _isWishlisted
+                      ? Icons.favorite_rounded
+                      : Icons.favorite_border_rounded,
+                  color: Colors.white,
+                ),
+                onPressed: _isWishlistLoading ? null : _toggleWishlist,
+              ),
+            ],
+          ),
+          SliverToBoxAdapter(child: _buildBody(widget.hotel)),
+        ],
+      ),
     );
   }
 
@@ -212,471 +289,401 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
 
     final totalReviews = _hotelDetail?['total_reviews'] ?? 0;
 
-    return CustomScrollView(
-      slivers: [
-        SliverAppBar(
-          backgroundColor: Colors.white,
-          elevation: 0,
-          pinned: true,
-          expandedHeight: 0,
-          leading: GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: Container(
-              margin: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(10),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.08),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: const Icon(
-                Icons.chevron_left_rounded,
-                color: Color(0xFF1E293B),
-                size: 24,
-              ),
-            ),
-          ),
-          actions: [
-            GestureDetector(
-              onTap: _toggleWishlist,
-              child: Container(
-                margin: const EdgeInsets.all(8),
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.08),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.10),
+                  blurRadius: 24,
+                  offset: const Offset(0, 8),
                 ),
-                child: _isWishlistLoading
-                    ? const Padding(
-                        padding: EdgeInsets.all(10),
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Icon(
-                        _isWishlisted
-                            ? Icons.favorite_rounded
-                            : Icons.favorite_border_rounded,
-                        color: _isWishlisted
-                            ? const Color(0xFFEF4444)
-                            : const Color(0xFF94A3B8),
-                        size: 22,
-                      ),
-              ),
+              ],
             ),
-          ],
-          title: const Text(
-            'Hotel Detail',
-            style: TextStyle(
-              color: Color(0xFF1E293B),
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          centerTitle: true,
-        ),
-
-        SliverToBoxAdapter(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  HotelImage(
-                    imagePath: hotelImages.isNotEmpty
-                        ? hotelImages.first
-                        : hotel.imagePath,
-                    placeholderColor: const Color(0xFF1E3A5F),
-                    width: double.infinity,
-                    height: 220,
-                    borderRadius: BorderRadius.zero,
-                  ),
-
-                  Positioned(
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    child: Container(
-                      height: 100,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Colors.transparent,
-                            Colors.black.withValues(alpha: 0.18),
-                          ],
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        hotel.name,
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF1E293B),
+                          height: 1.2,
                         ),
                       ),
                     ),
-                  ),
-
-                  Positioned(
-                    bottom: -60,
-                    left: 16,
-                    right: 16,
-                    child: Container(
-                      padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(24),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.10),
-                            blurRadius: 24,
-                            offset: const Offset(0, 8),
-                          ),
-                        ],
+                    const SizedBox(width: 8),
+                    Row(
+                      children: List.generate(
+                        hotel.starRating,
+                        (_) => const Icon(
+                          Icons.star_rounded,
+                          size: 18,
+                          color: Color(0xFFFBBF24),
+                        ),
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  hotel.name,
-                                  style: const TextStyle(
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.w800,
-                                    color: Color(0xFF1E293B),
-                                    height: 1.2,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Row(
-                                children: List.generate(
-                                  hotel.starRating,
-                                  (_) => const Icon(
-                                    Icons.star_rounded,
-                                    size: 18,
-                                    color: Color(0xFFFBBF24),
-                                  ),
-                                ),
-                              ),
-                            ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+
+                GestureDetector(
+                  onTap: _scrollToMap,
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.location_on_outlined,
+                        size: 15,
+                        color: Color(0xFF3B82F6),
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          hotel.location,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Color(0xFF3B82F6),
+                            fontWeight: FontWeight.w500,
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const Icon(
+                        Icons.chevron_right_rounded,
+                        size: 18,
+                        color: Color(0xFF3B82F6),
+                      ),
+                    ],
+                  ),
+                ),
 
-                          const SizedBox(height: 12),
-
-                          GestureDetector(
-                            onTap: () {},
+                const SizedBox(height: 12),
+                Container(height: 1, color: const Color(0xFFF1F5F9)),
+                const SizedBox(height: 10),
+                // rating + reviews row (keep as-is)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                const ReviewPage(bookingId: '0'),
+                          ),
+                        );
+                      },
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 7,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFEF3C7),
+                              borderRadius: BorderRadius.circular(24),
+                            ),
                             child: Row(
                               children: [
                                 const Icon(
-                                  Icons.location_on_outlined,
-                                  size: 15,
-                                  color: Color(0xFF3B82F6),
+                                  Icons.star_outline_rounded,
+                                  color: Color(0xFFF59E0B),
+                                  size: 16,
                                 ),
-                                const SizedBox(width: 4),
-                                Expanded(
-                                  child: Text(
-                                    hotel.location,
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      color: Color(0xFF3B82F6),
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
+                                const SizedBox(width: 5),
+                                Text(
+                                  '$rating / 5',
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFFF59E0B),
                                   ),
-                                ),
-                                const Icon(
-                                  Icons.chevron_right_rounded,
-                                  size: 18,
-                                  color: Color(0xFF3B82F6),
                                 ),
                               ],
                             ),
                           ),
-
-                          const SizedBox(height: 12),
-                          Container(height: 1, color: const Color(0xFFF1F5F9)),
-                          const SizedBox(height: 10),
-
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              Container(
-                                alignment: Alignment.topRight,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 7,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFFEF3C7),
-                                  borderRadius: BorderRadius.circular(24),
-                                ),
-                                child: Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.star_outline_rounded,
-                                      color: Color(0xFFF59E0B),
-                                      size: 16,
-                                    ),
-                                    const SizedBox(width: 5),
-                                    Text(
-                                      '$rating / 5',
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w700,
-                                        color: Color(0xFFF59E0B),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: 14),
-                              SizedBox(
-                                width: 72,
-                                height: 30,
-                                child: Stack(
-                                  children: [
-                                    for (int i = 0; i < 3; i++)
-                                      Positioned(
-                                        left: i * 20.0,
-                                        child: Container(
-                                          width: 30,
-                                          height: 30,
-                                          decoration: BoxDecoration(
-                                            shape: BoxShape.circle,
-                                            color: [
-                                              const Color(0xFF94A3B8),
-                                              const Color(0xFF64748B),
-                                              const Color(0xFF3B82F6),
-                                            ][i],
-                                            border: Border.all(
-                                              color: Colors.white,
-                                              width: 2,
-                                            ),
-                                          ),
-                                          child: const Icon(
-                                            Icons.person,
-                                            size: 16,
-                                            color: Colors.white,
-                                          ),
+                          const SizedBox(width: 14),
+                          SizedBox(
+                            width: 72,
+                            height: 30,
+                            child: Stack(
+                              children: [
+                                for (int i = 0; i < 3; i++)
+                                  Positioned(
+                                    left: i * 20.0,
+                                    child: Container(
+                                      width: 30,
+                                      height: 30,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: [
+                                          const Color(0xFF94A3B8),
+                                          const Color(0xFF64748B),
+                                          const Color(0xFF3B82F6),
+                                        ][i],
+                                        border: Border.all(
+                                          color: Colors.white,
+                                          width: 2,
                                         ),
                                       ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                '${totalReviews > 99 ? '99+' : totalReviews}',
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  color: Color(0xFF64748B),
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
+                                      child: const Icon(
+                                        Icons.person,
+                                        size: 16,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            '${totalReviews > 99 ? '99+' : totalReviews}',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: Color(0xFF64748B),
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                         ],
                       ),
                     ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 80),
-
-              if (hotelImages.length >= 2)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Carousel(imageUrls: hotelImages, height: 220),
-                ),
-
-              const SizedBox(height: 24),
-
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 20),
-
-                    const Text(
-                      'About',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF1E293B),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      aboutText,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: Color(0xFF64748B),
-                        height: 1.6,
-                      ),
-                    ),
-                    if (description.length > 150)
-                      GestureDetector(
-                        onTap: () => setState(() => _isExpanded = !_isExpanded),
-                        child: Padding(
-                          padding: const EdgeInsets.only(top: 4),
-                          child: Text(
-                            _isExpanded ? 'Show less' : 'Read more',
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF3B82F6),
-                            ),
-                          ),
-                        ),
-                      ),
-
-                    const SizedBox(height: 20),
-
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Amenities',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF1E293B),
-                          ),
-                        ),
-                        if (hasMoreFacilities)
-                          GestureDetector(
-                            onTap: _showAmenitiesSheet,
-                            child: const Text(
-                              'See all',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: Color(0xFF3B82F6),
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    if (displayFacilities.isEmpty)
-                      const Text(
-                        'No amenities listed yet.',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Color(0xFF94A3B8),
-                        ),
-                      )
-                    else
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: displayFacilities.map((f) {
-                          final facility = Facility.fromJson(
-                            f as Map<String, dynamic>,
-                          );
-                          return _FacilityChip(facility: facility);
-                        }).toList(),
-                      ),
-
-                    const SizedBox(height: 20),
-
-                    const Text(
-                      'Available Rooms',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF1E293B),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    if (_rooms.isEmpty)
-                      const Text(
-                        'No rooms available yet.',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Color(0xFF94A3B8),
-                        ),
-                      )
-                    else
-                      ..._rooms.map((room) {
-                        return RoomCard(
-                          room: room,
-                          hotelName: hotel.name,
-                          reviewScore:
-                              double.tryParse(rating) ?? hotel.userRating,
-                        );
-                      }),
-
-                    const SizedBox(height: 20),
-
-                    const Text(
-                      'Locations',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF1E293B),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(16),
-                      child: SizedBox(
-                        height: 220,
-                        child: FlutterMap(
-                          mapController: _mapController,
-                          options: MapOptions(
-                            initialCenter: _center,
-                            initialZoom: 16,
-                            interactionOptions: const InteractionOptions(
-                              flags:
-                                  InteractiveFlag.all & ~InteractiveFlag.rotate,
-                            ),
-                          ),
-                          children: [
-                            TileLayer(
-                              urlTemplate:
-                                  'https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=$_maptilerKey',
-                              userAgentPackageName: 'com.example.frontend',
-                            ),
-                            MarkerLayer(
-                              markers: [
-                                Marker(
-                                  point: _center,
-                                  width: 50,
-                                  height: 50,
-                                  alignment: Alignment.topCenter,
-                                  child: const Icon(
-                                    Icons.location_on,
-                                    color: Color(0xFFEF4444),
-                                    size: 45,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 32),
                   ],
                 ),
+              ],
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 24),
+
+        if (hotelImages.length >= 2)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Carousel(imageUrls: hotelImages, height: 220),
+          ),
+
+        const SizedBox(height: 24),
+
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 20),
+
+              const Text(
+                'About',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF1E293B),
+                ),
               ),
+              const SizedBox(height: 8),
+              Text(
+                aboutText,
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: Color(0xFF64748B),
+                  height: 1.6,
+                ),
+              ),
+              if (description.length > 150)
+                GestureDetector(
+                  onTap: () => setState(() => _isExpanded = !_isExpanded),
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      _isExpanded ? 'Show less' : 'Read more',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF3B82F6),
+                      ),
+                    ),
+                  ),
+                ),
+
+              const SizedBox(height: 20),
+              Container(height: 1, color: const Color(0xFFF1F5F9)),
+              const SizedBox(height: 20),
+
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Amenities',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF1E293B),
+                    ),
+                  ),
+                  if (hasMoreFacilities)
+                    GestureDetector(
+                      onTap: _showAmenitiesSheet,
+                      child: const Text(
+                        'See all',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFF3B82F6),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              if (displayFacilities.isEmpty)
+                const Text(
+                  'No amenities listed yet.',
+                  style: TextStyle(fontSize: 13, color: Color(0xFF94A3B8)),
+                )
+              else
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: displayFacilities.map((f) {
+                    final facility = Facility.fromJson(
+                      f as Map<String, dynamic>,
+                    );
+                    return _FacilityChip(facility: facility);
+                  }).toList(),
+                ),
+
+              const SizedBox(height: 20),
+              Container(height: 1, color: const Color(0xFFF1F5F9)),
+              const SizedBox(height: 20),
+
+              const Text(
+                'Available Rooms',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF1E293B),
+                ),
+              ),
+              const SizedBox(height: 12),
+              if (_rooms.isEmpty)
+                const Text(
+                  'No rooms available yet.',
+                  style: TextStyle(fontSize: 13, color: Color(0xFF94A3B8)),
+                )
+              else
+                ..._rooms.map((room) {
+                  final roomsDetail =
+                      _hotelDetail?['rooms'] as List<dynamic>? ?? [];
+                  final roomImagesRaw =
+                      roomsDetail.firstWhere(
+                            (r) =>
+                                r is Map<String, dynamic> && r['id'] == room.id,
+                            orElse: () => <String, dynamic>{},
+                          )
+                          as Map<String, dynamic>;
+                  final roomImages =
+                      (roomImagesRaw['room_images'] as List<dynamic>? ?? [])
+                          .map((e) => e['image']?.toString() ?? '')
+                          .where((image) => image.isNotEmpty)
+                          .toList();
+                  final firstImage = roomImages.isNotEmpty
+                      ? roomImages.first
+                      : null;
+
+                  return RoomCard(
+                    room: room,
+                    imageUrl: firstImage,
+                    imageUrls: roomImages,
+                    hotelName: hotel.name,
+                    reviewScore: double.tryParse(rating) ?? hotel.userRating,
+                  );
+                }),
+
+              const SizedBox(height: 20),
+              Container(height: 1, color: const Color(0xFFF1F5F9)),
+              const SizedBox(height: 20),
+
+              const Text(
+                'Locations',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF1E293B),
+                ),
+              ),
+              const SizedBox(height: 16),
+              // new
+              ClipRRect(
+                key: _mapKey,
+                borderRadius: BorderRadius.circular(16),
+                child: SizedBox(
+                  height: 220,
+                  child: FlutterMap(
+                    mapController: _mapController,
+                    options: MapOptions(
+                      initialCenter: _center,
+                      initialZoom: 16,
+                      interactionOptions: const InteractionOptions(
+                        flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
+                      ),
+                    ),
+                    children: [
+                      TileLayer(
+                        urlTemplate:
+                            'https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=$_maptilerKey',
+                        userAgentPackageName: 'com.example.frontend',
+                      ),
+                      MarkerLayer(
+                        markers: [
+                          Marker(
+                            point: _center,
+                            width: 50,
+                            height: 50,
+                            alignment: Alignment.topCenter,
+                            child: const Icon(
+                              Icons.location_on,
+                              color: Color(0xFFEF4444),
+                              size: 45,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 32),
             ],
           ),
         ),
       ],
+    );
+  }
+
+  void _scrollToMap() {
+    final ctx = _mapKey.currentContext;
+    if (ctx == null) return;
+    Scrollable.ensureVisible(
+      ctx,
+      duration: const Duration(milliseconds: 600),
+      curve: Curves.easeInOut,
+      alignment: 0.1,
     );
   }
 
