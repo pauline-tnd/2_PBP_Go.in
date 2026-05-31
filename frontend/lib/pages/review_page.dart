@@ -3,7 +3,20 @@ import 'package:dotted_border/dotted_border.dart';
 import 'package:frontend/services/api_services.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
-import 'package:frontend/models/facility.dart';
+
+class Facility {
+  final String name;
+  final String icon;
+
+  Facility({required this.name, required this.icon});
+
+  factory Facility.fromJson(Map<String, dynamic> json) {
+    return Facility(
+      name: json['name'] ?? '',
+      icon: json['icon']?['icon']?.toString().trim() ?? '',
+    );
+  }
+}
 
 class HotelReviewDetail {
   final String hotelName;
@@ -46,12 +59,9 @@ class HotelReviewDetail {
     return HotelReviewDetail(
       hotelName: json['hotel']['name'] ?? 'Unknown Hotel',
       roomType: json['room_type'] ?? 'Standard Room',
-      imageName: img,
-      checkOutDate: DateTime.parse(
-        json['check_out'] ?? DateTime.now().toIso8601String(),
-      ),
       facilities: parsedFacilities,
-      roomId: json['room_id'],
+          ? json['room_id']
+          : int.tryParse(json['room_id']?.toString() ?? ''),
       bookingDetailId: json['booking_detail_id'] is int
           ? json['booking_detail_id']
           : int.tryParse(json['booking_detail_id']?.toString() ?? ''),
