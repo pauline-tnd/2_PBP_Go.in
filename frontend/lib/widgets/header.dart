@@ -1,22 +1,6 @@
-// ============================================================
-// FILE: gradient_scroll_header.dart
-//
-// Usage:
-//   - GradientScrollHeader  -> main wrapper for the body
-//   - HeaderAction          -> navbar icon action
-//   - HeaderLocation        -> existing location widget
-//
-// Example usage is at the bottom (class ExampleHomePage).
-// ============================================================
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-// ─────────────────────────────────────────────
-// 1. Small reusable components
-// ─────────────────────────────────────────────
-
-/// Icon button for either side of the navbar.
 class HeaderAction extends StatelessWidget {
   const HeaderAction({
     super.key,
@@ -28,7 +12,8 @@ class HeaderAction extends StatelessWidget {
   final IconData icon;
   final VoidCallback? onTap;
 
-  /// Shows a small red badge when the count is greater than zero.
+  /// Shows a small red badge when the count > 0
+  /// For Notification, etc
   final int badgeCount;
 
   @override
@@ -97,7 +82,7 @@ class HeaderLocation extends StatelessWidget {
                 color: Colors.white,
               ),
               maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+              overflow: TextOverflow.ellipsis, // text too long...
             ),
           ),
         ],
@@ -106,20 +91,14 @@ class HeaderLocation extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────
-// 2. Main widget: GradientScrollHeader
-// ─────────────────────────────────────────────
-
-/// Gradient header that switches to a solid navbar while scrolling.
-///
 /// Parameter:
-/// - [leading]       : left navbar widget, usually HeaderLocation
-/// - [actions]       : right navbar widgets, usually HeaderAction
+/// - [leading]       : left navbar widget (e.g HeaderLocation)
+/// - [actions]       : right navbar widgets (e.g HeaderAction)
 /// - [expandedHeight]: gradient area height, defaults to 160
 /// - [gradientColors]: gradient colors
 /// - [navbarColor]   : solid navbar color while scrolling
 /// - [body]          : scrollable content below the header
-/// - [flexibleContent]: extra content inside the gradient area
+/// - [flexibleContent]: extra content inside the gradient area (e.g search bar)
 class GradientScrollHeader extends StatefulWidget {
   const GradientScrollHeader({
     super.key,
@@ -139,35 +118,21 @@ class GradientScrollHeader extends StatefulWidget {
     this.bodyTopPadding,
   });
 
-  /// Widget on the left side of the navbar, usually HeaderLocation.
   final Widget? leading;
-
-  /// Widgets on the right side of the navbar, usually HeaderAction.
   final List<Widget> actions;
-
-  /// Total height of the collapsible gradient area.
   final double expandedHeight;
-
-  /// Header background gradient colors.
   final List<Color> gradientColors;
-
-  /// Gradient stop positions. Must match gradientColors length.
   final List<double> gradientStops;
-
-  /// Solid navbar color after scrolling.
   final Color navbarColor;
-
-  /// Main scrollable page content.
   final Widget body;
-
-  /// Extra content inside the gradient area, such as a search bar.
-  /// This fades out while scrolling.
   final Widget? flexibleContent;
 
-  /// Optional external scroll controller. A local one is created when null.
+  /// (Optional) external scroll controller
+  /// Defaults created when null
   final ScrollController? scrollController;
 
-  /// Optional top padding for the body. Defaults to expandedHeight.
+  /// (Optional) top padding for the body
+  /// Defaults to expandedHeight
   final double? bodyTopPadding;
 
   @override
@@ -178,7 +143,7 @@ class _GradientScrollHeaderState extends State<GradientScrollHeader> {
   late final ScrollController _scrollController;
   double _scrollOffset = 0.0;
 
-  // Scroll distance before the navbar becomes fully solid.
+  // Scroll distance before the navbar becomes fully solid
   double get _solidThreshold => widget.expandedHeight * 0.5;
 
   @override
@@ -197,7 +162,8 @@ class _GradientScrollHeaderState extends State<GradientScrollHeader> {
 
   @override
   void dispose() {
-    // Only dispose controllers owned by this widget.
+    /// Only dispose controllers owned by this widget
+    /// Free memory -> destroy
     if (widget.scrollController == null) {
       _scrollController.dispose();
     } else {
@@ -206,22 +172,25 @@ class _GradientScrollHeaderState extends State<GradientScrollHeader> {
     super.dispose();
   }
 
-  /// Transition progress: 0.0 = expanded, 1.0 = fully collapsed.
-  double get _progress => (_scrollOffset / _solidThreshold).clamp(0.0, 1.0);
+  /// Transition progress:
+  /// 0.0 = expanded
+  /// 1.0 = fully collapsed
+  double get _progress =>
+      (_scrollOffset / _solidThreshold).clamp(0.0, 1.0); // min, max
 
   @override
   Widget build(BuildContext context) {
     final topPadding = MediaQuery.of(context).padding.top;
     final navbarHeight = topPadding + kToolbarHeight;
 
-    // Navbar color moves from transparent to solid while scrolling.
+    // Navbar color transparent -> solid while scrolling
     final navbarBg = Color.lerp(
-      Colors.transparent,
-      widget.navbarColor,
-      _progress,
+      Colors.transparent, // x color
+      widget.navbarColor, // y color
+      _progress, // t clamp
     )!;
 
-    // Keep the status bar icons light because the header background is blue.
+    // Icons light, header background blue
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
       child: Scaffold(
@@ -268,8 +237,8 @@ class _GradientScrollHeaderState extends State<GradientScrollHeader> {
               right: 0,
               child: Stack(
                 children: [
-                  // Solid navbar background behind the navbar content.
-                  // Ignore touches when transparent so it does not block content below.
+                  // Solid navbar background behind the navbar content
+                  // Ignore touches when transparent so it does not block content below
                   IgnorePointer(
                     ignoring: _progress == 0,
                     child: AnimatedContainer(
@@ -322,10 +291,6 @@ class _GradientScrollHeaderState extends State<GradientScrollHeader> {
     );
   }
 }
-
-// ─────────────────────────────────────────────
-// 3.  INTERNAL: Background Gradasi
-// ─────────────────────────────────────────────
 
 class _GradientHeaderBackground extends StatelessWidget {
   const _GradientHeaderBackground({
