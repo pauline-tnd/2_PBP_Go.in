@@ -83,9 +83,10 @@ Future<pw.Document> _buildReceiptPdf(Booking booking) async {
 
   // Go.in logo
   final logoBytes = (await rootBundle.load(
+    // byte data
     'assets/images/logo-full.png',
-  )).buffer.asUint8List();
-  final logoImage = pw.MemoryImage(logoBytes);
+  )).buffer.asUint8List(); // raw bytes / array of bytes
+  final logoImage = pw.MemoryImage(logoBytes); // byte -> image in pdf
 
   // User info
   String userName = '';

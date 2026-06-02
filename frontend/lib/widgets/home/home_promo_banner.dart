@@ -1,157 +1,124 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 
-class HomePromoBanner extends StatelessWidget {
-  const HomePromoBanner({super.key});
+class HomePromoBanner extends StatefulWidget {
+  final VoidCallback? onTap;
+
+  const HomePromoBanner({super.key, this.onTap});
+
+  @override
+  State<HomePromoBanner> createState() => _HomePromoBannerState();
+}
+
+class _HomePromoBannerState extends State<HomePromoBanner> {
+  final PageController _pageController = PageController();
+  Timer? _autoPlayTimer;
+  int _currentIndex = 0;
+
+  final List<String> _bannerImages = [
+    'assets/images/promo/Promo1.jpeg',
+    'assets/images/promo/Promo2.jpeg',
+    'assets/images/promo/Promo3.jpeg',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _startAutoPlay();
+  }
+
+  @override
+  void dispose() {
+    _autoPlayTimer?.cancel();
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  void _startAutoPlay() {
+    _autoPlayTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
+      if (!mounted) return;
+      final nextIndex = (_currentIndex + 1) % _bannerImages.length;
+      _pageController.animateToPage(
+        nextIndex,
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOut,
+      );
+    });
+  }
+
+  void _onPageChanged(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Transform.translate(
-      offset: const Offset(0, -40),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: Container(
-          width: double.infinity,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(18),
-            gradient: const LinearGradient(
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-              colors: [Color(0xFF1E3A5F), Color(0xFF2D4A6F)],
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF1E3A5F).withAlpha(51),
-                blurRadius: 16,
-                offset: const Offset(0, 6),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 48.0),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: Stack(
+          alignment: Alignment.bottomCenter,
+          children: [
+            // Banner Image Slider
+            AspectRatio(
+              aspectRatio: 16 / 9,
+              child: PageView.builder(
+                controller: _pageController,
+                onPageChanged: _onPageChanged,
+                itemCount: _bannerImages.length,
+                itemBuilder: (context, index) {
+                  return Image.asset(
+                    _bannerImages[index],
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        color: Colors.grey[300],
+                        child: const Center(
+                          child: Icon(
+                            Icons.broken_image,
+                            size: 48,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
               ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(18),
-            child: Stack(
-              children: [
-                // Background image
-                Positioned(
-                  right: -10,
-                  top: -10,
-                  bottom: -10,
-                  child: ShaderMask(
-                    shaderCallback: (bounds) => const LinearGradient(
-                      begin: Alignment.centerRight,
-                      end: Alignment.centerLeft,
-                      colors: [Colors.white, Colors.transparent],
-                      stops: [0.1, 0.9],
-                    ).createShader(bounds),
-                    blendMode: BlendMode.dstIn,
-                    child: Image.asset(
-                      'assets/images/hotel/the-savoy-london.webp',
-                      width: 160,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) =>
-                          Container(width: 160, color: Colors.transparent),
+            ),
+
+            // Dot Indicator
+            Positioned(
+              bottom: 12.0,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.black.withAlpha(80),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(
+                    _bannerImages.length,
+                    (index) => AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      width: _currentIndex == index ? 20 : 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(4),
+                        color: _currentIndex == index
+                            ? Theme.of(context).primaryColor
+                            : Colors.white.withAlpha(80),
+                      ),
                     ),
                   ),
                 ),
-                // Content
-                Padding(
-                  padding: const EdgeInsets.all(18),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        flex: 3,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Badge
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFEF4444),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: const Text(
-                                'Limited Offer',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            // Promo Text
-                            const Text(
-                              'Save Up to\n30% on Hotel\nBookings',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
-                                height: 1.3,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Grab the booking promo\nbefore Mar 01 2025',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: Colors.white.withAlpha(179),
-                                fontWeight: FontWeight.w400,
-                                height: 1.4,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '*Terms & conditions apply',
-                              style: TextStyle(
-                                fontSize: 9,
-                                color: Colors.white.withAlpha(102),
-                                fontWeight: FontWeight.w400,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      // Claim Offer
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          const SizedBox(height: 80),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 10,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withAlpha(26),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: const Text(
-                              'Claim Offer',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFF1E3A5F),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );

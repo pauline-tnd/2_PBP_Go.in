@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/pages/main_shell.dart';
 import 'package:frontend/models/hotel.dart';
 import 'package:frontend/models/wishlist.dart';
+import 'package:frontend/pages/promo_page.dart';
 import 'package:frontend/services/api_services.dart';
 import 'package:frontend/widgets/home/home_header.dart';
 import 'package:frontend/widgets/home/home_search_card.dart';
@@ -142,7 +144,13 @@ class _HomePageState extends State<HomePage> {
             const HomeSearchCard(),
 
             // Promo banner
-            const HomePromoBanner(),
+            HomePromoBanner(
+              onTap: () {
+                final mainShellState = context
+                    .findAncestorStateOfType<MainShellState>();
+                mainShellState?.switchTab(2); // PromoPage
+              },
+            ),
 
             // Recommended For You section
             _isLoading

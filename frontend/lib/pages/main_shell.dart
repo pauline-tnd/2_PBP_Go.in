@@ -44,11 +44,15 @@ class MainShellState extends State<MainShell> {
     });
   }
 
-  void _handleNavTap(int index) {
+  void switchTab(int index) {
     setState(() {
       _showWishlist = false;
       _currentIndex = index;
     });
+  }
+
+  void _handleNavTap(int index) {
+    switchTab(index);
   }
 
   @override
