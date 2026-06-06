@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/pages/main_shell.dart';
 import 'package:frontend/widgets/header.dart';
+import 'package:frontend/pages/location_picker_page.dart';
+import 'package:frontend/providers/location_provider.dart';
+import 'package:provider/provider.dart';
 
 class HomeHeader extends StatelessWidget {
   final Widget body;
@@ -9,14 +12,18 @@ class HomeHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final location = context.watch<LocationProvider>();
+
     return GradientScrollHeader(
-      expandedHeight: 180, // Adjust as needed to match previous bottom padding
+      expandedHeight: 180,
+      bodyTopPadding: 120,
       navbarColor: const Color(0xFF3B82F6),
       leading: HeaderLocation(
-        location: 'Walter Street, Yongha',
-        onTap: () {
-          // Buka halaman pilih lokasi
-        },
+        location: location.address,
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const LocationPickerPage()),
+        ),
       ),
       actions: [
         HeaderAction(

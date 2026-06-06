@@ -6,11 +6,12 @@ class Booking {
   final String checkOut;
   final double totalPrice;
   final String status;
-
-  // Nested relationship fields (from booking_details → room → hotel)
   final String? hotelName;
   final String? roomType;
   final String? roomImageUrl;
+  final int? reviewRating;
+  final int? reviewId;
+  final bool hasReview;
 
   Booking({
     required this.id,
@@ -23,18 +24,20 @@ class Booking {
     this.hotelName,
     this.roomType,
     this.roomImageUrl,
+    this.reviewRating,
+    this.reviewId,
+    this.hasReview = false,
   });
 
   factory Booking.fromJson(Map<String, dynamic> json) {
     String? hotelName;
     String? roomType;
     String? roomImageUrl;
-
-    // Try to extract nested hotel/room info from booking_details relationship
-    final rawDetails =
-        json['booking_details'] ?? json['bookingDetails'] ?? json['details'];
+    Map<String, dynamic>? review;
+    final rawDetails = json['booking_details'] ?? json['bookingDetails'] ?? json['details'];
     if (rawDetails is List && rawDetails.isNotEmpty) {
       final detail = rawDetails.first as Map<String, dynamic>? ?? {};
+      review = detail['review'] as Map<String, dynamic>?;
       final room = detail['room'] as Map<String, dynamic>?;
       final hotel = room?['hotel'] as Map<String, dynamic>?;
       hotelName = hotel?['name']?.toString();
@@ -58,6 +61,9 @@ class Booking {
       hotelName: hotelName,
       roomType: roomType,
       roomImageUrl: roomImageUrl,
+      reviewRating: review?['rating'],
+      reviewId: review?['id'],
+      hasReview: review != null,
     );
   }
 

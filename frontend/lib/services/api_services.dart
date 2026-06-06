@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:frontend/models/room.dart';
@@ -10,6 +11,21 @@ import 'package:frontend/services/app_config.dart';
 
 class ApiService {
   static String get baseUrl => AppConfig.apiBaseUrl;
+import 'package:frontend/models/nominatim.dart';
+
+class ApiService {
+  // static const String baseUrl = 'http://ipv4hp:8000/api'; //ini buat jalanin di hp, ganti ke ipv4 hp kln
+  static String get baseUrl {
+    if (kIsWeb) return 'http://127.0.0.1:8000/api';
+    if (Platform.isAndroid) return 'http://10.0.2.2:8000/api';
+    return 'http://localhost:8000/api';
+  }
+
+  static const String nominatimUrl = 'https://nominatim.openstreetmap.org';
+  static const Map<String, String> headersNominatim = {
+    'User-Agent': 'GoInApp/1.0',
+    'Accept-Language': 'id',
+  };
 
   // ── Token Helpers ─────────────────────────────────────────────
 
@@ -28,7 +44,8 @@ class ApiService {
   }
 
   static Future<Map<String, String>> _authHeaders() async {
-    final token = await _getToken();
+    // final token = await _getToken();
+    final token = "tokentempeldisini";
     return {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
@@ -61,7 +78,7 @@ class ApiService {
     if (response.statusCode == 201) {
       return jsonDecode(response.body);
     } else {
-      throw Exception('Register gagal: ${response.body}');
+      throw Exception('Register failed: ${response.body}');
     }
   }
 
@@ -84,7 +101,7 @@ class ApiService {
       await _saveToken(data['token']);
       return data;
     } else {
-      throw Exception('Login gagal: ${response.body}');
+      throw Exception('Login failed: ${response.body}');
     }
   }
 
@@ -101,7 +118,7 @@ class ApiService {
       await prefs.remove('token');
       return jsonDecode(response.body);
     } else {
-      throw Exception('Logout gagal: ${response.body}');
+      throw Exception('Logout failed: ${response.body}');
     }
   }
 
@@ -215,6 +232,70 @@ class ApiService {
     }
   }
 
+  // ── Location ──────────────────────────────────────────────────
+  // Search location helper
+  static Future<List<NominatimResult>> search(String query) async {
+    if (query.trim().isEmpty) return [];
+
+    final response = await http.get(
+      Uri.parse('$nominatimUrl/search').replace(
+        queryParameters: {
+          'q': query,
+          'format': 'json',
+          'limit': '5',
+          'addressdetails': '1',
+          'countrycodes': 'id', // Indonesia only
+        },
+      ),
+      headers: headersNominatim,
+    );
+
+    if (response.statusCode == 200) {
+      final List data = jsonDecode(response.body);
+      return data.map((e) => NominatimResult.fromJson(e)).toList();
+    } else {
+      throw Exception('Failed to load location: ${response.body}');
+    }
+  }
+
+  // Coord -> address name
+  static Future<String> reverseGeocode(double lat, double lon) async {
+    final response = await http.get(
+      Uri.parse('$nominatimUrl/reverse').replace(
+        queryParameters: {
+          'lat': lat.toString(),
+          'lon': lon.toString(),
+          'format': 'json',
+          'addressdetails': '1',
+        },
+      ),
+      headers: headersNominatim,
+    );
+
+    String formatAddress(Map<String, dynamic> addr) {
+      final parts = <String>[];
+
+      if (addr['road'] != null) parts.add(addr['road']);
+      if (addr['suburb'] != null) parts.add(addr['suburb']);
+      if (addr['city'] != null) {
+        parts.add(addr['city']);
+      } else if (addr['town'] != null) {
+        parts.add(addr['town']);
+      } else if (addr['county'] != null) {
+        parts.add(addr['county']);
+      }
+
+      return parts.isNotEmpty ? parts.join(', ') : 'Selected location';
+    }
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return formatAddress(data['address']);
+    } else {
+      throw Exception('Location unknown: ${response.body}');
+    }
+  }
+
   // ── Hotels ────────────────────────────────────────────────────
   // GET /hotels
   static Future<Map<String, dynamic>> fetchHotels({
@@ -229,31 +310,30 @@ class ApiService {
     String? cursor,
   }) async {
     final headers = await _authHeaders();
-    final queryParts = <String>[];
+    final queryParameters = <String, dynamic>{};
 
-    if (search != null) queryParts.add('search=$search');
-    if (minPrice != null) queryParts.add('min_price=$minPrice');
-    if (maxPrice != null) queryParts.add('max_price=$maxPrice');
-    if (sortBy != null) queryParts.add('sort_by=$sortBy');
-    if (userLat != null) queryParts.add('user_lat=$userLat');
-    if (userLng != null) queryParts.add('user_lng=$userLng');
-    if (cursor != null) queryParts.add('cursor=$cursor');
-    if (star != null) {
-      for (var s in star) {
-        queryParts.add('star[]=$s');
-      }
+    if (search != null && search.trim().isNotEmpty) {
+      queryParameters['search'] = search.trim();
     }
-    if (amenities != null) {
-      for (var a in amenities) {
-        queryParts.add('amenities[]=$a');
-      }
+    if (minPrice != null) queryParameters['min_price'] = minPrice.toString();
+    if (maxPrice != null) queryParameters['max_price'] = maxPrice.toString();
+    if (sortBy != null) queryParameters['sort_by'] = sortBy;
+    if (userLat != null) queryParameters['user_lat'] = userLat.toString();
+    if (userLng != null) queryParameters['user_lng'] = userLng.toString();
+    if (cursor != null) queryParameters['cursor'] = cursor;
+    if (star != null && star.isNotEmpty) {
+      queryParameters['star[]'] = star.map((s) => s.toString()).toList();
+    }
+    if (amenities != null && amenities.isNotEmpty) {
+      queryParameters['amenities[]'] = amenities
+          .map((a) => a.toString())
+          .toList();
     }
 
-    final queryString = queryParts.isNotEmpty ? '?${queryParts.join('&')}' : '';
-    final response = await http.get(
-      Uri.parse('$baseUrl/hotels$queryString'),
-      headers: headers,
-    );
+    final uri = Uri.parse(
+      '$baseUrl/hotels',
+    ).replace(queryParameters: queryParameters);
+    final response = await http.get(uri, headers: headers);
 
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
@@ -463,7 +543,13 @@ class ApiService {
     request.fields['created_at'] = createdAt;
 
     if (image != null) {
-      request.files.add(await http.MultipartFile.fromPath('image', image.path));
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'image',
+          image.path,
+          filename: image.path.split('/').last,
+        ),
+      );
     }
 
     final streamedResponse = await request.send();
@@ -505,7 +591,13 @@ class ApiService {
     if (description != null) request.fields['description'] = description;
 
     if (image != null) {
-      request.files.add(await http.MultipartFile.fromPath('image', image.path));
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'image',
+          image.path,
+          filename: image.path.split('/').last,
+        ),
+      );
     }
 
     final streamedResponse = await request.send();
@@ -730,6 +822,20 @@ class ApiService {
       return jsonDecode(response.body);
     } else {
       throw Exception('Failed to delete booking detail: ${response.body}');
+    }
+  }
+
+  // GET /bookings/{booking}/review-details
+  static Future<Map<String, dynamic>> fetchReviewDetails(int bookingId) async {
+    final headers = await _authHeaders();
+    final response = await http.get(
+      Uri.parse('$baseUrl/bookings/$bookingId/review-details'),
+      headers: headers,
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to load review details: ${response.body}');
     }
   }
 
