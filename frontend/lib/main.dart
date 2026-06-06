@@ -5,12 +5,9 @@ import 'pages/search_results_page.dart';
 import 'providers/location_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-<<<<<<< HEAD
 import 'pages/landing-page.dart';
-=======
 import 'package:provider/provider.dart';
 import 'package:frontend/providers/hotel_search_provider.dart';
->>>>>>> 8123059e60711c6cc7d74ea5d7b51a1d21a45500
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

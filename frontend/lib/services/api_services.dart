@@ -1,33 +1,23 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:flutter/foundation.dart';
+
+import 'package:frontend/models/booking.dart';
+import 'package:frontend/models/nominatim.dart';
+import 'package:frontend/models/review.dart';
+import 'package:frontend/models/room.dart';
+import 'package:frontend/models/wishlist.dart';
+import 'package:frontend/services/app_config.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:frontend/models/room.dart';
-import 'package:frontend/models/booking.dart';
-import 'package:frontend/models/wishlist.dart';
-import 'package:frontend/models/review.dart';
-import 'package:frontend/services/app_config.dart';
 
 class ApiService {
   static String get baseUrl => AppConfig.apiBaseUrl;
-import 'package:frontend/models/nominatim.dart';
-
-class ApiService {
-  // static const String baseUrl = 'http://ipv4hp:8000/api'; //ini buat jalanin di hp, ganti ke ipv4 hp kln
-  static String get baseUrl {
-    if (kIsWeb) return 'http://127.0.0.1:8000/api';
-    if (Platform.isAndroid) return 'http://10.0.2.2:8000/api';
-    return 'http://localhost:8000/api';
-  }
 
   static const String nominatimUrl = 'https://nominatim.openstreetmap.org';
   static const Map<String, String> headersNominatim = {
     'User-Agent': 'GoInApp/1.0',
     'Accept-Language': 'id',
   };
-
-  // ── Token Helpers ─────────────────────────────────────────────
 
   static Future<void> _saveToken(String token) async {
     final prefs = await SharedPreferences.getInstance();
@@ -45,7 +35,7 @@ class ApiService {
 
   static Future<Map<String, String>> _authHeaders() async {
     // final token = await _getToken();
-    final token = "tokentempeldisini";
+    final token = 'tokentempeldisini';
     return {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
@@ -53,8 +43,6 @@ class ApiService {
     };
   }
 
-  // ── Authentication ────────────────────────────────────────────
-  // POST /register
   static Future<Map<String, dynamic>> register({
     required String username,
     required String email,
@@ -82,7 +70,6 @@ class ApiService {
     }
   }
 
-  // POST /login
   static Future<Map<String, dynamic>> login(
     String email,
     String password,
@@ -105,7 +92,6 @@ class ApiService {
     }
   }
 
-  // POST /logout
   static Future<Map<String, dynamic>> logout() async {
     final headers = await _authHeaders();
     final response = await http.post(
@@ -127,8 +113,6 @@ class ApiService {
     await prefs.remove('token');
   }
 
-  // ── User Profile ──────────────────────────────────────────────
-  // GET /user
   static Future<Map<String, dynamic>> getUser() async {
     final headers = await _authHeaders();
     final response = await http.get(
@@ -143,7 +127,6 @@ class ApiService {
     }
   }
 
-  // PUT /user
   static Future<Map<String, dynamic>> updateUser({
     String? username,
     String? phone,
@@ -168,7 +151,6 @@ class ApiService {
     }
   }
 
-  // PUT /user/password
   static Future<Map<String, dynamic>> updatePassword({
     required String currentPassword,
     required String newPassword,
@@ -192,7 +174,6 @@ class ApiService {
     }
   }
 
-  // PUT /user/profile (multipart - file upload)
   static Future<Map<String, dynamic>> updateProfileImage(File imageFile) async {
     final token = await _getToken();
     final request = http.MultipartRequest(
@@ -215,7 +196,6 @@ class ApiService {
     }
   }
 
-  // DELETE /user
   static Future<Map<String, dynamic>> deleteUser() async {
     final headers = await _authHeaders();
     final response = await http.delete(
@@ -232,8 +212,6 @@ class ApiService {
     }
   }
 
-  // ── Location ──────────────────────────────────────────────────
-  // Search location helper
   static Future<List<NominatimResult>> search(String query) async {
     if (query.trim().isEmpty) return [];
 
@@ -244,7 +222,7 @@ class ApiService {
           'format': 'json',
           'limit': '5',
           'addressdetails': '1',
-          'countrycodes': 'id', // Indonesia only
+          'countrycodes': 'id',
         },
       ),
       headers: headersNominatim,
@@ -258,7 +236,6 @@ class ApiService {
     }
   }
 
-  // Coord -> address name
   static Future<String> reverseGeocode(double lat, double lon) async {
     final response = await http.get(
       Uri.parse('$nominatimUrl/reverse').replace(
@@ -296,8 +273,6 @@ class ApiService {
     }
   }
 
-  // ── Hotels ────────────────────────────────────────────────────
-  // GET /hotels
   static Future<Map<String, dynamic>> fetchHotels({
     String? search,
     double? minPrice,
@@ -342,7 +317,6 @@ class ApiService {
     }
   }
 
-  // GET /hotels/{hotel}
   static Future<Map<String, dynamic>> fetchHotelDetail(int hotelId) async {
     final headers = await _authHeaders();
     final response = await http.get(
@@ -357,8 +331,6 @@ class ApiService {
     }
   }
 
-  // ── Rooms ─────────────────────────────────────────────────────
-  // GET /rooms
   static Future<List<Room>> fetchRooms() async {
     final headers = await _authHeaders();
     final response = await http.get(
@@ -374,7 +346,6 @@ class ApiService {
     }
   }
 
-  // GET /rooms/{room}
   static Future<Map<String, dynamic>> fetchRoomDetail(int roomId) async {
     final headers = await _authHeaders();
     final response = await http.get(
@@ -389,8 +360,6 @@ class ApiService {
     }
   }
 
-  // ── Wishlists ─────────────────────────────────────────────────
-  // GET /wishlists
   static Future<List<Wishlist>> fetchWishlists() async {
     final headers = await _authHeaders();
     final response = await http.get(
@@ -406,7 +375,6 @@ class ApiService {
     }
   }
 
-  // POST /wishlists
   static Future<Map<String, dynamic>> storeWishlist(int hotelId) async {
     final headers = await _authHeaders();
     final response = await http.post(
@@ -422,7 +390,6 @@ class ApiService {
     }
   }
 
-  // DELETE /wishlists/{wishlist}
   static Future<Map<String, dynamic>> deleteWishlist(int wishlistId) async {
     final headers = await _authHeaders();
     final response = await http.delete(
@@ -437,8 +404,6 @@ class ApiService {
     }
   }
 
-  // ── Reviews ───────────────────────────────────────────────────
-  // GET /reviews
   static Future<List<Review>> fetchReviews() async {
     final headers = await _authHeaders();
     final response = await http.get(
@@ -454,7 +419,6 @@ class ApiService {
     }
   }
 
-  // GET /reviews/{review}
   static Future<Review> fetchReviewById(int reviewId) async {
     final headers = await _authHeaders();
     final response = await http.get(
@@ -469,7 +433,6 @@ class ApiService {
     }
   }
 
-  // GET /hotels/{hotel}/reviews
   static Future<List<Review>> fetchHotelReviews(int hotelId) async {
     final headers = await _authHeaders();
     final response = await http.get(
@@ -485,7 +448,6 @@ class ApiService {
     }
   }
 
-  // GET /rooms/{room}/reviews
   static Future<List<Review>> fetchRoomReviews(int roomId) async {
     final headers = await _authHeaders();
     final response = await http.get(
@@ -501,7 +463,6 @@ class ApiService {
     }
   }
 
-  // GET /users/{user}/reviews
   static Future<List<Review>> fetchUserReviews(int userId) async {
     final headers = await _authHeaders();
     final response = await http.get(
@@ -517,7 +478,6 @@ class ApiService {
     }
   }
 
-  // POST /reviews (multipart - supports image upload)
   static Future<Map<String, dynamic>> storeReview({
     required int userId,
     required int roomId,
@@ -562,7 +522,6 @@ class ApiService {
     }
   }
 
-  // PUT /reviews/{review} (multipart - supports image upload)
   static Future<Map<String, dynamic>> updateReview(
     int reviewId, {
     int? userId,
@@ -577,7 +536,6 @@ class ApiService {
       'POST',
       Uri.parse('$baseUrl/reviews/$reviewId'),
     );
-    // Laravel doesn't support PUT multipart natively, use _method override
     request.fields['_method'] = 'PUT';
     request.headers['Authorization'] = 'Bearer $token';
     request.headers['Accept'] = 'application/json';
@@ -610,7 +568,6 @@ class ApiService {
     }
   }
 
-  // DELETE /reviews/{review}
   static Future<Map<String, dynamic>> deleteReview(int reviewId) async {
     final headers = await _authHeaders();
     final response = await http.delete(
@@ -625,8 +582,6 @@ class ApiService {
     }
   }
 
-  // ── Bookings ──────────────────────────────────────────────────
-  // GET /bookings
   static Future<List<Booking>> fetchBookings() async {
     final headers = await _authHeaders();
     final response = await http.get(
@@ -642,7 +597,6 @@ class ApiService {
     }
   }
 
-  // GET /bookings/{booking}
   static Future<Map<String, dynamic>> fetchBookingById(int bookingId) async {
     final headers = await _authHeaders();
     final response = await http.get(
@@ -657,7 +611,6 @@ class ApiService {
     }
   }
 
-  // POST /bookings
   static Future<Map<String, dynamic>> storeBooking({
     required String checkIn,
     required String checkOut,
@@ -685,7 +638,6 @@ class ApiService {
     }
   }
 
-  // PUT /bookings/{booking}
   static Future<Map<String, dynamic>> updateBooking(
     int bookingId,
     String status,
@@ -704,7 +656,6 @@ class ApiService {
     }
   }
 
-  // DELETE /bookings/{booking}
   static Future<Map<String, dynamic>> deleteBooking(int bookingId) async {
     final headers = await _authHeaders();
     final response = await http.delete(
@@ -719,8 +670,6 @@ class ApiService {
     }
   }
 
-  // ── Booking Details ───────────────────────────────────────────
-  // GET /booking-details
   static Future<Map<String, dynamic>> fetchBookingDetails() async {
     final headers = await _authHeaders();
     final response = await http.get(
@@ -735,7 +684,6 @@ class ApiService {
     }
   }
 
-  // GET /booking-details/{id}
   static Future<Map<String, dynamic>> fetchBookingDetailById(int id) async {
     final headers = await _authHeaders();
     final response = await http.get(
@@ -750,7 +698,6 @@ class ApiService {
     }
   }
 
-  // POST /booking-details
   static Future<Map<String, dynamic>> storeBookingDetail({
     required int bookingId,
     required int roomId,
@@ -780,7 +727,6 @@ class ApiService {
     }
   }
 
-  // PUT /booking-details/{id}
   static Future<Map<String, dynamic>> updateBookingDetail(
     int id, {
     int? bookingId,
@@ -810,7 +756,6 @@ class ApiService {
     }
   }
 
-  // DELETE /booking-details/{id}
   static Future<Map<String, dynamic>> deleteBookingDetail(int id) async {
     final headers = await _authHeaders();
     final response = await http.delete(
@@ -825,7 +770,6 @@ class ApiService {
     }
   }
 
-  // GET /bookings/{booking}/review-details
   static Future<Map<String, dynamic>> fetchReviewDetails(int bookingId) async {
     final headers = await _authHeaders();
     final response = await http.get(
@@ -839,8 +783,6 @@ class ApiService {
     }
   }
 
-  // ── Booking Detail Add-Ons ────────────────────────────────────
-  // GET /booking-detail-addons
   static Future<List<dynamic>> fetchBookingDetailAddOns() async {
     final headers = await _authHeaders();
     final response = await http.get(
@@ -855,7 +797,6 @@ class ApiService {
     }
   }
 
-  // GET /booking-detail-addons/{id}
   static Future<Map<String, dynamic>> fetchBookingDetailAddOnById(
     int id,
   ) async {
@@ -872,7 +813,6 @@ class ApiService {
     }
   }
 
-  // GET /booking-details/{bookingDetail}/addons
   static Future<Map<String, dynamic>> fetchAddOnsByBookingDetail(
     int bookingDetailId,
   ) async {
@@ -889,7 +829,6 @@ class ApiService {
     }
   }
 
-  // POST /booking-detail-addons
   static Future<Map<String, dynamic>> storeBookingDetailAddOn({
     required int bookingDetailId,
     required int addOnId,
@@ -915,7 +854,6 @@ class ApiService {
     }
   }
 
-  // PUT /booking-detail-addons/{id}
   static Future<Map<String, dynamic>> updateBookingDetailAddOn(
     int id, {
     int? qty,
@@ -939,7 +877,6 @@ class ApiService {
     }
   }
 
-  // DELETE /booking-detail-addons/{id}
   static Future<Map<String, dynamic>> deleteBookingDetailAddOn(int id) async {
     final headers = await _authHeaders();
     final response = await http.delete(
