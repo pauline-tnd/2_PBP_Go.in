@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
-import 'pages/main_shell.dart';
 import 'pages/search_results_page.dart';
 import 'providers/location_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'pages/landing-page.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend/providers/hotel_search_provider.dart';
 
@@ -52,11 +52,21 @@ class MyApp extends StatelessWidget {
                 seedColor: const Color(0xFF3B82F6),
               ),
             ),
+<<<<<<< HEAD
+          ),
+          home: const LandingPage(),
+          routes: {
+            '/search-results': (context) => const SearchResultsPage(),
+          },
+        );
+      },
+=======
             home: const MainShell(),
             routes: {'/search-results': (context) => const SearchResultsPage()},
           );
         },
       ),
+>>>>>>> 8123059e60711c6cc7d74ea5d7b51a1d21a45500
     );
   }
 }

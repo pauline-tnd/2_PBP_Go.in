@@ -9,6 +9,7 @@ import 'package:frontend/widgets/home/home_search_card.dart';
 import 'package:frontend/widgets/home/home_promo_banner.dart';
 import 'package:frontend/widgets/home/home_recommended_section.dart';
 import 'package:frontend/widgets/home/home_you_might_like.dart';
+import 'package:frontend/widgets/skeleton_loader.dart';
 import 'package:frontend/extensions/snackbar.dart';
 
 class HomePage extends StatefulWidget {
@@ -42,6 +43,7 @@ class _HomePageState extends State<HomePage> {
         return Hotel.fromMap(item as Map<String, dynamic>);
       }).toList();
 
+      if (!mounted) return;
       setState(() {
         _allHotels = fetchedHotels;
         _hotelBadges = assignBadges(_allHotels);
@@ -49,6 +51,7 @@ class _HomePageState extends State<HomePage> {
         _isLoading = false;
       });
     } catch (error) {
+      if (!mounted) return;
       setState(() {
         _isLoading = false;
       });
@@ -154,34 +157,25 @@ class _HomePageState extends State<HomePage> {
 
             // Recommended For You section
             _isLoading
-                ? const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 40),
-                    child: Center(
-                      child: CircularProgressIndicator(
-                        color: Color(0xFF3B82F6),
-                        strokeWidth: 2.5,
+                ? const HomeDataSkeleton()
+                : Column(
+                    children: [
+                      HomeRecommendedSection(
+                        hotels: _allHotels,
+                        hotelBadges: _hotelBadges,
+                        wishlistedHotelIds: _wishlistedHotelIds,
+                        favoriteLoadingHotelIds: _favoriteLoadingHotelIds,
+                        onFavoriteTap: _toggleWishlist,
                       ),
-                    ),
-                  )
-                : HomeRecommendedSection(
-                    hotels: _allHotels,
-                    hotelBadges: _hotelBadges,
-                    wishlistedHotelIds: _wishlistedHotelIds,
-                    favoriteLoadingHotelIds: _favoriteLoadingHotelIds,
-                    onFavoriteTap: _toggleWishlist,
-                  ),
-
-            const SizedBox(height: 8),
-
-            // You Might Like section
-            _isLoading
-                ? const SizedBox.shrink()
-                : HomeYouMightLike(
-                    hotels: _allHotels,
-                    hotelBadges: _hotelBadges,
-                    wishlistedHotelIds: _wishlistedHotelIds,
-                    favoriteLoadingHotelIds: _favoriteLoadingHotelIds,
-                    onFavoriteTap: _toggleWishlist,
+                      const SizedBox(height: 8),
+                      HomeYouMightLike(
+                        hotels: _allHotels,
+                        hotelBadges: _hotelBadges,
+                        wishlistedHotelIds: _wishlistedHotelIds,
+                        favoriteLoadingHotelIds: _favoriteLoadingHotelIds,
+                        onFavoriteTap: _toggleWishlist,
+                      ),
+                    ],
                   ),
 
             // Bottom padding for navbar

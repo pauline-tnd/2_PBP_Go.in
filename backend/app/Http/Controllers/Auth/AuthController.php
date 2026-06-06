@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
@@ -18,7 +19,12 @@ class AuthController extends Controller
             'phone' => 'required|string|max:50',
         ]);
 
-        $user = User::create($validated);
+        $user = User::create([
+            'username' => $validated['username'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+            'phone' => $validated['phone'],
+        ]);
 
         return response()->json([
             'message' => 'User created successfully',
@@ -33,16 +39,16 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        if (!Auth::attempt($validated)) {
+        $user = User::where('email', $validated['email'])->first();
+
+        if (! $user || ! Hash::check($validated['password'], $user->password)) {
             return response()->json([
                 'message' => 'Email or Password incorrect.',
             ], 401);
         }
 
-        $user = $request->user();
-
         $user->tokens()->delete();
-        
+
         $token = $user->createToken('Personal Access Token')->plainTextToken;
 
         return response()->json([
@@ -50,6 +56,13 @@ class AuthController extends Controller
             'user' => $user,
             'token' => $token,
         ], 200);
+    }
+
+    public function googleLogin(Request $request)
+    {
+        return response()->json([
+            'message' => 'Google authentication is currently unavailable.',
+        ], 410);
     }
 
     public function logout() {
