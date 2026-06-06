@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\BookingDetail;
 use App\Models\Room;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
@@ -37,8 +38,8 @@ class ReviewController extends Controller
             'room.hotel',
             'bookingDetail'
         ])
-        ->where('room_id', $roomId)
-        ->get();
+            ->where('room_id', $roomId)
+            ->get();
 
         if ($reviews->isEmpty()) {
             return response()->json([
@@ -56,10 +57,10 @@ class ReviewController extends Controller
             'room.hotel',
             'bookingDetail'
         ])
-        ->whereHas('room.hotel', function ($query) use ($hotelId) {
-            $query->where('hotel_id', $hotelId);
-        })
-        ->get();
+            ->whereHas('room.hotel', function ($query) use ($hotelId) {
+                $query->where('hotel_id', $hotelId);
+            })
+            ->get();
 
         if ($reviews->isEmpty()) {
             return response()->json([
@@ -91,8 +92,8 @@ class ReviewController extends Controller
         $reviews = Review::with([
             'room.hotel'
         ])
-        ->where('user_id', $userId)
-        ->get();
+            ->where('user_id', $userId)
+            ->get();
         if ($reviews->isEmpty()) {
             return response()->json([
                 'message' => 'User belum memiliki review'
@@ -104,7 +105,6 @@ class ReviewController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'user_id'           => 'required|exists:users,id',
             'room_id'           => 'required|exists:rooms,id',
             'booking_detail_id' => 'required|exists:booking_details,id',
             'rating'            => 'required|integer|min:1|max:5',
@@ -112,6 +112,9 @@ class ReviewController extends Controller
             'created_at'        => 'required|date',
             'image'             => 'nullable|image|mimes:jpg,jpeg,png|max:20480',
         ]);
+
+        $validated['user_id'] = Auth::user()->id;
+
         if ($request->hasFile('image')) {
             $validated['image'] = $request->file('image')->store('reviews', 'public');
         }
@@ -134,13 +137,15 @@ class ReviewController extends Controller
             ], 404);
         }
         $validated = $request->validate([
-            'user_id'           => 'exists:users,id',
             'room_id'           => 'exists:rooms,id',
             'booking_detail_id' => 'exists:booking_details,id',
             'rating'            => 'integer|min:1|max:5',
             'description'       => 'string',
             'image'             => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
+
+        $validated['user_id'] = Auth::user()->id;
+
         if ($request->hasFile('image')) {
             $validated['image'] = $request->file('image')->store('reviews', 'public');
         }

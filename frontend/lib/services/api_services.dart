@@ -123,6 +123,7 @@ class ApiService {
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
+      print(response.body);
       throw Exception('Failed to load user: ${response.body}');
     }
   }
@@ -166,22 +167,24 @@ class ApiService {
         'new_password_confirmation': newPasswordConfirmation,
       }),
     );
-
+    print("STATUS: ${response.statusCode}");
+    print("BODY: ${response.body}");
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
-      throw Exception('Failed to update password: ${response.body}');
+      throw Exception(response.body);
     }
   }
 
   static Future<Map<String, dynamic>> updateProfileImage(File imageFile) async {
-    final token = await _getToken();
+    final headers = await _authHeaders();
     final request = http.MultipartRequest(
       'PUT',
       Uri.parse('$baseUrl/user/profile'),
     );
-    request.headers['Authorization'] = 'Bearer $token';
-    request.headers['Accept'] = 'application/json';
+
+    request.headers.addAll(headers);
+
     request.files.add(
       await http.MultipartFile.fromPath('profile_image', imageFile.path),
     );
@@ -479,7 +482,7 @@ class ApiService {
   }
 
   static Future<Map<String, dynamic>> storeReview({
-    required int userId,
+    // required int userId,
     required int roomId,
     required int bookingDetailId,
     required int rating,
@@ -487,15 +490,15 @@ class ApiService {
     required String createdAt,
     File? image,
   }) async {
-    final token = await _getToken();
+    final headers = await _authHeaders();
     final request = http.MultipartRequest(
       'POST',
       Uri.parse('$baseUrl/reviews'),
     );
-    request.headers['Authorization'] = 'Bearer $token';
-    request.headers['Accept'] = 'application/json';
 
-    request.fields['user_id'] = userId.toString();
+    request.headers.addAll(headers);
+
+    // request.fields['user_id'] = userId.toString();
     request.fields['room_id'] = roomId.toString();
     request.fields['booking_detail_id'] = bookingDetailId.toString();
     request.fields['rating'] = rating.toString();
@@ -531,14 +534,13 @@ class ApiService {
     String? description,
     File? image,
   }) async {
-    final token = await _getToken();
+    final headers = await _authHeaders();
     final request = http.MultipartRequest(
       'POST',
       Uri.parse('$baseUrl/reviews/$reviewId'),
     );
     request.fields['_method'] = 'PUT';
-    request.headers['Authorization'] = 'Bearer $token';
-    request.headers['Accept'] = 'application/json';
+    request.headers.addAll(headers);
 
     if (userId != null) request.fields['user_id'] = userId.toString();
     if (roomId != null) request.fields['room_id'] = roomId.toString();
@@ -614,15 +616,10 @@ class ApiService {
   static Future<Map<String, dynamic>> storeBooking({
     required String checkIn,
     required String checkOut,
-    required double totalPrice,
     String? status,
   }) async {
     final headers = await _authHeaders();
-    final body = <String, dynamic>{
-      'check_in': checkIn,
-      'check_out': checkOut,
-      'total_price': totalPrice,
-    };
+    final body = <String, dynamic>{'check_in': checkIn, 'check_out': checkOut};
     if (status != null) body['status'] = status;
 
     final response = await http.post(
@@ -702,7 +699,6 @@ class ApiService {
     required int bookingId,
     required int roomId,
     required int totalRoom,
-    required double subTotal,
     String? notes,
   }) async {
     final headers = await _authHeaders();
@@ -710,7 +706,6 @@ class ApiService {
       'booking_id': bookingId,
       'room_id': roomId,
       'total_room': totalRoom,
-      'sub_total': subTotal,
     };
     if (notes != null) body['notes'] = notes;
 
@@ -732,7 +727,6 @@ class ApiService {
     int? bookingId,
     int? roomId,
     int? totalRoom,
-    double? subTotal,
     String? notes,
   }) async {
     final headers = await _authHeaders();
@@ -740,7 +734,6 @@ class ApiService {
     if (bookingId != null) body['booking_id'] = bookingId;
     if (roomId != null) body['room_id'] = roomId;
     if (totalRoom != null) body['total_room'] = totalRoom;
-    if (subTotal != null) body['sub_total'] = subTotal;
     if (notes != null) body['notes'] = notes;
 
     final response = await http.put(
