@@ -53,6 +53,7 @@ flutter:
     - assets/images/hotel/
     - assets/images/logo.png
     - assets/images/profile-photo.jpg
+    - assets/images/profile-photo.png
   fonts:
     - family: PlusJakartaSans
       fonts:
