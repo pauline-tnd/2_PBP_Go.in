@@ -4,7 +4,6 @@ import 'package:frontend/services/api_services.dart';
 import 'package:frontend/widgets/activity/activity_header.dart';
 import 'package:frontend/widgets/activity/activity_card.dart';
 import 'package:frontend/widgets/activity/activity_filter_dropdown.dart';
-import 'package:frontend/pages/booking_detail_page.dart';
 import 'package:frontend/pages/review_page.dart';
 import 'package:frontend/utils/app_responsive.dart';
 
@@ -92,8 +91,6 @@ class _ActivityPageState extends State<ActivityPage> {
       price: priceStr,
       status: status,
       imageUrl: b.roomImageUrl ?? '',
-      reviewRating: b.reviewRating,
-      hasReview: b.hasReview,
     );
   }
 
@@ -194,11 +191,7 @@ class _ActivityPageState extends State<ActivityPage> {
             }
 
             // ── Success ──────────────────────────────────────────
-            final bookings = snapshot.data ?? [];
-            final bookingsById = {
-              for (final booking in bookings) booking.id.toString(): booking,
-            };
-            final allItems = bookings.map(_toBookingItem).toList();
+            final allItems = (snapshot.data ?? []).map(_toBookingItem).toList();
             final filteredItems = _filterItems(allItems);
 
             return SingleChildScrollView(

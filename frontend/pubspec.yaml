@@ -10,8 +10,6 @@ dependencies:
   # api
   http: ^1.6.0
   shared_preferences: ^2.3.3
-  dotted_border: ^2.1.0
-  image_picker: ^1.1.2
 
   intl: ^0.19.0
   google_fonts: ^6.2.1
@@ -21,25 +19,13 @@ dependencies:
   responsive_sizer: ^3.3.1
   flutter:
     sdk: flutter
-
-  # homepage
   calendar_date_picker2: ^3.0.0
-  geolocator: ^13.0.1 # Get Coord GPS
-  geocoding: ^3.0.0 # Coord to address
-  flutter_map: ^7.0.2 # Widget maps
+  flutter_map: ^7.0.0
   latlong2: ^0.9.1
-  permission_handler: ^11.3.1 # GPS permission
-  provider: ^6.1.2
-
-  # receipt / pdf
-  pdf: ^3.10.8
-  printing: ^5.12.0
-
-  # qr generator
-  qr_flutter: ^4.1.0
+  url_launcher: ^6.1.7
 
 dev_dependencies:
-  flutter_test:
+  flutter_test: 
     sdk: flutter
   flutter_lints: ^6.0.0
   flutter_launcher_icons: "^0.13.1"

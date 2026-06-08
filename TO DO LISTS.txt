@@ -1,0 +1,7 @@
+Saski:
+DONE: 
+- Detail hotel (minus: review_page, check data wishlist masuk atau blm)
+NOT DONE: 
+- Detail kamar (tinggal rapiin desain; butuh data amenities (main + room), review, dan add on)
+- Add On pop-up (kurang isian, dan controller text blm ada)
+- Booking pop-up (literally belum ada)

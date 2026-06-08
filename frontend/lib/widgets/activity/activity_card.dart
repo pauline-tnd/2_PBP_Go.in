@@ -10,8 +10,6 @@ class BookingItem {
   final String price;
   final BookingStatus status;
   final String imageUrl;
-  final int? reviewRating;
-  final bool hasReview;
 
   const BookingItem({
     required this.id,
@@ -21,8 +19,6 @@ class BookingItem {
     required this.price,
     required this.status,
     required this.imageUrl,
-    this.reviewRating,
-    this.hasReview = false,
   });
 }
 
@@ -144,13 +140,7 @@ class ActivityCard extends StatelessWidget {
                   : MainAxisAlignment.start,
               children: [
                 if (item.status == BookingStatus.completed) ...[
-                  Expanded(
-                    child: _ReviewButton(
-                      onRate: onReview,
-                      initialRating: item.reviewRating ?? 0,
-                      hasReview: item.hasReview,
-                    ),
-                  ),
+                  Expanded(child: _ReviewButton(onRate: onReview)),
                   const SizedBox(width: 10),
                 ],
                 _BookingDetailButton(
@@ -229,27 +219,14 @@ class _StatusConfig {
 
 class _ReviewButton extends StatefulWidget {
   final ValueChanged<int>? onRate;
-  final int initialRating;
-  final bool hasReview;
-
-  const _ReviewButton({
-    this.onRate,
-    this.initialRating = 0,
-    this.hasReview = false,
-  });
+  const _ReviewButton({this.onRate});
 
   @override
   State<_ReviewButton> createState() => _ReviewButtonState();
 }
 
 class _ReviewButtonState extends State<_ReviewButton> {
-  late int _rating;
-
-  @override
-  void initState() {
-    super.initState();
-    _rating = widget.initialRating;
-  }
+  int _rating = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -259,28 +236,27 @@ class _ReviewButtonState extends State<_ReviewButton> {
         border: Border.all(color: const Color(0xFFE0E4EA)),
         borderRadius: BorderRadius.circular(10),
       ),
+      // child: Expanded(
+      //   child: SingleChildScrollView(
+      //     scrollDirection: Axis.horizontal,
       child: Row(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          Text(
-            widget.hasReview ? 'Reviewed' : 'Review',
-            style: const TextStyle(
+          const Text(
+            'Review',
+            style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
               color: Color(0xFF64748B),
             ),
           ),
           const SizedBox(width: 6),
-
           ...List.generate(5, (i) {
             return GestureDetector(
               onTap: () {
+                setState(() => _rating = i + 1);
                 widget.onRate?.call(i + 1);
-
-                if (!widget.hasReview) {
-                  setState(() => _rating = i + 1);
-                }
               },
               child: Icon(
                 i < _rating ? Icons.star : Icons.star_border,
@@ -293,6 +269,8 @@ class _ReviewButtonState extends State<_ReviewButton> {
           }),
         ],
       ),
+      //   ),
+      // ),
     );
   }
 }

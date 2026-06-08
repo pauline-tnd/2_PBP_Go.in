@@ -10,7 +10,7 @@ import 'package:frontend/widgets/settings/settings_section_title.dart';
 import 'package:frontend/widgets/common/logout_button.dart';
 import 'package:frontend/services/api_services.dart';
 
-class SettingsPage extends StatefulWidget {
+class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 
   @override
@@ -51,8 +51,8 @@ class _SettingsPageState extends State<SettingsPage> {
     final isTablet = screenWidth >= 768;
     final isDesktop = screenWidth >= 1024;
     final horizontalPadding = isDesktop
-      ? screenWidth * 0.18
-      : isTablet
+        ? screenWidth * 0.18
+        : isTablet
         ? screenWidth * 0.1
         : 24.0;
     return Scaffold(
@@ -63,8 +63,8 @@ class _SettingsPageState extends State<SettingsPage> {
             children: [
               SizedBox(
                 height: isDesktop
-                  ? 300
-                  : isTablet
+                    ? 300
+                    : isTablet
                     ? 270
                     : 240,
                 child: Stack(
@@ -120,7 +120,9 @@ class _SettingsPageState extends State<SettingsPage> {
                       left: 0,
                       right: 0,
                       child: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: horizontalPadding,
+                        ),
                         child: _buildProfileCard(
                           isTablet,
                           isDesktop,
@@ -128,6 +130,7 @@ class _SettingsPageState extends State<SettingsPage> {
                           email,
                           profileImage,
                         ),
+                        child: _buildProfileCard(isTablet, isDesktop),
                       ),
                     ),
                   ],
@@ -144,9 +147,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const SettingsSectionTitle(
-                        title: 'ACCOUNT SETTINGS',
-                      ),
+                      const SettingsSectionTitle(title: 'ACCOUNT SETTINGS'),
                       const SizedBox(height: 12),
                       SettingsGroup(
                         items: [
@@ -177,9 +178,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         ],
                       ),
                       const SizedBox(height: 28),
-                      const SettingsSectionTitle(
-                        title: 'SUPPORT & LEGAL',
-                      ),
+                      const SettingsSectionTitle(title: 'SUPPORT & LEGAL'),
                       const SizedBox(height: 12),
                       SettingsGroup(
                         items: [
@@ -247,7 +246,13 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  static Widget _buildProfileCard(bool isTablet, bool isDesktop, String username, String email, String? profileImage) {
+  static Widget _buildProfileCard(
+    bool isTablet,
+    bool isDesktop,
+    String username,
+    String email,
+    String? profileImage,
+  ) {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(isTablet ? 24 : 20),
@@ -277,28 +282,28 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                 ),
                 child: profileImage != null && profileImage!.isNotEmpty
-                  ? Image.network(
-                      profileImage!,
-                      width: isTablet ? 80 : 64,
-                      height: isTablet ? 80 : 64,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          color: const Color(0xFFE2E8F0),
-                          child: const Icon(
-                            Icons.person_rounded,
-                            size: 40,
-                            color: Color(0xFF94A3B8),
-                          ),
-                        );
-                      },
-                    )
-                  : Image.asset(
-                      'assets/images/profile-photo.png',
-                      width: isTablet ? 80 : 64,
-                      height: isTablet ? 80 : 64,
-                      fit: BoxFit.cover,
-                    ),
+                    ? Image.network(
+                        profileImage!,
+                        width: isTablet ? 80 : 64,
+                        height: isTablet ? 80 : 64,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            color: const Color(0xFFE2E8F0),
+                            child: const Icon(
+                              Icons.person_rounded,
+                              size: 40,
+                              color: Color(0xFF94A3B8),
+                            ),
+                          );
+                        },
+                      )
+                    : Image.asset(
+                        'assets/images/profile-photo.png',
+                        width: isTablet ? 80 : 64,
+                        height: isTablet ? 80 : 64,
+                        fit: BoxFit.cover,
+                      ),
               ),
               Positioned(
                 bottom: 0,
@@ -326,7 +331,7 @@ class _SettingsPageState extends State<SettingsPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  username,
+                  'Shinnosuke Nohara',
                   style: TextStyle(
                     fontSize: isTablet ? 18 : 16,
                     fontWeight: FontWeight.w700,
@@ -337,7 +342,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  email,
+                  'shin@gmail.com',
                   style: TextStyle(
                     fontSize: isTablet ? 14 : 13,
                     fontWeight: FontWeight.w400,
@@ -348,17 +353,17 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 const SizedBox(height: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFEACD80).withAlpha(128),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: ShaderMask(
                     shaderCallback: (bounds) => const LinearGradient(
-                      colors: [
-                        Color(0xFFF59E0B),
-                        Color(0xFF8F5C06),
-                      ],
+                      colors: [Color(0xFFF59E0B), Color(0xFF8F5C06)],
                       stops: [0.0, 0.61],
                     ).createShader(bounds),
                     blendMode: BlendMode.srcIn,

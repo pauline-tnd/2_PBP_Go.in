@@ -18,7 +18,7 @@ class HotelFacility extends Model
     ];
 
     protected $casts = [
-        'name' => 'string'
+        'name' => 'string',
     ];
 
     public function hotel()
@@ -28,6 +28,6 @@ class HotelFacility extends Model
 
     public function icon()
     {
-        return $this->belongsTo(Icon::class);
+        return $this->belongsTo(Icon::class, 'icon_id');
     }
 }

@@ -10,8 +10,11 @@ class Review extends Model
     // use HasFactory;
 
     protected $table = 'reviews';
+
     protected $primaryKey = 'id';
+
     public $incrementing = true;
+
     protected $keyType = 'int';
 
     protected $fillable = [
@@ -28,15 +31,6 @@ class Review extends Model
         'description' => 'string',
         'image' => 'string',
     ];
-
-    protected $appends = ['image_url'];
-
-    public function getImageUrlAttribute()
-    {
-        return $this->image
-            ? asset('storage/' . $this->image)
-            : null;
-    }
 
     public function user()
     {

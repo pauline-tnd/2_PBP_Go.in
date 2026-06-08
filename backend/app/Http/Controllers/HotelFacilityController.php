@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\HotelFacility;
-use Illuminate\Http\Request;
 
 class HotelFacilityController extends Controller
 {
@@ -12,7 +11,7 @@ class HotelFacilityController extends Controller
         $facilities = HotelFacility::with('icon')->get();
 
         return response()->json([
-            'data' => $facilities
+            'data' => $facilities,
         ], 200);
     }
 }

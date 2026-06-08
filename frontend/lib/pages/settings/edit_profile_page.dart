@@ -21,30 +21,19 @@ class _EditProfilePageState extends State<EditProfilePage> {
   bool isLoading = true;
   bool isSaving = false;
 
-  @override
-  void initState() {
-    super.initState();
-    loadUser();
-  }
+  Future<void> pickDate() async {
+    DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: selectedDate!,
+      firstDate: DateTime(1950),
+      lastDate: DateTime.now(),
+    );
 
-  Future<void> loadUser() async {
-    try {
-      final response = await ApiService.getUser();
-      final user = response['data'];
-      nameController.text = user['username'] ?? '';
-      emailController.text = user['email'] ?? '';
-      phoneController.text = user['phone'] ?? '';
+    if (picked != null) {
       setState(() {
         profileImageUrl = user['profile_image_url'];
         isLoading = false;
       });
-    } catch (e) {
-      setState(() {
-        isLoading = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
-      );
     }
   }
 
@@ -60,21 +49,17 @@ class _EditProfilePageState extends State<EditProfilePage> {
         phone: phoneController.text,
       );
       if (selectedImage != null) {
-        await ApiService.updateProfileImage(
-          selectedImage!,
-        );
+        await ApiService.updateProfileImage(selectedImage!);
       }
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Profile updated successfully'),
-        ),
+        const SnackBar(content: Text('Profile updated successfully')),
       );
       Navigator.pop(context, true);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.toString())));
     } finally {
       if (mounted) {
         setState(() {
@@ -138,24 +123,13 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    if (isLoading) {
-      return const Scaffold(
-        backgroundColor: Color(0xFFF5F7F8),
-        body: Center(
-          child: CircularProgressIndicator(
-            color: Color(0xFF3B82F6),
-          ),
-        ),
-      );
-    }
-
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7F8),
       appBar: AppBar(
         backgroundColor: const Color(0xFFF5F7F8),
         elevation: 0,
         scrolledUnderElevation: 0,
-        toolbarHeight: 60,
+        toolbarHeight: 90,
         centerTitle: true,
         leading: Padding(
           padding: const EdgeInsets.only(left: 12),
@@ -178,18 +152,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
         ),
         bottom: const PreferredSize(
           preferredSize: Size.fromHeight(1),
-          child: Divider(
-            height: 1,
-            thickness: 1,
-            color: Color(0xFFE2E8F0),
-          ),
+          child: Divider(height: 1, thickness: 1, color: Color(0xFFE2E8F0)),
         ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 20,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
         child: Column(
           children: [
             Stack(
@@ -203,8 +170,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   child: CircleAvatar(
                     radius: 45,
                     backgroundImage: selectedImage != null
-                      ? FileImage(selectedImage!) as ImageProvider
-                      : (profileImageUrl != null && profileImageUrl!.isNotEmpty)
+                        ? FileImage(selectedImage!) as ImageProvider
+                        : (profileImageUrl != null &&
+                              profileImageUrl!.isNotEmpty)
                         ? NetworkImage(profileImageUrl!) as ImageProvider
                         : const AssetImage("assets/images/profile-photo.png"),
                   ),
@@ -226,8 +194,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         size: 18,
                       ),
                     ),
-                  )
-                )
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 28),
@@ -237,6 +205,94 @@ class _EditProfilePageState extends State<EditProfilePage> {
               Column(
                 children: [
                   buildTextField("Full Name", nameController),
+                  const SizedBox(height: 16),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        "Date of Birth",
+                        style: TextStyle(
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xFF64748B),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      GestureDetector(
+                        onTap: pickDate,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 14,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF1F5F9),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  formatDate(selectedDate!),
+                                  style: const TextStyle(fontSize: 15),
+                                ),
+                              ),
+                              const Icon(
+                                Icons.calendar_today_rounded,
+                                size: 18,
+                                color: Color(0xFF64748B),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Gender",
+                          style: TextStyle(
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF64748B),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(horizontal: 14),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF1F5F9),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              isExpanded: true, // penting supaya full width
+                              value: gender,
+                              items: ["Male", "Female"]
+                                  .map(
+                                    (e) => DropdownMenuItem(
+                                      value: e,
+                                      child: Text(e),
+                                    ),
+                                  )
+                                  .toList(),
+                              onChanged: (value) {
+                                setState(() {
+                                  gender = value!;
+                                });
+                              },
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  buildTextField("City of Residence", cityController),
                 ],
               ),
             ),
@@ -286,10 +342,36 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                 ),
                               ),
                             ),
-                          )
+                          ),
                         ],
-                      )
+                      ),
                     ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            buildCard(
+              Row(
+                children: [
+                  Image.network(
+                    "https://cdn-icons-png.flaticon.com/512/300/300221.png",
+                    width: 26,
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Text(
+                      "Google",
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  Icon(
+                    Icons.check_circle_outline,
+                    color: Colors.green,
+                    size: 22,
                   ),
                 ],
               ),
@@ -298,22 +380,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
             SizedBox(
               width: 365,
               child: ElevatedButton.icon(
-                icon: isSaving
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2,
-                        ),
-                      )
-                    : const Icon(
-                        Icons.save_as_outlined,
-                        color: Colors.white,
-                      ),
-                label: Text(
-                  isSaving ? "Saving..." : "Save Changes",
-                  style: const TextStyle(color: Colors.white),
+                icon: const Icon(Icons.save_as_outlined, color: Colors.white),
+                label: const Text(
+                  "Save Changes",
+                  style: TextStyle(color: Colors.white),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF3B82F6),
@@ -322,7 +392,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     borderRadius: BorderRadius.circular(20),
                   ),
                 ),
-                onPressed: isSaving ? null : saveProfile,
+                onPressed: () {},
               ),
             ),
             const SizedBox(height: 30),
@@ -346,7 +416,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 color: Colors.black.withAlpha(15),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
-              )
+              ),
             ],
           ),
           child: child,
@@ -384,7 +454,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
               ),
             ],
           ),
-        )
+        ),
       ],
     );
   }

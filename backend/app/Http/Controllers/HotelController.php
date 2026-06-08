@@ -22,10 +22,10 @@ class HotelController extends Controller
 
         // Filter Price Range
         $query->when($request->min_price, function ($q, $min_price) {
-            $q->whereHas('rooms', fn($room) => $room->where('price', '>=', $min_price));
+            $q->whereHas('rooms', fn ($room) => $room->where('price', '>=', $min_price));
         });
         $query->when($request->max_price, function ($q, $max_price) {
-            $q->whereHas('rooms', fn($room) => $room->where('price', '<=', $max_price));
+            $q->whereHas('rooms', fn ($room) => $room->where('price', '<=', $max_price));
         });
 
         // Filtering hotel star
@@ -41,7 +41,7 @@ class HotelController extends Controller
 
         // Filtering hotel by list ID facilities, example: ?amenities[]=1&amenities[]=3
         $query->when($request->amenities, function ($q, $amenities) {
-            $q->whereHas('hotelFacilities', fn($facility) => $facility->whereIn('id', $amenities));
+            $q->whereHas('hotelFacilities', fn ($facility) => $facility->whereIn('id', $amenities));
         });
 
         // Sorting
@@ -65,14 +65,14 @@ class HotelController extends Controller
             // select raw = inject raw, plain SQL statements
             // 6371 = earth's radius in kilometer (Km unit)
             // radians = convert degrees to radians
-            $query->selectRaw("hotels.*, 
+            $query->selectRaw('hotels.*, 
             (6371 * acos(
             cos( radians(?) ) 
             * cos( radians( latitude ) ) 
             * cos( radians( longitude ) - radians(?) ) + 
             sin( radians(?) ) 
             * sin( radians( latitude ) ) ) 
-            ) AS distance", [$lat, $lng, $lat])
+            ) AS distance', [$lat, $lng, $lat])
                 ->orderBy('distance', 'asc'); // shortest distance
         } else {
             // Default sort
@@ -101,7 +101,7 @@ class HotelController extends Controller
             ->withCount('reviews as total_reviews')           // review total
             ->find($id);
 
-        if (!$hotel) { // invalid id
+        if (! $hotel) { // invalid id
             return response()->json([
                 'message' => 'Hotel not found',
             ], 404);
@@ -117,7 +117,7 @@ class HotelController extends Controller
 
         return response()->json([ // success
             'data' => $hotel,
-            'is_wishlist' => $isWishlist
+            'is_wishlist' => $isWishlist,
         ], 200);
     }
 }
