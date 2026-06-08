@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:frontend/pages/Detail_pages/detail_room_page.dart';
+import 'package:frontend/models/addOn.dart';
 
 import '../models/room.dart';
 import 'package:frontend/widgets/common/carousel.dart';
@@ -11,7 +12,7 @@ class RoomCard extends StatefulWidget {
   final VoidCallback? onSelectRoom;
   final List<String> imageUrls;
   final List<Map<String, dynamic>> facilities;
-  final List<String>? addOns;
+  final List<AddOnItem>? addOns;
   final List<Map<String, dynamic>> reviews;
   final String hotelName;
   final double reviewScore;
@@ -40,8 +41,7 @@ class _RoomCardState extends State<RoomCard> {
         : widget.imageUrls.isNotEmpty
         ? widget.imageUrls
         : [if (widget.imageUrl != null) widget.imageUrl!];
-    final addOns =
-        widget.addOns ?? widget.room.addOns.map((addOn) => addOn.name).toList();
+    final addOns = widget.addOns ?? widget.room.addOns;
 
     Navigator.push(
       context,
@@ -50,7 +50,7 @@ class _RoomCardState extends State<RoomCard> {
           room: widget.room,
           imageUrls: imageUrls,
           facilities: widget.facilities,
-          roomAmenities: widget.room.roomFacilities ?? [],
+          roomAmenities: widget.room.roomFacilities,
           addOns: addOns,
           reviews: widget.reviews,
           hotelName: widget.hotelName,

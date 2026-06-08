@@ -1,3 +1,5 @@
+//DO NOT PUSH
+
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
@@ -15,11 +17,18 @@ class _EditProfilePageState extends State<EditProfilePage> {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
+  final TextEditingController cityController = TextEditingController();
   File? selectedImage;
   String? profileImageUrl;
   final ImagePicker picker = ImagePicker();
   bool isLoading = true;
   bool isSaving = false;
+
+  DateTime? selectedDate = DateTime(2000, 1, 1);
+  String gender = "Male";
+  String formatDate(DateTime date) {
+    return "${date.day}/${date.month}/${date.year}";
+  }
 
   Future<void> pickDate() async {
     DateTime? picked = await showDatePicker(
@@ -31,7 +40,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
     if (picked != null) {
       setState(() {
-        profileImageUrl = user['profile_image_url'];
+        selectedDate = picked;
         isLoading = false;
       });
     }

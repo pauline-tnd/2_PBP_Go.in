@@ -1,26 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:frontend/models/addOn.dart';
-import 'package:frontend/models/room.dart';
+import 'package:frontend/models/bookingDetail.dart';
 
 class BookingConfirmationPopUp extends StatefulWidget {
-  final Room room;
-  final String roomImage;
-  final List<AddOnItem> selectedAddOns;
-  final String notes;
-  final int quantity;
+  final List<BookingDetail> bookingDetails;
   final void Function()? onCustomAnother;
   final void Function()? onBookNow;
+  final void Function(int index)? onEditItem;
+  final void Function(int index)? onDeleteItem;
 
   const BookingConfirmationPopUp({
     super.key,
-    required this.room,
-    required this.roomImage,
-    required this.selectedAddOns,
-    required this.notes,
-    this.quantity = 1,
+    required this.bookingDetails,
     this.onCustomAnother,
     this.onBookNow,
+    this.onEditItem,
+    this.onDeleteItem,
   });
 
   @override
@@ -29,368 +24,363 @@ class BookingConfirmationPopUp extends StatefulWidget {
 }
 
 class _BookingConfirmationPopUpState extends State<BookingConfirmationPopUp> {
-  late int _quantity;
+  static const _blue = Color(0xFF3B82F6);
+  static const _dark = Color(0xFF1E293B);
+  static const _muted = Color(0xFF94A3B8);
+  static const _line = Color(0xFFE2E8F0);
 
-  @override
-  void initState() {
-    super.initState();
-    _quantity = widget.quantity;
+  String formatPrice(double price) {
+    return NumberFormat('#,###', 'en_US').format(price.toInt());
   }
 
-  String _formatPrice(double price) {
-    return NumberFormat(
-      '#,###',
-      'id_ID',
-    ).format(price.toInt()).replaceAll(',', '.');
+  double itemTotal(BookingDetail detail) {
+    final addOnsTotal = detail.selectedAddOns.fold<double>(
+      0,
+      (sum, item) => sum + item.price,
+    );
+
+    return (detail.room.price + addOnsTotal) * detail.quantity;
   }
 
-  double _calculateAddOnsTotal() {
-    return widget.selectedAddOns.fold(0, (sum, addon) => sum + addon.price);
+  double grandTotal() {
+    return widget.bookingDetails.fold<double>(
+      0,
+      (sum, detail) => sum + itemTotal(detail),
+    );
   }
 
-  double _calculateSubtotal() {
-    final roomTotal = widget.room.price * _quantity;
-    final addOnsTotal = _calculateAddOnsTotal() * _quantity;
-    return roomTotal + addOnsTotal;
+  String _addOnsText(BookingDetail detail) {
+    if (detail.selectedAddOns.isEmpty) return '-';
+    return detail.selectedAddOns.map((item) => item.name).join(', ');
+  }
+
+  Widget _roomImage(String imageUrl, double size) {
+    final placeholder = Container(
+      width: size,
+      height: size,
+      color: const Color(0xFFE2E8F0),
+      child: const Icon(
+        Icons.meeting_room_rounded,
+        color: Color(0xFF94A3B8),
+        size: 34,
+      ),
+    );
+
+    if (imageUrl.isEmpty) return placeholder;
+
+    return Image.network(
+      imageUrl,
+      width: size,
+      height: size,
+      fit: BoxFit.cover,
+      errorBuilder: (_, _, _) => placeholder,
+    );
+  }
+
+  Widget _bookingItem(BookingDetail detail, int index) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 360;
+        final imageSize = compact ? 88.0 : 108.0;
+        final titleSize = compact ? 22.0 : 25.0;
+        final priceSize = compact ? 24.0 : 28.0;
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(18),
+              child: _roomImage(detail.roomImage, imageSize),
+            ),
+            SizedBox(width: compact ? 14 : 22),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          detail.room.type,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: titleSize,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.black,
+                          ),
+                        ),
+                      ),
+                      _IconAction(
+                        icon: Icons.edit_outlined,
+                        onPressed: widget.onEditItem == null
+                            ? null
+                            : () => widget.onEditItem!(index),
+                      ),
+                      _IconAction(
+                        icon: Icons.delete_outline,
+                        onPressed: widget.onDeleteItem == null
+                            ? null
+                            : () => widget.onDeleteItem!(index),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${detail.quantity}x',
+                        style: TextStyle(
+                          fontSize: titleSize,
+                          fontWeight: FontWeight.w700,
+                          color: _dark,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Add-on : ${_addOnsText(detail)}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 16, color: _dark),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    detail.notes.isEmpty
+                        ? 'Notes : -'
+                        : 'Notes : ${detail.notes}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 16, color: _muted),
+                  ),
+                  const SizedBox(height: 14),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      'Rp ${formatPrice(itemTotal(detail))}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: priceSize,
+                        fontWeight: FontWeight.w500,
+                        color: _blue,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final subtotal = _calculateSubtotal();
-    final addOnsText = widget.selectedAddOns.isEmpty
-        ? '–'
-        : widget.selectedAddOns.map((e) => e.name).join(', ');
+    final screenHeight = MediaQuery.sizeOf(context).height;
+    final viewInsets = MediaQuery.viewInsetsOf(context);
 
-    return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-      ),
-      child: SingleChildScrollView(
+    return SafeArea(
+      top: false,
+      child: Container(
+        constraints: BoxConstraints(maxHeight: screenHeight * 0.9),
+        padding: EdgeInsets.only(bottom: viewInsets.bottom),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(36)),
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const SizedBox(height: 12),
+            const SizedBox(height: 18),
             Container(
-              width: 40,
-              height: 4,
+              width: 58,
+              height: 5,
               decoration: BoxDecoration(
-                color: const Color(0xFFCBD5E1),
-                borderRadius: BorderRadius.circular(2),
+                color: const Color(0xFF94A3B8),
+                borderRadius: BorderRadius.circular(20),
               ),
             ),
-            const SizedBox(height: 16),
-            const Text(
-              'Booking Confirmation',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF1E293B),
-              ),
+            Flexible(
+              child: widget.bookingDetails.isEmpty
+                  ? const Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 28,
+                        vertical: 64,
+                      ),
+                      child: Center(
+                        child: Text(
+                          'No rooms selected',
+                          style: TextStyle(fontSize: 16, color: _muted),
+                        ),
+                      ),
+                    )
+                  : ListView.separated(
+                      shrinkWrap: true,
+                      padding: const EdgeInsets.fromLTRB(28, 64, 28, 36),
+                      itemCount: widget.bookingDetails.length,
+                      separatorBuilder: (_, _) => const SizedBox(height: 42),
+                      itemBuilder: (context, index) =>
+                          _bookingItem(widget.bookingDetails[index], index),
+                    ),
             ),
-            const SizedBox(height: 20),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 28),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Room Card
-                  Container(
-                    decoration: BoxDecoration(
-                      border: Border.all(color: const Color(0xFFE2E8F0)),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Room Image
-                        ClipRRect(
-                          borderRadius: const BorderRadius.vertical(
-                            top: Radius.circular(12),
-                          ),
-                          child: Container(
-                            width: double.infinity,
-                            height: 140,
-                            color: const Color(0xFF94A3B8),
-                            child: widget.roomImage.isNotEmpty
-                                ? Image.network(
-                                    widget.roomImage,
-                                    fit: BoxFit.cover,
-                                  )
-                                : const SizedBox(),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      widget.room.type,
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w700,
-                                        color: Color(0xFF1E293B),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 6),
-                                    Text(
-                                      'Add-on : $addOnsText',
-                                      style: const TextStyle(
-                                        fontSize: 13,
-                                        color: Color(0xFF64748B),
-                                      ),
-                                    ),
-                                    if (widget.notes.isNotEmpty) ...[
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        'Notes : ${widget.notes}',
-                                        style: const TextStyle(
-                                          fontSize: 13,
-                                          color: Color(0xFF94A3B8),
-                                        ),
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Row(
-                                    children: [
-                                      GestureDetector(
-                                        onTap: () {
-                                          // Edit functionality will be added later
-                                        },
-                                        child: Container(
-                                          padding: const EdgeInsets.all(6),
-                                          child: const Icon(
-                                            Icons.edit_outlined,
-                                            size: 18,
-                                            color: Color(0xFFCBD5E1),
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      GestureDetector(
-                                        onTap: () {
-                                          // Delete functionality will be added later
-                                        },
-                                        child: Container(
-                                          padding: const EdgeInsets.all(6),
-                                          child: const Icon(
-                                            Icons.delete_outline_rounded,
-                                            size: 18,
-                                            color: Color(0xFFCBD5E1),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    'Rp ${_formatPrice(widget.room.price)}',
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: Color(0xFF3B82F6),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Quantity Section
+                  const Divider(height: 1, color: _line),
+                  const SizedBox(height: 24),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      const Text(
-                        'Quantity',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: Color(0xFF1E293B),
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            GestureDetector(
-                              onTap: _quantity > 1
-                                  ? () => setState(() => _quantity--)
-                                  : null,
-                              child: Icon(
-                                Icons.remove,
-                                size: 16,
-                                color: _quantity > 1
-                                    ? const Color(0xFF1E293B)
-                                    : const Color(0xFFCBD5E1),
-                              ),
+                            const Text(
+                              'Subtotal',
+                              style: TextStyle(fontSize: 22, color: _muted),
                             ),
-                            const SizedBox(width: 12),
+                            const SizedBox(height: 12),
                             Text(
-                              '$_quantity',
+                              'Rp ${formatPrice(grandTotal())}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFF1E293B),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            GestureDetector(
-                              onTap: () => setState(() => _quantity++),
-                              child: const Icon(
-                                Icons.add,
-                                size: 16,
-                                color: Color(0xFF1E293B),
+                                fontSize: 30,
+                                fontWeight: FontWeight.w500,
+                                color: _blue,
                               ),
                             ),
                           ],
                         ),
                       ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Divider
-                  Divider(
-                    color: const Color(0xFFE2E8F0),
-                    thickness: 1,
-                    height: 1,
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Subtotal Section
-                  Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'Subtotal',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Color(0xFF94A3B8),
-                            ),
-                          ),
-                          Text(
-                            'Rp ${_formatPrice(subtotal)}',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF3B82F6),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 6),
-                      const Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Text(
-                            'Price includes tax',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Color(0xFFCBD5E1),
-                            ),
-                          ),
-                        ],
+                      const SizedBox(width: 16),
+                      const Padding(
+                        padding: EdgeInsets.only(bottom: 5),
+                        child: Text(
+                          'Price includes tax',
+                          style: TextStyle(fontSize: 16, color: _muted),
+                        ),
                       ),
                     ],
                   ),
-
-                  const SizedBox(height: 24),
-
-                  // Buttons
+                  const SizedBox(height: 26),
+                  const Divider(height: 1, color: _line),
+                  const SizedBox(height: 26),
                   Row(
                     children: [
                       Expanded(
-                        child: OutlinedButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                            widget.onCustomAnother?.call();
-                          },
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: const Color(0xFF3B82F6),
-                            side: const BorderSide(
-                              color: Color(0xFF3B82F6),
-                              width: 1.5,
-                            ),
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                          ),
-                          child: const Text(
-                            'Custom Another',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
+                        child: _BottomActionButton(
+                          label: 'Custom Another',
+                          onPressed: widget.onCustomAnother,
+                          outlined: true,
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 18),
                       Expanded(
-                        child: ElevatedButton(
-                          onPressed: () {
-                            widget.onBookNow?.call();
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF3B82F6),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            elevation: 0,
-                          ),
-                          child: const Text(
-                            'Book Now',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
+                        child: _BottomActionButton(
+                          label: 'Book Now',
+                          onPressed: widget.onBookNow,
                         ),
                       ),
                     ],
                   ),
-
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 28),
                 ],
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _IconAction extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback? onPressed;
+
+  const _IconAction({required this.icon, required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      onPressed: onPressed,
+      constraints: const BoxConstraints.tightFor(width: 36, height: 36),
+      padding: EdgeInsets.zero,
+      splashRadius: 20,
+      icon: Icon(icon, color: const Color(0xFFBFC3C9), size: 28),
+    );
+  }
+}
+
+class _BottomActionButton extends StatelessWidget {
+  final String label;
+  final VoidCallback? onPressed;
+  final bool outlined;
+
+  const _BottomActionButton({
+    required this.label,
+    required this.onPressed,
+    this.outlined = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final child = FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 24,
+          fontWeight: FontWeight.w500,
+          color: outlined ? const Color(0xFF3B82F6) : Colors.white,
+        ),
+      ),
+    );
+
+    if (outlined) {
+      return Container(
+        height: 64,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: 14,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: OutlinedButton(
+          onPressed: onPressed,
+          style: OutlinedButton.styleFrom(
+            backgroundColor: Colors.white,
+            side: const BorderSide(color: Color(0xFFE2E8F0)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(24),
+            ),
+          ),
+          child: child,
+        ),
+      );
+    }
+
+    return SizedBox(
+      height: 64,
+      child: ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF3B82F6),
+          foregroundColor: Colors.white,
+          elevation: 8,
+          shadowColor: Colors.black.withValues(alpha: 0.22),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+        ),
+        child: child,
       ),
     );
   }

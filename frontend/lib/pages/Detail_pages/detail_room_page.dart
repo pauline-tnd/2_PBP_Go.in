@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:frontend/models/bookingDetail.dart' as booking_detail;
 import 'package:frontend/models/room.dart';
+import 'package:frontend/models/addOn.dart';
 import 'package:frontend/widgets/room_image.dart';
-import 'package:frontend/widgets/review_card.dart';
 import 'package:frontend/widgets/add_on_pop_up.dart';
 import 'package:frontend/pages/review_page.dart';
 
@@ -10,7 +11,7 @@ class DetailRoomPage extends StatefulWidget {
   final Room room;
   final List<String> imageUrls;
   final List<Map<String, dynamic>> facilities;
-  final List<String> addOns;
+  final List<AddOnItem> addOns;
   final List<Map<String, dynamic>> roomAmenities;
   final List<Map<String, dynamic>> reviews;
   final String hotelName;
@@ -319,39 +320,6 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                       ),
                       const SizedBox(height: 20),
 
-                      // const Text(
-                      //   'Room Amenities',
-                      //   style: TextStyle(
-                      //     fontSize: 16,
-                      //     fontWeight: FontWeight.w700,
-                      //     color: Color(0xFF1E293B),
-                      //   ),
-                      // ),
-                      // ...[
-                      //   'Television',
-                      //   'Desk',
-                      //   'In-room Safe',
-                      //   'Hair Dryer',
-                      // ].map(
-                      //   (item) => Padding(
-                      //     padding: const EdgeInsets.symmetric(vertical: 3),
-                      //     child: Row(
-                      //       children: [
-                      //         const Text(
-                      //           '• ',
-                      //           style: TextStyle(color: Color(0xFF64748B)),
-                      //         ),
-                      //         Text(
-                      //           item,
-                      //           style: const TextStyle(
-                      //             fontSize: 13,
-                      //             color: Color(0xFF64748B),
-                      //           ),
-                      //         ),
-                      //       ],
-                      //     ),
-                      //   ),
-                      // ),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -421,7 +389,7 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                                 style: TextStyle(color: Color(0xFF64748B)),
                               ),
                               Text(
-                                item,
+                                item.name,
                                 style: const TextStyle(
                                   fontSize: 13,
                                   color: Color(0xFF64748B),
@@ -523,7 +491,7 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                                 ),
                               );
                             },
-                            child: ReviewCard(review: widget.reviews[index]),
+                            // child: ReviewCard(review: widget.reviews[index]),
                           ),
                         ),
                       ),
@@ -550,9 +518,15 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                   backgroundColor: Colors.transparent,
                   builder: (_) => AddOnPopUp(
                     roomType: widget.room.type,
-                    addOns: widget.room.addOns,
-                    room: widget.room,
-                    roomImage: widget.imageUrls.first,
+                    addOns: widget.addOns,
+                    room: booking_detail.Room(
+                      id: widget.room.id,
+                      type: widget.room.type,
+                      price: widget.room.price,
+                    ),
+                    roomImage: widget.imageUrls.isNotEmpty
+                        ? widget.imageUrls.first
+                        : '',
                   ),
                 );
               },

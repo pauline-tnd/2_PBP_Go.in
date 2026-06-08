@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:frontend/models/addOn.dart';
-import 'package:frontend/models/room.dart';
 import 'package:frontend/widgets/booking_confirmation_pop_up.dart';
+import 'package:frontend/models/bookingDetail.dart';
 
 class AddOnPopUp extends StatefulWidget {
   final String roomType;
@@ -225,15 +225,23 @@ class _AddOnPopUpState extends State<AddOnPopUp> {
                           isScrollControlled: true,
                           backgroundColor: Colors.transparent,
                           builder: (_) => BookingConfirmationPopUp(
-                            room: widget.room,
-                            roomImage: widget.roomImage,
-                            selectedAddOns: selected,
-                            notes: _notesController.text,
+                            bookingDetails: [
+                              BookingDetail(
+                                id: 0,
+                                room: widget.room,
+                                quantity: 1,
+                                roomImage: widget.roomImage,
+                                notes: _notesController.text,
+                                selectedAddOns: selected,
+                              ),
+                            ],
+
                             onCustomAnother: () {
                               showModalBottomSheet(
                                 context: context,
                                 isScrollControlled: true,
                                 backgroundColor: Colors.transparent,
+
                                 builder: (_) => AddOnPopUp(
                                   roomType: widget.roomType,
                                   addOns: widget.addOns,
@@ -242,6 +250,7 @@ class _AddOnPopUpState extends State<AddOnPopUp> {
                                 ),
                               );
                             },
+
                             onBookNow: () {
                               Navigator.pop(context);
                             },
