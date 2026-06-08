@@ -1,3 +1,5 @@
+import 'package:frontend/models/review_user.dart';
+
 class Review {
   final int id;
   final int userId;
@@ -7,6 +9,7 @@ class Review {
   final String description;
   final String? image;
   final String? createdAt;
+  final ReviewUser? user;
 
   Review({
     required this.id,
@@ -17,6 +20,7 @@ class Review {
     required this.description,
     this.image,
     this.createdAt,
+    this.user,
   });
 
   factory Review.fromJson(Map<String, dynamic> json) {
@@ -29,6 +33,7 @@ class Review {
       description: json['description'] ?? '',
       image: json['image'],
       createdAt: json['created_at'],
+      user: json['user'] != null ? ReviewUser.fromJson(json['user']) : null,
     );
   }
 
