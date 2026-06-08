@@ -1,95 +1,75 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
-import '../models/review.dart';
-import 'hotel_image.dart';
-import 'package:intl/intl.dart';
+import 'package:frontend/models/review.dart';
+import 'package:frontend/widgets/star_rating.dart';
 
 class ReviewCard extends StatelessWidget {
-  final Map<String, dynamic> review;
+  final Review review;
+  final VoidCallback? onImageTap;
 
-  const ReviewCard({super.key, required this.review});
+  const ReviewCard({super.key, required this.review, this.onImageTap});
 
   @override
   Widget build(BuildContext context) {
-    final rating = (review['rating'] as num? ?? 0).toInt();
-
-    return Container(
-      width: 220,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF1E293B).withAlpha(12),
-            blurRadius: 12,
-            offset: const Offset(0, 3),
-          ),
-        ],
+    return Card(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadiusGeometry.circular(12),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 16,
-                backgroundImage: review['avatar'] != null
-                    ? NetworkImage(review['avatar'] as String)
-                    : null,
-                backgroundColor: const Color(0xFF94A3B8),
-                child: review['avatar'] == null
-                    ? const Icon(Icons.person, color: Colors.white, size: 16)
-                    : null,
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      review['userName'] as String? ?? '',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF1E293B),
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    Text(
-                      review['date'] as String? ?? '',
-                      style: const TextStyle(
-                        fontSize: 10,
-                        color: Color(0xFF94A3B8),
-                      ),
-                    ),
-                  ],
+      child: Padding(
+        padding: const EdgeInsets.all(10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                CircleAvatar(
+                  backgroundImage: review.user?.profileImage != null
+                      ? NetworkImage(review.user!.profileImage!)
+                      : const AssetImage('assets/profile-photo.png')
+                            as ImageProvider,
+                  radius: 20,
                 ),
-              ),
-              Row(
-                children: List.generate(
-                  rating,
-                  (_) => const Icon(
-                    Icons.star_rounded,
-                    color: Color(0xFFF59E0B),
-                    size: 12,
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        review.user?.username ?? 'Unknown',
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      Text(
+                        review.createdAt ?? 'Date not found',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                StarRating(rating: review.rating),
+              ],
+            ),
+            const SizedBox(height: 10),
+            // Description review
+            Text(review.description),
+            if (review.image != null) ...[
+              const SizedBox(height: 10),
+              GestureDetector(
+                onTap: onImageTap,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.network(
+                    review.image!,
+                    width: 90,
+                    height: 70,
+                    fit: BoxFit.cover,
                   ),
                 ),
               ),
             ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            review['comment'] as String? ?? '',
-            style: const TextStyle(
-              fontSize: 11,
-              color: Color(0xFF64748B),
-              height: 1.4,
-            ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
