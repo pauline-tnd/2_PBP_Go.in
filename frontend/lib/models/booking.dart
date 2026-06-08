@@ -7,7 +7,6 @@ class Booking {
   final double totalPrice;
   final String status;
 
-  // Nested relationship fields (from booking_details → room → hotel)
   final String? hotelName;
   final String? roomType;
   final String? roomImageUrl;
@@ -38,10 +37,12 @@ class Booking {
       final room = detail['room'] as Map<String, dynamic>?;
       final hotel = room?['hotel'] as Map<String, dynamic>?;
       hotelName = hotel?['name']?.toString();
-      roomType = room?['name']?.toString() ??
+      roomType =
+          room?['name']?.toString() ??
           room?['type']?.toString() ??
           room?['room_type']?.toString();
-      roomImageUrl = room?['image_url']?.toString() ??
+      roomImageUrl =
+          room?['image_url']?.toString() ??
           room?['image']?.toString() ??
           hotel?['image_url']?.toString() ??
           hotel?['image']?.toString();

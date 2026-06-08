@@ -1,16 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:frontend/models/addOn.dart';
+import 'package:frontend/models/room.dart';
+import 'package:frontend/widgets/booking_confirmation_pop_up.dart';
 
 class AddOnPopUp extends StatefulWidget {
   final String roomType;
   final List<AddOnItem> addOns;
+  final Room room;
+  final String roomImage;
   final void Function(List<AddOnItem> selected, String notes)? onContinue;
 
   const AddOnPopUp({
     super.key,
     required this.roomType,
     required this.addOns,
+    required this.room,
+    required this.roomImage,
     this.onContinue,
   });
 
@@ -213,11 +219,34 @@ class _AddOnPopUpState extends State<AddOnPopUp> {
                         final selected = _selectedIndexes
                             .map((i) => widget.addOns[i])
                             .toList();
-                        widget.onContinue?.call(
-                          selected,
-                          _notesController.text,
-                        );
                         Navigator.pop(context);
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.transparent,
+                          builder: (_) => BookingConfirmationPopUp(
+                            room: widget.room,
+                            roomImage: widget.roomImage,
+                            selectedAddOns: selected,
+                            notes: _notesController.text,
+                            onCustomAnother: () {
+                              showModalBottomSheet(
+                                context: context,
+                                isScrollControlled: true,
+                                backgroundColor: Colors.transparent,
+                                builder: (_) => AddOnPopUp(
+                                  roomType: widget.roomType,
+                                  addOns: widget.addOns,
+                                  room: widget.room,
+                                  roomImage: widget.roomImage,
+                                ),
+                              );
+                            },
+                            onBookNow: () {
+                              Navigator.pop(context);
+                            },
+                          ),
+                        );
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF3B82F6),

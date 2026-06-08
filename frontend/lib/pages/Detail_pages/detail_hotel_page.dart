@@ -141,8 +141,8 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
       if (_isWishlisted) {
         if (_wishlistId != null) {
           await ApiService.deleteWishlist(_wishlistId!);
-        } else {
-          await ApiService.deleteWishlistByHotelId(widget.hotel.id);
+          // } else {
+          //   await ApiService.deleteWishlistByHotelId(widget.hotel.id);
         }
         _wishlistId = null;
         if (mounted) context.showAppSnackBar('Removed from wishlist');

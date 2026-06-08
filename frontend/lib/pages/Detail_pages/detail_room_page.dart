@@ -551,6 +551,8 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                   builder: (_) => AddOnPopUp(
                     roomType: widget.room.type,
                     addOns: widget.room.addOns,
+                    room: widget.room,
+                    roomImage: widget.imageUrls.first,
                   ),
                 );
               },
