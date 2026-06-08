@@ -11,32 +11,44 @@ class UserController extends Controller
 {
     public function show(Request $request)
     {
+        $user = $request->user();
         return response()->json([
-            'data' => $request->user(),
+            'data' => [
+                ...$user->toArray(),
+                'profile_image_url' => $user->profile_image
+                    ? asset('storage/' . $user->profile_image)
+                    : null,
+            ]
         ], 200);
     }
 
     public function updateProfile(Request $request)
     {
         $user = $request->user();
-
         $request->validate([
-            'profile_image' => 'required|image|mimes:jpg,jpeg,png|max:2048',
+            'profile_image' => 'nullable|image|mimes:jpg,jpeg,png|max:20480',
         ]);
-
-        if ($user->profile_image && Storage::disk('public')->exists($user->profile_image)) {
-            Storage::disk('public')->delete($user->profile_image);
+        if ($request->hasFile('profile_image')) {
+            if (
+                $user->profile_image &&
+                Storage::disk('public')->exists($user->profile_image)
+            ) {
+                Storage::disk('public')->delete($user->profile_image);
+            }
+            $path = $request->file('profile_image') ->store('profile_images', 'public');
+            $user->update([
+                'profile_image' => $path,
+            ]);
         }
-
-        $path = $request->file('profile_image')->store('profile_images', 'public');
-        $user->update([
-            'profile_image' => $path
-        ]);
-
         return response()->json([
             'message' => 'Profile updated successfully',
-            'data'    => $user->fresh(),
-        ], 200);
+            'data' => [
+                ...$user->fresh()->toArray(),
+                'profile_image_url' => $user->profile_image
+                    ? asset('storage/' . $user->profile_image)
+                    : null,
+            ]
+        ]);
     }
 
     public function update(Request $request)
@@ -92,17 +104,16 @@ class UserController extends Controller
     public function destroy(Request $request)
     {
         $user = $request->user();
-
-        if ($user->profile_image) {
+        if (
+            $user->profile_image &&
+            Storage::disk('public')->exists($user->profile_image)
+        ) {
             Storage::disk('public')->delete($user->profile_image);
         }
-
         if (method_exists($user, 'tokens')) {
             $user->tokens()->delete();
         }
-
         $user->delete();
-
         return response()->json([
             'message' => 'Account deleted successfully',
         ], 200);

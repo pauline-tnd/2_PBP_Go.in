@@ -1,5 +1,8 @@
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/services/api_services.dart';
+import 'package:flutter/cupertino.dart';
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});
@@ -12,6 +15,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
+  File? selectedImage;
+  String? profileImageUrl;
+  final ImagePicker picker = ImagePicker();
   bool isLoading = true;
   bool isSaving = false;
 
@@ -29,6 +35,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       emailController.text = user['email'] ?? '';
       phoneController.text = user['phone'] ?? '';
       setState(() {
+        profileImageUrl = user['profile_image_url'];
         isLoading = false;
       });
     } catch (e) {
@@ -52,6 +59,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
         email: emailController.text,
         phone: phoneController.text,
       );
+      if (selectedImage != null) {
+        await ApiService.updateProfileImage(
+          selectedImage!,
+        );
+      }
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -70,6 +82,50 @@ class _EditProfilePageState extends State<EditProfilePage> {
         });
       }
     }
+  }
+
+  Future<void> pickImage(ImageSource source) async {
+    final XFile? image = await picker.pickImage(
+      source: source,
+      imageQuality: 80,
+    );
+    if (image == null) return;
+    setState(() {
+      selectedImage = File(image.path);
+    });
+  }
+
+  void showImagePicker() {
+    showCupertinoModalPopup(
+      context: context,
+      builder: (BuildContext context) {
+        return CupertinoActionSheet(
+          actions: [
+            CupertinoActionSheetAction(
+              onPressed: () {
+                Navigator.pop(context);
+                pickImage(ImageSource.gallery);
+              },
+              child: const Text('Photo Library'),
+            ),
+            CupertinoActionSheetAction(
+              onPressed: () {
+                Navigator.pop(context);
+                pickImage(ImageSource.camera);
+              },
+              child: const Text('Take Photo'),
+            ),
+          ],
+          cancelButton: CupertinoActionSheetAction(
+            isDefaultAction: true,
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: const Text('Cancel'),
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -144,26 +200,33 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     color: Colors.white,
                     shape: BoxShape.circle,
                   ),
-                  child: const CircleAvatar(
+                  child: CircleAvatar(
                     radius: 45,
-                    backgroundImage: AssetImage("assets/images/profile-photo.png"),
+                    backgroundImage: selectedImage != null
+                      ? FileImage(selectedImage!) as ImageProvider
+                      : (profileImageUrl != null && profileImageUrl!.isNotEmpty)
+                        ? NetworkImage(profileImageUrl!) as ImageProvider
+                        : const AssetImage("assets/images/profile-photo.png"),
                   ),
                 ),
                 Positioned(
                   bottom: 0,
                   right: 0,
-                  child: Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: const BoxDecoration(
-                      color: Color(0xFF3B82F6),
-                      shape: BoxShape.circle,
+                  child: GestureDetector(
+                    onTap: showImagePicker,
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF3B82F6),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.camera_alt,
+                        color: Colors.white,
+                        size: 18,
+                      ),
                     ),
-                    child: const Icon(
-                      Icons.camera_alt,
-                      color: Colors.white,
-                      size: 18,
-                    ),
-                  ),
+                  )
                 )
               ],
             ),
