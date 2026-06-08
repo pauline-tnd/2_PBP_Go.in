@@ -1,17 +1,49 @@
 import 'package:flutter/material.dart';
-import '../../widgets/bottom_navbar.dart';
-import '../../widgets/settings/settings_group.dart';
-import '../../widgets/settings/settings_section_title.dart';
-import '../../widgets/common/logout_button.dart';
 import 'edit_profile_page.dart';
 import 'preferences_page.dart';
 import 'help_centre_page.dart';
 import 'contact_us_page.dart';
 import 'faq_page.dart';
 import 'package:frontend/widgets/bottom_navbar.dart';
+import 'package:frontend/widgets/settings/settings_group.dart';
+import 'package:frontend/widgets/settings/settings_section_title.dart';
+import 'package:frontend/widgets/common/logout_button.dart';
+import 'package:frontend/services/api_services.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
+
+  @override
+  State<SettingsPage> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends State<SettingsPage> {
+  String username = '';
+  String email = '';
+  String? profileImage;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchUser();
+  }
+
+  Future<void> fetchUser() async {
+    try {
+      final response = await ApiService.getUser();
+      final user = response['data'];
+
+      if (!mounted) return;
+
+      setState(() {
+        username = user['username'] ?? '';
+        email = user['email'] ?? '';
+        profileImage = user['profile_image_url'];
+      });
+    } catch (e) {
+      debugPrint("Error fetch user: $e");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -90,6 +122,13 @@ class SettingsPage extends StatelessWidget {
                       child: Padding(
                         padding: EdgeInsets.symmetric(
                           horizontal: horizontalPadding,
+                        ),
+                        child: _buildProfileCard(
+                          isTablet,
+                          isDesktop,
+                          username,
+                          email,
+                          profileImage,
                         ),
                         child: _buildProfileCard(isTablet, isDesktop),
                       ),
@@ -207,7 +246,13 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  static Widget _buildProfileCard(bool isTablet, bool isDesktop) {
+  static Widget _buildProfileCard(
+    bool isTablet,
+    bool isDesktop,
+    String username,
+    String email,
+    String? profileImage,
+  ) {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(isTablet ? 24 : 20),
@@ -236,24 +281,29 @@ class SettingsPage extends StatelessWidget {
                     width: 2,
                   ),
                 ),
-                child: ClipOval(
-                  child: Image.asset(
-                    'assets/images/profile-photo.jpg',
-                    width: isTablet ? 80 : 64,
-                    height: isTablet ? 80 : 64,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        color: const Color(0xFFE2E8F0),
-                        child: const Icon(
-                          Icons.person_rounded,
-                          size: 40,
-                          color: Color(0xFF94A3B8),
-                        ),
-                      );
-                    },
-                  ),
-                ),
+                child: profileImage != null && profileImage!.isNotEmpty
+                    ? Image.network(
+                        profileImage!,
+                        width: isTablet ? 80 : 64,
+                        height: isTablet ? 80 : 64,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            color: const Color(0xFFE2E8F0),
+                            child: const Icon(
+                              Icons.person_rounded,
+                              size: 40,
+                              color: Color(0xFF94A3B8),
+                            ),
+                          );
+                        },
+                      )
+                    : Image.asset(
+                        'assets/images/profile-photo.png',
+                        width: isTablet ? 80 : 64,
+                        height: isTablet ? 80 : 64,
+                        fit: BoxFit.cover,
+                      ),
               ),
               Positioned(
                 bottom: 0,

@@ -1,13 +1,15 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 
-import 'home_page.dart';
 import 'register.dart';
+import 'main_shell.dart';
 import '../services/app_config.dart';
-import '../services/google_auth_service.dart';
+import '../services/api_services.dart';
+import '../utils/app_responsive.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -27,7 +29,7 @@ class _LoginPageState extends State<LoginPage> {
   String? _passwordError;
   String? _generalError;
 
-  String get _apiBaseUrl => AppConfig.apiBaseUrl;
+  String get _authBaseUrl => AppConfig.mobileAuthBaseUrl;
 
   @override
   void dispose() {
@@ -75,10 +77,10 @@ class _LoginPageState extends State<LoginPage> {
 
     try {
       final response = await http.post(
-        Uri.parse('$_apiBaseUrl/login'),
+        Uri.parse('$_authBaseUrl/login'),
         headers: {'Accept': 'application/json'},
         body: {'email': email, 'password': password},
-      );
+      ).timeout(const Duration(seconds: 10));
 
       final Map<String, dynamic>? data = response.body.isNotEmpty
           ? jsonDecode(response.body) as Map<String, dynamic>
@@ -87,8 +89,13 @@ class _LoginPageState extends State<LoginPage> {
       if (!mounted) return;
 
       if (response.statusCode == 200) {
+        final token = data?['token']?.toString();
+        if (token != null && token.isNotEmpty) {
+          await ApiService.saveToken(token);
+        }
+
         Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => const HomePage()),
+          MaterialPageRoute(builder: (_) => const MainShell()),
           (route) => false,
         );
         return;
@@ -108,13 +115,21 @@ class _LoginPageState extends State<LoginPage> {
         setState(() {
           _emailError = _extractFirstError(errors, 'email');
           _passwordError = _extractFirstError(errors, 'password');
-          _generalError = backendMessage;
+          _generalError =
+              _extractAnyError(errors) ??
+              backendMessage;
         });
       } else {
         setState(() {
           _generalError = backendMessage;
         });
       }
+    } on TimeoutException {
+      if (!mounted) return;
+      setState(() {
+        _generalError =
+            'The login request timed out. Check your backend connection.';
+      });
     } catch (_) {
       if (!mounted) return;
       setState(() {
@@ -130,35 +145,6 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  Future<void> _handleGoogleSignIn() async {
-    FocusScope.of(context).unfocus();
-    setState(() {
-      _generalError = null;
-      _emailError = null;
-      _passwordError = null;
-      _isSubmitting = true;
-    });
-
-    final result = await GoogleAuthService.signInWithGoogle(_apiBaseUrl);
-
-    if (!mounted) return;
-
-    if (result.isSuccess) {
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const HomePage()),
-        (route) => false,
-      );
-      return;
-    }
-
-    setState(() {
-      _generalError = result.wasCancelled
-          ? null
-          : result.message ?? 'Google sign-in failed. Please try again.';
-      _isSubmitting = false;
-    });
-  }
-
   String? _extractFirstError(dynamic errors, String field) {
     if (errors is Map<String, dynamic> && errors[field] is List) {
       final fieldErrors = errors[field] as List<dynamic>;
@@ -169,10 +155,48 @@ class _LoginPageState extends State<LoginPage> {
     return null;
   }
 
+  String? _extractAnyError(dynamic errors) {
+    if (errors is Map<String, dynamic>) {
+      for (final value in errors.values) {
+        if (value is List && value.isNotEmpty) {
+          return value.first.toString();
+        }
+      }
+    }
+    return null;
+  }
+
+  Future<void> _handleGoogleSignIn() async {
+    FocusScope.of(context).unfocus();
+    setState(() {
+      _generalError = null;
+      _emailError = null;
+      _passwordError = null;
+    });
+
+    setState(() {
+      _generalError = 'Google sign-in is currently unavailable.';
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
-    final panelTopSpacing = screenHeight * 0.25;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isTablet = AppResponsive.isTablet(context);
+    final isDesktop = AppResponsive.isDesktop(context);
+    final panelTopSpacing = screenHeight * (isDesktop ? 0.18 : isTablet ? 0.22 : 0.25);
+    final panelMaxWidth = AppResponsive.contentMaxWidth(
+      context,
+      mobile: 420,
+      tablet: 520,
+      desktop: 560,
+    );
+    final panelPadding = isDesktop ? 36.0 : isTablet ? 32.0 : 28.0;
+    final logoShellSize = isDesktop ? 138.0 : isTablet ? 130.0 : 122.0;
+    final logoShellPadding = isDesktop ? 18.0 : 16.0;
+    final titleFontSize = isDesktop ? 24.0 : isTablet ? 23.0 : 22.0;
+    final actionFontSize = isDesktop ? 19.0 : 18.0;
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
@@ -212,13 +236,18 @@ class _LoginPageState extends State<LoginPage> {
               child: SingleChildScrollView(
                 padding: EdgeInsets.only(top: panelTopSpacing),
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 420),
+                  constraints: BoxConstraints(maxWidth: panelMaxWidth),
                   child: Container(
-                    width: double.infinity,
+                    width: screenWidth,
                     constraints: BoxConstraints(
                       minHeight: screenHeight - panelTopSpacing,
                     ),
-                    padding: const EdgeInsets.fromLTRB(28, 82, 28, 28),
+                    padding: EdgeInsets.fromLTRB(
+                      panelPadding,
+                      isDesktop ? 90 : 82,
+                      panelPadding,
+                      panelPadding,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xE6FFFFFF),
                       borderRadius: const BorderRadius.only(
@@ -259,13 +288,13 @@ class _LoginPageState extends State<LoginPage> {
                           right: 0,
                           child: Center(
                             child: Container(
-                              width: 122,
-                              height: 122,
+                              width: logoShellSize,
+                              height: logoShellSize,
                               decoration: const BoxDecoration(
                                 color: Color(0xE6FFFFFF),
                                 shape: BoxShape.circle,
                               ),
-                              padding: const EdgeInsets.all(16),
+                              padding: EdgeInsets.all(logoShellPadding),
                               child: Image.asset(
                                 'assets/images/logo.png',
                                 fit: BoxFit.contain,
@@ -277,11 +306,11 @@ class _LoginPageState extends State<LoginPage> {
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             const SizedBox(height: 8),
-                            const Text(
+                            Text(
                               'Welcome Back!',
                               textAlign: TextAlign.center,
                               style: TextStyle(
-                                fontSize: 22,
+                                fontSize: titleFontSize,
                                 fontWeight: FontWeight.w700,
                                 color: Color(0xFF25324B),
                               ),
@@ -383,13 +412,13 @@ class _LoginPageState extends State<LoginPage> {
                                           ),
                                         ),
                                       )
-                                    : const Text(
+                                    : Text(
                                         'Sign in',
                                         style: TextStyle(
-                                          fontSize: 18,
+                                          fontSize: actionFontSize,
                                           fontWeight: FontWeight.w600,
                                         ),
-                                      ),
+                                    ),
                               ),
                             ),
                             const SizedBox(height: 20),
@@ -449,7 +478,7 @@ class _LoginPageState extends State<LoginPage> {
                                     'Sign in with Google',
                                     style: TextStyle(
                                       color: Color(0xFF25324B),
-                                      fontSize: 18,
+                                      fontSize: actionFontSize,
                                       fontWeight: FontWeight.w500,
                                     ),
                                   ),

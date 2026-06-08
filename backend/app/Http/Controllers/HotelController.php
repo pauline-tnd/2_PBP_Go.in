@@ -16,8 +16,8 @@ class HotelController extends Controller
         // When = Optional
         // Search by hotel name / location
         $query->when($request->search, function ($q, $search) {
-            $q->where('name', 'like', '%'.$search.'%')
-                ->orWhere('location', 'like', '%'.$search.'%');
+            $q->where('name', 'ILIKE', '%' . $search . '%')
+                ->orWhere('location', 'ILIKE', '%' . $search . '%');
         });
 
         // Filter Price Range

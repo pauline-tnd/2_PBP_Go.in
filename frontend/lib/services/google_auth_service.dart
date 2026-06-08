@@ -22,6 +22,9 @@ class GoogleAuthService {
     final serverClientId = AppConfig.googleServerClientId;
 
     return GoogleSignIn(
+      clientId: serverClientId != null && serverClientId.isNotEmpty
+          ? serverClientId
+          : null,
       scopes: const ['email', 'profile'],
       serverClientId: serverClientId != null && serverClientId.isNotEmpty
           ? serverClientId
@@ -67,7 +70,7 @@ class GoogleAuthService {
         Uri.parse('$apiBaseUrl/google-login'),
         headers: {'Accept': 'application/json'},
         body: body,
-      );
+      ).timeout(const Duration(seconds: 10));
 
       final Map<String, dynamic>? data = response.body.isNotEmpty
           ? jsonDecode(response.body) as Map<String, dynamic>

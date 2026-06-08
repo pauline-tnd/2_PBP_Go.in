@@ -9,6 +9,7 @@ import 'package:frontend/models/hotel.dart';
 import 'package:frontend/widgets/bottom_navbar.dart';
 import 'package:frontend/widgets/hotel_card.dart';
 import 'package:frontend/widgets/sorting_bar.dart';
+import 'package:frontend/widgets/skeleton_loader.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:frontend/pages/loading_page.dart';
 
@@ -84,12 +85,14 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
         return Hotel.fromMap(item as Map<String, dynamic>);
       }).toList();
 
+      if (!mounted) return;
       setState(() {
         _allHotels = fetchedHotels;
         _hotelBadges = assignBadges(_allHotels);
         _isLoading = false;
       });
     } catch (error) {
+      if (!mounted) return;
       setState(() {
         _isLoading = false;
       });
@@ -175,7 +178,7 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return const SearchResultsSkeletonPage();
     }
     final hotels = _filteredAndSortedHotels;
 

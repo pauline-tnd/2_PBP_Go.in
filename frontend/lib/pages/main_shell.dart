@@ -31,10 +31,10 @@ class MainShellState extends State<MainShell> {
   }
 
   final List<Widget> _pages = const [
-    HomePage(),
-    ActivityPage(),
-    PromoPage(),
-    SettingsPage(),
+    HomePage(), // 0
+    ActivityPage(), // 1
+    PromoPage(), // 2
+    SettingsPage(), // 3
   ];
 
   void showWishlist() {
@@ -49,17 +49,22 @@ class MainShellState extends State<MainShell> {
     });
   }
 
-  void _handleNavTap(int index) {
+  void switchTab(int index) {
     setState(() {
       _showWishlist = false;
       _currentIndex = index;
     });
   }
 
+  void _handleNavTap(int index) {
+    switchTab(index);
+  }
+
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      canPop: !_showWishlist,
+      // Back button
+      canPop: !_showWishlist, // if not a wishlist page, can pop / back
       onPopInvokedWithResult: (didPop, result) {
         if (!didPop && _showWishlist) {
           _hideWishlist();
@@ -74,6 +79,7 @@ class MainShellState extends State<MainShell> {
                 return FadeTransition(opacity: animation, child: child);
               },
               child: KeyedSubtree(
+                // Make sure if widget changed, so AnimatedSwitcher could work properly
                 key: ValueKey(_showWishlist ? 'wishlist' : _currentIndex),
                 child: _showWishlist
                     ? WishlistPage(onBack: _hideWishlist)

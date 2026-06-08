@@ -1,22 +1,6 @@
-// ============================================================
-// FILE: gradient_scroll_header.dart
-//
-// Cara pakai:
-//   - GradientScrollHeader  → widget utama, wrap body kamu
-//   - HeaderAction          → komponen aksi (icon button) buat navbar
-//   - HeaderLocation        → komponen lokasi yang sudah ada
-//
-// Contoh penggunaan ada di bawah (class ExampleHomePage)
-// ============================================================
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-// ─────────────────────────────────────────────
-// 1.  KOMPONEN KECIL (bisa dipakai di mana pun)
-// ─────────────────────────────────────────────
-
-/// Tombol ikon untuk ditaruh di kanan/kiri navbar.
 class HeaderAction extends StatelessWidget {
   const HeaderAction({
     super.key,
@@ -28,7 +12,8 @@ class HeaderAction extends StatelessWidget {
   final IconData icon;
   final VoidCallback? onTap;
 
-  /// Kalau > 0, tampilkan badge merah kecil di atas ikon.
+  /// Shows a small red badge when the count > 0
+  /// For Notification, etc
   final int badgeCount;
 
   @override
@@ -97,7 +82,7 @@ class HeaderLocation extends StatelessWidget {
                 color: Colors.white,
               ),
               maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+              overflow: TextOverflow.ellipsis, // text too long...
             ),
           ),
         ],
@@ -106,22 +91,14 @@ class HeaderLocation extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────
-// 2.  WIDGET UTAMA: GradientScrollHeader
-// ─────────────────────────────────────────────
-
-/// Widget header dengan gradasi yang otomatis berubah jadi
-/// solid navbar transparan saat konten di-scroll ke atas.
-///
 /// Parameter:
-/// - [leading]       : widget di kiri navbar (biasanya HeaderLocation)
-/// - [actions]       : list widget di kanan navbar (biasanya HeaderAction)
-/// - [expandedHeight]: tinggi area gradasi (default 160)
-/// - [gradientColors]: warna gradasi (default biru seperti desain asal)
-/// - [navbarColor]   : warna solid navbar saat scroll (default biru tua)
-/// - [body]          : konten scrollable di bawah header
-/// - [flexibleContent]: konten tambahan di dalam area gradasi
-///   (misal: search box, dll.)
+/// - [leading]       : left navbar widget (e.g HeaderLocation)
+/// - [actions]       : right navbar widgets (e.g HeaderAction)
+/// - [expandedHeight]: gradient area height, defaults to 160
+/// - [gradientColors]: gradient colors
+/// - [navbarColor]   : solid navbar color while scrolling
+/// - [body]          : scrollable content below the header
+/// - [flexibleContent]: extra content inside the gradient area (e.g search bar)
 class GradientScrollHeader extends StatefulWidget {
   const GradientScrollHeader({
     super.key,
@@ -141,35 +118,21 @@ class GradientScrollHeader extends StatefulWidget {
     this.bodyTopPadding,
   });
 
-  /// Widget di sisi kiri navbar (misal: HeaderLocation).
   final Widget? leading;
-
-  /// List widget di sisi kanan navbar (misal: [HeaderAction(...)]).
   final List<Widget> actions;
-
-  /// Tinggi total area gradasi yang bisa di-collapse.
   final double expandedHeight;
-
-  /// Warna-warna gradasi background header.
   final List<Color> gradientColors;
-
-  /// Stop posisi gradasi (harus sama panjang dengan gradientColors).
   final List<double> gradientStops;
-
-  /// Warna solid navbar ketika sudah di-scroll.
   final Color navbarColor;
-
-  /// Konten utama halaman (scrollable).
   final Widget body;
-
-  /// Konten ekstra di dalam area gradasi (misal search bar).
-  /// Widget ini akan fade out saat scroll.
   final Widget? flexibleContent;
 
-  /// Opsional: scroll controller eksternal. Kalau null, dibuat sendiri.
+  /// (Optional) external scroll controller
+  /// Defaults created when null
   final ScrollController? scrollController;
 
-  /// Opsional: Jarak padding atas untuk body. Default = expandedHeight
+  /// (Optional) top padding for the body
+  /// Defaults to expandedHeight
   final double? bodyTopPadding;
 
   @override
@@ -180,7 +143,7 @@ class _GradientScrollHeaderState extends State<GradientScrollHeader> {
   late final ScrollController _scrollController;
   double _scrollOffset = 0.0;
 
-  // Seberapa jauh scroll sampai navbar jadi fully solid.
+  // Scroll distance before the navbar becomes fully solid
   double get _solidThreshold => widget.expandedHeight * 0.5;
 
   @override
@@ -199,7 +162,8 @@ class _GradientScrollHeaderState extends State<GradientScrollHeader> {
 
   @override
   void dispose() {
-    // Hanya dispose kalau kita yang buat controller-nya
+    /// Only dispose controllers owned by this widget
+    /// Free memory -> destroy
     if (widget.scrollController == null) {
       _scrollController.dispose();
     } else {
@@ -208,23 +172,25 @@ class _GradientScrollHeaderState extends State<GradientScrollHeader> {
     super.dispose();
   }
 
-  /// Progress transisi: 0.0 = expanded, 1.0 = fully collapsed/solid
-  double get _progress => (_scrollOffset / _solidThreshold).clamp(0.0, 1.0);
+  /// Transition progress:
+  /// 0.0 = expanded
+  /// 1.0 = fully collapsed
+  double get _progress =>
+      (_scrollOffset / _solidThreshold).clamp(0.0, 1.0); // min, max
 
   @override
   Widget build(BuildContext context) {
     final topPadding = MediaQuery.of(context).padding.top;
     final navbarHeight = topPadding + kToolbarHeight;
 
-    // Warna navbar: transparan → solid sesuai scroll
+    // Navbar color transparent -> solid while scrolling
     final navbarBg = Color.lerp(
-      Colors.transparent,
-      widget.navbarColor,
-      _progress,
+      Colors.transparent, // x color
+      widget.navbarColor, // y color
+      _progress, // t clamp
     )!;
 
-    // Status bar style: gelap (untuk gradasi terang) selalu putih
-    // karena latar belakang header biru.
+    // Icons light, header background blue
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
       child: Scaffold(
@@ -272,9 +238,8 @@ class _GradientScrollHeaderState extends State<GradientScrollHeader> {
               right: 0,
               child: Stack(
                 children: [
-                  // Latar belakang solid navbar (di belakang konten navbar)
-                  // Jika belum di-scroll (_progress == 0), abaikan sentuhan
-                  // agar tidak menutupi elemen di bawahnya secara tidak sengaja.
+                  // Solid navbar background behind the navbar content
+                  // Ignore touches when transparent so it does not block content below
                   IgnorePointer(
                     ignoring: _progress == 0,
                     child: AnimatedContainer(
@@ -322,10 +287,6 @@ class _GradientScrollHeaderState extends State<GradientScrollHeader> {
     );
   }
 }
-
-// ─────────────────────────────────────────────
-// 3.  INTERNAL: Background Gradasi
-// ─────────────────────────────────────────────
 
 class _GradientHeaderBackground extends StatelessWidget {
   const _GradientHeaderBackground({

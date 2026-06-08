@@ -5,6 +5,7 @@ import 'pages/main_shell.dart';
 import 'pages/search_results_page.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'pages/landing-page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -56,7 +57,7 @@ class MyApp extends StatelessWidget {
               seedColor: const Color(0xFF3B82F6),
             ),
           ),
-          home: const MainShell(),
+          home: const LandingPage(),
           routes: {'/search-results': (context) => const SearchResultsPage()},
         );
       },

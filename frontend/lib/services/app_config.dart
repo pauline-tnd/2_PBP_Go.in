@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AppConfig {
@@ -24,9 +25,28 @@ class AppConfig {
     }
   }
 
-  static String get apiBaseUrl =>
-      _readValue('API_BASE_URL') ?? 'http://127.0.0.1:8000/api';
+  static String get apiBaseUrl => _readValue('API_BASE_URL') ?? _defaultApiBaseUrl;
 
   static String? get googleServerClientId =>
       _readValue('GOOGLE_SERVER_CLIENT_ID');
+
+  static String get mobileAuthBaseUrl => '$apiBaseUrl/mobile-auth';
+
+  static String get _defaultApiBaseUrl {
+    if (kIsWeb) {
+      return 'http://127.0.0.1:8000/api';
+    }
+
+    switch (defaultTargetPlatform) {
+      case TargetPlatform.android:
+        return 'http://10.0.2.2:8000/api';
+      case TargetPlatform.iOS:
+      case TargetPlatform.macOS:
+      case TargetPlatform.windows:
+      case TargetPlatform.linux:
+        return 'http://127.0.0.1:8000/api';
+      case TargetPlatform.fuchsia:
+        return 'http://127.0.0.1:8000/api';
+    }
+  }
 }

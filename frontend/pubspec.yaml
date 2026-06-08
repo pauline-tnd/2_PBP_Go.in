@@ -41,9 +41,13 @@ flutter:
   assets:
     - .env
     - assets/images/
+    - assets/videos/
     - assets/images/hotel/
     - assets/images/logo.png
     - assets/images/profile-photo.jpg
+    - assets/images/profile-photo.png
+    - assets/images/promo/
+    
   fonts:
     - family: PlusJakartaSans
       fonts:

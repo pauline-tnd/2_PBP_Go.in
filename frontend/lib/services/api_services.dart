@@ -1,21 +1,31 @@
 import 'dart:convert';
 import 'dart:io';
+
+import 'package:frontend/models/booking.dart';
+import 'package:frontend/models/nominatim.dart';
+import 'package:frontend/models/review.dart';
+import 'package:frontend/models/room.dart';
+import 'package:frontend/models/wishlist.dart';
+import 'package:frontend/services/app_config.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:frontend/models/room.dart';
-import 'package:frontend/models/booking.dart';
-import 'package:frontend/models/wishlist.dart';
-import 'package:frontend/models/review.dart';
-import 'package:frontend/services/app_config.dart';
 
 class ApiService {
   static String get baseUrl => AppConfig.apiBaseUrl;
 
-  // ── Token Helpers ─────────────────────────────────────────────
+  static const String nominatimUrl = 'https://nominatim.openstreetmap.org';
+  static const Map<String, String> headersNominatim = {
+    'User-Agent': 'GoInApp/1.0',
+    'Accept-Language': 'id',
+  };
 
   static Future<void> _saveToken(String token) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('token', token);
+  }
+
+  static Future<void> saveToken(String token) async {
+    await _saveToken(token);
   }
 
   static Future<String> _getToken() async {
@@ -38,8 +48,6 @@ class ApiService {
     return headers;
   }
 
-  // ── Authentication ────────────────────────────────────────────
-  // POST /register
   static Future<Map<String, dynamic>> register({
     required String username,
     required String email,
@@ -67,7 +75,6 @@ class ApiService {
     }
   }
 
-  // POST /login
   static Future<Map<String, dynamic>> login(
     String email,
     String password,
@@ -90,7 +97,6 @@ class ApiService {
     }
   }
 
-  // POST /logout
   static Future<Map<String, dynamic>> logout() async {
     final headers = await _authHeaders();
     final response = await http.post(
@@ -107,8 +113,11 @@ class ApiService {
     }
   }
 
-  // ── User Profile ──────────────────────────────────────────────
-  // GET /user
+  static Future<void> clearToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('token');
+  }
+
   static Future<Map<String, dynamic>> getUser() async {
     final headers = await _authHeaders();
     final response = await http.get(
@@ -123,7 +132,6 @@ class ApiService {
     }
   }
 
-  // PUT /user
   static Future<Map<String, dynamic>> updateUser({
     String? username,
     String? phone,
@@ -148,7 +156,6 @@ class ApiService {
     }
   }
 
-  // PUT /user/password
   static Future<Map<String, dynamic>> updatePassword({
     required String currentPassword,
     required String newPassword,
@@ -172,7 +179,6 @@ class ApiService {
     }
   }
 
-  // PUT /user/profile (multipart - file upload)
   static Future<Map<String, dynamic>> updateProfileImage(File imageFile) async {
     final token = await _getToken();
     final request = http.MultipartRequest(
@@ -195,7 +201,6 @@ class ApiService {
     }
   }
 
-  // DELETE /user
   static Future<Map<String, dynamic>> deleteUser() async {
     final headers = await _authHeaders();
     final response = await http.delete(
@@ -212,8 +217,67 @@ class ApiService {
     }
   }
 
-  // ── Hotels ────────────────────────────────────────────────────
-  // GET /hotels
+  static Future<List<NominatimResult>> search(String query) async {
+    if (query.trim().isEmpty) return [];
+
+    final response = await http.get(
+      Uri.parse('$nominatimUrl/search').replace(
+        queryParameters: {
+          'q': query,
+          'format': 'json',
+          'limit': '5',
+          'addressdetails': '1',
+          'countrycodes': 'id',
+        },
+      ),
+      headers: headersNominatim,
+    );
+
+    if (response.statusCode == 200) {
+      final List data = jsonDecode(response.body);
+      return data.map((e) => NominatimResult.fromJson(e)).toList();
+    } else {
+      throw Exception('Failed to load location: ${response.body}');
+    }
+  }
+
+  static Future<String> reverseGeocode(double lat, double lon) async {
+    final response = await http.get(
+      Uri.parse('$nominatimUrl/reverse').replace(
+        queryParameters: {
+          'lat': lat.toString(),
+          'lon': lon.toString(),
+          'format': 'json',
+          'addressdetails': '1',
+        },
+      ),
+      headers: headersNominatim,
+    );
+
+    String formatAddress(Map<String, dynamic> addr) {
+      final parts = <String>[];
+
+      if (addr['road'] != null) parts.add(addr['road']);
+      if (addr['suburb'] != null) parts.add(addr['suburb']);
+      if (addr['city'] != null) {
+        parts.add(addr['city']);
+      } else if (addr['town'] != null) {
+        parts.add(addr['town']);
+      } else if (addr['county'] != null) {
+        parts.add(addr['county']);
+      }
+
+      return parts.isNotEmpty ? parts.join(', ') : 'Selected location';
+    }
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return formatAddress(data['address']);
+    } else {
+      throw Exception('Location unknown: ${response.body}');
+    }
+  }
+
   static Future<Map<String, dynamic>> fetchHotels({
     String? search,
     double? minPrice,
@@ -259,7 +323,6 @@ class ApiService {
     }
   }
 
-  // GET /hotels/{hotel}
   static Future<Map<String, dynamic>> fetchHotelDetail(int hotelId) async {
     final headers = await _authHeaders();
     final response = await http.get(
@@ -274,8 +337,6 @@ class ApiService {
     }
   }
 
-  // ── Rooms ─────────────────────────────────────────────────────
-  // GET /rooms
   static Future<List<Room>> fetchRooms() async {
     final headers = await _authHeaders();
     final response = await http.get(
@@ -291,7 +352,6 @@ class ApiService {
     }
   }
 
-  // GET /rooms/{room}
   static Future<Map<String, dynamic>> fetchRoomDetail(int roomId) async {
     final headers = await _authHeaders();
     final response = await http.get(
@@ -306,8 +366,6 @@ class ApiService {
     }
   }
 
-  // ── Wishlists ─────────────────────────────────────────────────
-  // GET /wishlists
   static Future<List<Wishlist>> fetchWishlists() async {
     final headers = await _authHeaders();
     final response = await http.get(
@@ -323,7 +381,6 @@ class ApiService {
     }
   }
 
-  // POST /wishlists
   static Future<Map<String, dynamic>> storeWishlist(int hotelId) async {
     final headers = await _authHeaders();
     final response = await http.post(
@@ -339,7 +396,6 @@ class ApiService {
     }
   }
 
-  // DELETE /wishlists/{wishlist}
   static Future<Map<String, dynamic>> deleteWishlist(int wishlistId) async {
     final headers = await _authHeaders();
     final response = await http.delete(
@@ -354,29 +410,6 @@ class ApiService {
     }
   }
 
-  static Future<Map<String, dynamic>> deleteWishlistByHotelId(
-    int hotelId,
-  ) async {
-    final wishlists = await fetchWishlists();
-    Object? lastError;
-
-    for (final wishlist in wishlists) {
-      if (wishlist.hotelId == hotelId) {
-        try {
-          return await deleteWishlist(wishlist.id);
-        } catch (error) {
-          lastError = error;
-        }
-      }
-    }
-
-    throw Exception(
-      lastError?.toString() ?? 'Wishlist not found for this hotel',
-    );
-  }
-
-  // ── Reviews ───────────────────────────────────────────────────
-  // GET /reviews
   static Future<List<Review>> fetchReviews() async {
     final headers = await _authHeaders();
     final response = await http.get(
@@ -392,7 +425,6 @@ class ApiService {
     }
   }
 
-  // GET /reviews/{review}
   static Future<Review> fetchReviewById(int reviewId) async {
     final headers = await _authHeaders();
     final response = await http.get(
@@ -407,7 +439,6 @@ class ApiService {
     }
   }
 
-  // GET /hotels/{hotel}/reviews
   static Future<List<Review>> fetchHotelReviews(int hotelId) async {
     final headers = await _authHeaders();
     final response = await http.get(
@@ -423,7 +454,6 @@ class ApiService {
     }
   }
 
-  // GET /rooms/{room}/reviews
   static Future<List<Review>> fetchRoomReviews(int roomId) async {
     final headers = await _authHeaders();
     final response = await http.get(
@@ -439,7 +469,6 @@ class ApiService {
     }
   }
 
-  // GET /users/{user}/reviews
   static Future<List<Review>> fetchUserReviews(int userId) async {
     final headers = await _authHeaders();
     final response = await http.get(
@@ -455,7 +484,6 @@ class ApiService {
     }
   }
 
-  // POST /reviews (multipart - supports image upload)
   static Future<Map<String, dynamic>> storeReview({
     required int userId,
     required int roomId,
@@ -494,7 +522,6 @@ class ApiService {
     }
   }
 
-  // PUT /reviews/{review} (multipart - supports image upload)
   static Future<Map<String, dynamic>> updateReview(
     int reviewId, {
     int? userId,
@@ -509,7 +536,6 @@ class ApiService {
       'POST',
       Uri.parse('$baseUrl/reviews/$reviewId'),
     );
-    // Laravel doesn't support PUT multipart natively, use _method override
     request.fields['_method'] = 'PUT';
     request.headers['Authorization'] = 'Bearer $token';
     request.headers['Accept'] = 'application/json';
@@ -536,7 +562,6 @@ class ApiService {
     }
   }
 
-  // DELETE /reviews/{review}
   static Future<Map<String, dynamic>> deleteReview(int reviewId) async {
     final headers = await _authHeaders();
     final response = await http.delete(
@@ -551,8 +576,6 @@ class ApiService {
     }
   }
 
-  // ── Bookings ──────────────────────────────────────────────────
-  // GET /bookings
   static Future<List<Booking>> fetchBookings() async {
     final headers = await _authHeaders();
     final response = await http.get(
@@ -568,7 +591,6 @@ class ApiService {
     }
   }
 
-  // GET /bookings/{booking}
   static Future<Map<String, dynamic>> fetchBookingById(int bookingId) async {
     final headers = await _authHeaders();
     final response = await http.get(
@@ -583,7 +605,6 @@ class ApiService {
     }
   }
 
-  // POST /bookings
   static Future<Map<String, dynamic>> storeBooking({
     required String checkIn,
     required String checkOut,
@@ -611,7 +632,6 @@ class ApiService {
     }
   }
 
-  // PUT /bookings/{booking}
   static Future<Map<String, dynamic>> updateBooking(
     int bookingId,
     String status,
@@ -630,7 +650,6 @@ class ApiService {
     }
   }
 
-  // DELETE /bookings/{booking}
   static Future<Map<String, dynamic>> deleteBooking(int bookingId) async {
     final headers = await _authHeaders();
     final response = await http.delete(
@@ -645,8 +664,6 @@ class ApiService {
     }
   }
 
-  // ── Booking Details ───────────────────────────────────────────
-  // GET /booking-details
   static Future<Map<String, dynamic>> fetchBookingDetails() async {
     final headers = await _authHeaders();
     final response = await http.get(
@@ -661,7 +678,6 @@ class ApiService {
     }
   }
 
-  // GET /booking-details/{id}
   static Future<Map<String, dynamic>> fetchBookingDetailById(int id) async {
     final headers = await _authHeaders();
     final response = await http.get(
@@ -676,7 +692,6 @@ class ApiService {
     }
   }
 
-  // POST /booking-details
   static Future<Map<String, dynamic>> storeBookingDetail({
     required int bookingId,
     required int roomId,
@@ -706,7 +721,6 @@ class ApiService {
     }
   }
 
-  // PUT /booking-details/{id}
   static Future<Map<String, dynamic>> updateBookingDetail(
     int id, {
     int? bookingId,
@@ -736,7 +750,6 @@ class ApiService {
     }
   }
 
-  // DELETE /booking-details/{id}
   static Future<Map<String, dynamic>> deleteBookingDetail(int id) async {
     final headers = await _authHeaders();
     final response = await http.delete(
@@ -751,8 +764,19 @@ class ApiService {
     }
   }
 
-  // ── Booking Detail Add-Ons ────────────────────────────────────
-  // GET /booking-detail-addons
+  static Future<Map<String, dynamic>> fetchReviewDetails(int bookingId) async {
+    final headers = await _authHeaders();
+    final response = await http.get(
+      Uri.parse('$baseUrl/bookings/$bookingId/review-details'),
+      headers: headers,
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to load review details: ${response.body}');
+    }
+  }
+
   static Future<List<dynamic>> fetchBookingDetailAddOns() async {
     final headers = await _authHeaders();
     final response = await http.get(
@@ -767,7 +791,6 @@ class ApiService {
     }
   }
 
-  // GET /booking-detail-addons/{id}
   static Future<Map<String, dynamic>> fetchBookingDetailAddOnById(
     int id,
   ) async {
@@ -784,7 +807,6 @@ class ApiService {
     }
   }
 
-  // GET /booking-details/{bookingDetail}/addons
   static Future<Map<String, dynamic>> fetchAddOnsByBookingDetail(
     int bookingDetailId,
   ) async {
@@ -801,7 +823,6 @@ class ApiService {
     }
   }
 
-  // POST /booking-detail-addons
   static Future<Map<String, dynamic>> storeBookingDetailAddOn({
     required int bookingDetailId,
     required int addOnId,
@@ -827,7 +848,6 @@ class ApiService {
     }
   }
 
-  // PUT /booking-detail-addons/{id}
   static Future<Map<String, dynamic>> updateBookingDetailAddOn(
     int id, {
     int? qty,
@@ -851,7 +871,6 @@ class ApiService {
     }
   }
 
-  // DELETE /booking-detail-addons/{id}
   static Future<Map<String, dynamic>> deleteBookingDetailAddOn(int id) async {
     final headers = await _authHeaders();
     final response = await http.delete(
