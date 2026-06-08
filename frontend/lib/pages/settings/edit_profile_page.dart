@@ -3,6 +3,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/services/api_services.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:frontend/extensions/snackbar.dart';
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});
@@ -42,8 +43,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
       setState(() {
         isLoading = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
+      context.showAppSnackBar(
+        e.toString(),
+        isError: true,
       );
     }
   }
@@ -65,15 +67,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
         );
       }
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Profile updated successfully'),
-        ),
+      context.showAppSnackBar(
+        "Profile Updated Successfully!",
       );
       Navigator.pop(context, true);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
+      context.showAppSnackBar(
+        e.toString(),
+        isError: true,
       );
     } finally {
       if (mounted) {
