@@ -11,7 +11,7 @@ import 'package:frontend/widgets/hotel_card.dart';
 import 'package:frontend/widgets/sorting_bar.dart';
 import 'package:frontend/widgets/skeleton_loader.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:frontend/pages/loading_page.dart';
+// import 'package:frontend/pages/loading_page.dart';
 
 class FilterState {
   final RangeValues priceRange;

@@ -23,9 +23,10 @@ dependencies:
   flutter_map: ^7.0.0
   latlong2: ^0.9.1
   url_launcher: ^6.1.7
+  image_picker: ^1.2.2
 
 dev_dependencies:
-  flutter_test: 
+  flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
   flutter_launcher_icons: "^0.13.1"
@@ -47,7 +48,7 @@ flutter:
     - assets/images/profile-photo.jpg
     - assets/images/profile-photo.png
     - assets/images/promo/
-    
+
   fonts:
     - family: PlusJakartaSans
       fonts:

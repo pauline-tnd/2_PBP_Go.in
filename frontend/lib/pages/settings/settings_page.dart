@@ -10,7 +10,7 @@ import 'package:frontend/widgets/settings/settings_section_title.dart';
 import 'package:frontend/widgets/common/logout_button.dart';
 import 'package:frontend/services/api_services.dart';
 
-class SettingsPage extends StatelessWidget {
+class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
 
   @override
@@ -130,7 +130,7 @@ class _SettingsPageState extends State<SettingsPage> {
                           email,
                           profileImage,
                         ),
-                        child: _buildProfileCard(isTablet, isDesktop),
+                        // child: _buildProfileCard(isTablet, isDesktop),
                       ),
                     ),
                   ],
