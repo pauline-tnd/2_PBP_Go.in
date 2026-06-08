@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:frontend/extensions/snackbar.dart';
 import 'package:http/http.dart' as http;
 
 import 'register.dart';
@@ -76,11 +77,13 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     try {
-      final response = await http.post(
-        Uri.parse('$_authBaseUrl/login'),
-        headers: {'Accept': 'application/json'},
-        body: {'email': email, 'password': password},
-      ).timeout(const Duration(seconds: 10));
+      final response = await http
+          .post(
+            Uri.parse('$_authBaseUrl/login'),
+            headers: {'Accept': 'application/json'},
+            body: {'email': email, 'password': password},
+          )
+          .timeout(const Duration(seconds: 10));
 
       final Map<String, dynamic>? data = response.body.isNotEmpty
           ? jsonDecode(response.body) as Map<String, dynamic>
@@ -115,9 +118,7 @@ class _LoginPageState extends State<LoginPage> {
         setState(() {
           _emailError = _extractFirstError(errors, 'email');
           _passwordError = _extractFirstError(errors, 'password');
-          _generalError =
-              _extractAnyError(errors) ??
-              backendMessage;
+          _generalError = _extractAnyError(errors) ?? backendMessage;
         });
       } else {
         setState(() {
@@ -185,17 +186,35 @@ class _LoginPageState extends State<LoginPage> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isTablet = AppResponsive.isTablet(context);
     final isDesktop = AppResponsive.isDesktop(context);
-    final panelTopSpacing = screenHeight * (isDesktop ? 0.18 : isTablet ? 0.22 : 0.25);
+    final panelTopSpacing =
+        screenHeight *
+        (isDesktop
+            ? 0.18
+            : isTablet
+            ? 0.22
+            : 0.25);
     final panelMaxWidth = AppResponsive.contentMaxWidth(
       context,
       mobile: 420,
       tablet: 520,
       desktop: 560,
     );
-    final panelPadding = isDesktop ? 36.0 : isTablet ? 32.0 : 28.0;
-    final logoShellSize = isDesktop ? 138.0 : isTablet ? 130.0 : 122.0;
+    final panelPadding = isDesktop
+        ? 36.0
+        : isTablet
+        ? 32.0
+        : 28.0;
+    final logoShellSize = isDesktop
+        ? 138.0
+        : isTablet
+        ? 130.0
+        : 122.0;
     final logoShellPadding = isDesktop ? 18.0 : 16.0;
-    final titleFontSize = isDesktop ? 24.0 : isTablet ? 23.0 : 22.0;
+    final titleFontSize = isDesktop
+        ? 24.0
+        : isTablet
+        ? 23.0
+        : 22.0;
     final actionFontSize = isDesktop ? 19.0 : 18.0;
 
     return Scaffold(
@@ -352,12 +371,9 @@ class _LoginPageState extends State<LoginPage> {
                               alignment: Alignment.centerRight,
                               child: TextButton(
                                 onPressed: () {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        'Forgot password is not available yet.',
-                                      ),
-                                    ),
+                                  context.showAppSnackBar(
+                                    'Forgot password is not available yet',
+                                    isError: true,
                                   );
                                 },
                                 style: TextButton.styleFrom(
@@ -408,8 +424,8 @@ class _LoginPageState extends State<LoginPage> {
                                           strokeWidth: 2.2,
                                           valueColor:
                                               AlwaysStoppedAnimation<Color>(
-                                            Colors.white,
-                                          ),
+                                                Colors.white,
+                                              ),
                                         ),
                                       )
                                     : Text(
@@ -418,7 +434,7 @@ class _LoginPageState extends State<LoginPage> {
                                           fontSize: actionFontSize,
                                           fontWeight: FontWeight.w600,
                                         ),
-                                    ),
+                                      ),
                               ),
                             ),
                             const SizedBox(height: 20),

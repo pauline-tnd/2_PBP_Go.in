@@ -1,30 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:frontend/extensions/snackbar.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 
 class PromoModel {
   final String image;
   final String code;
 
-  const PromoModel({
-    required this.image,
-    required this.code,
-  });
+  const PromoModel({required this.image, required this.code});
 }
 
 final List<PromoModel> promos = [
-  PromoModel(
-    image: 'assets/images/promo/Promo1.jpeg',
-    code: 'LUXURYSTAY50',
-  ),
-  PromoModel(
-    image: 'assets/images/promo/Promo2.jpeg',
-    code: 'BOOKS30',
-  ),
-  PromoModel(
-    image: 'assets/images/promo/Promo3.jpeg',
-    code: '15OYNE082026',
-  ),
+  PromoModel(image: 'assets/images/promo/Promo1.jpeg', code: 'LUXURYSTAY50'),
+  PromoModel(image: 'assets/images/promo/Promo2.jpeg', code: 'BOOKS30'),
+  PromoModel(image: 'assets/images/promo/Promo3.jpeg', code: '15OYNE082026'),
 ];
 
 class PromoPage extends StatelessWidget {
@@ -51,10 +40,7 @@ class PromoPage extends StatelessWidget {
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
-                        colors: [
-                          Color(0xFF0E4399),
-                          Color(0xFF3B82F6),
-                        ],
+                        colors: [Color(0xFF0E4399), Color(0xFF3B82F6)],
                       ),
                     ),
                   ),
@@ -69,10 +55,7 @@ class PromoPage extends StatelessWidget {
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
-                        colors: [
-                          Color(0xFF3B82F6),
-                          Color(0xFFF5F7F8),
-                        ],
+                        colors: [Color(0xFF3B82F6), Color(0xFFF5F7F8)],
                       ),
                     ),
                   ),
@@ -103,17 +86,13 @@ class PromoPage extends StatelessWidget {
           ),
           Expanded(
             child: ListView(
-              padding: EdgeInsets.symmetric(
-                horizontal: 5.w,
-              ),
+              padding: EdgeInsets.symmetric(horizontal: 5.w),
               children: [
                 SizedBox(height: 2.h),
                 ...promos.map(
                   (promo) => Padding(
                     padding: EdgeInsets.only(bottom: 2.h),
-                    child: PromoCard(
-                      promo: promo,
-                    ),
+                    child: PromoCard(promo: promo),
                   ),
                 ),
                 SizedBox(height: 2.h),
@@ -142,6 +121,7 @@ class PromoPage extends StatelessWidget {
       ),
     );
   }
+
   Widget _goldMemberCard() {
     return Container(
       padding: EdgeInsets.all(2.h),
@@ -174,10 +154,7 @@ class PromoPage extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                      colors: [
-                        Color(0xFFFBBF24),
-                        Color(0xFFD97706),
-                      ],
+                      colors: [Color(0xFFFBBF24), Color(0xFFD97706)],
                     ),
                     borderRadius: BorderRadius.circular(30),
                   ),
@@ -202,7 +179,8 @@ class PromoPage extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: 1.h),
-                Text('Exclusive Perks Active',
+                Text(
+                  'Exclusive Perks Active',
                   style: TextStyle(
                     fontSize: 16.sp,
                     fontWeight: FontWeight.w700,
@@ -210,11 +188,9 @@ class PromoPage extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: .5.h),
-                Text('You have 3 available coupons to use',
-                  style: TextStyle(
-                    color: Colors.grey,
-                    fontSize: 12.sp,
-                  ),
+                Text(
+                  'You have 3 available coupons to use',
+                  style: TextStyle(color: Colors.grey, fontSize: 12.sp),
                 ),
               ],
             ),
@@ -225,17 +201,11 @@ class PromoPage extends StatelessWidget {
             decoration: const BoxDecoration(
               shape: BoxShape.circle,
               gradient: LinearGradient(
-                colors: [
-                  Color(0xFFFBBF24),
-                  Color(0xFFD97706),
-                ],
+                colors: [Color(0xFFFBBF24), Color(0xFFD97706)],
               ),
             ),
-            child: Icon(
-              Icons.discount_outlined,
-              color: Colors.white,
-            ),
-          )
+            child: Icon(Icons.discount_outlined, color: Colors.white),
+          ),
         ],
       ),
     );
@@ -245,10 +215,7 @@ class PromoPage extends StatelessWidget {
 class PromoCard extends StatelessWidget {
   final PromoModel promo;
 
-  const PromoCard({
-    super.key,
-    required this.promo,
-  });
+  const PromoCard({super.key, required this.promo});
 
   @override
   Widget build(BuildContext context) {
@@ -300,29 +267,25 @@ class PromoCard extends StatelessWidget {
           ),
           Container(
             width: double.infinity,
-            padding: EdgeInsets.symmetric(
-              horizontal: 4.w,
-              vertical: 2.h,
-            ),
+            padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
             child: Row(
               children: [
                 InkWell(
                   onTap: () async {
-                    await Clipboard.setData(
-                      ClipboardData(text: promo.code),
-                    );
+                    await Clipboard.setData(ClipboardData(text: promo.code));
                     if (context.mounted) {
-                      ScaffoldMessenger.of(context)
-                          .showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            'Coupon copied',
-                            style: TextStyle(
-                              fontSize: 13.sp,
-                            ),
-                          ),
-                        ),
-                      );
+                      context.showAppSnackBar('Coupon copied!');
+                      // ScaffoldMessenger.of(context)
+                      //     .showSnackBar(
+                      //   SnackBar(
+                      //     content: Text(
+                      //       'Coupon copied',
+                      //       style: TextStyle(
+                      //         fontSize: 13.sp,
+                      //       ),
+                      //     ),
+                      //   ),
+                      // );
                     }
                   },
                   child: Container(
@@ -331,11 +294,8 @@ class PromoCard extends StatelessWidget {
                       vertical: 1.2.h,
                     ),
                     decoration: BoxDecoration(
-                      border: Border.all(
-                        color: const Color(0xFF4D8DFF),
-                      ),
-                      borderRadius:
-                          BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFF4D8DFF)),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
                       children: [
@@ -343,17 +303,14 @@ class PromoCard extends StatelessWidget {
                           promo.code,
                           style: TextStyle(
                             fontSize: 16.sp,
-                            color:
-                                const Color(0xFF4D8DFF),
-                            fontWeight:
-                                FontWeight.w600,
+                            color: const Color(0xFF4D8DFF),
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                         SizedBox(width: 2.w),
                         Icon(
                           Icons.copy_rounded,
-                          color:
-                              const Color(0xFF4D8DFF),
+                          color: const Color(0xFF4D8DFF),
                           size: 5.w,
                         ),
                       ],

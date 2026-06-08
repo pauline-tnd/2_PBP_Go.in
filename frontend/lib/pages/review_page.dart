@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:dotted_border/dotted_border.dart';
+import 'package:frontend/extensions/snackbar.dart';
 import 'package:frontend/services/api_services.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
@@ -332,18 +333,14 @@ class _ReviewPageState extends State<ReviewPage> {
 
   Future<void> submitReview() async {
     if (selectedRating == 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Silakan pilih rating terlebih dahulu")),
-      );
+      context.showAppSnackBar('Select the rating first', isWarning: true);
       return;
     }
     if (hotelDetail == null) return;
     if (
     // hotelDetail?.userId == null ||
     hotelDetail?.roomId == null || hotelDetail?.bookingDetailId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Data review tidak lengkap")),
-      );
+      context.showAppSnackBar('Review data incomplete', isWarning: true);
       return;
     }
     if (!mounted) return;
@@ -362,9 +359,8 @@ class _ReviewPageState extends State<ReviewPage> {
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Review berhasil dikirim!")));
+      context.showAppSnackBar('Review submitted successfully');
+
       if (!mounted) return;
       if (Navigator.of(context).canPop()) {
         Navigator.of(context).pop();
@@ -372,9 +368,7 @@ class _ReviewPageState extends State<ReviewPage> {
     } catch (e) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Error: $e")));
+      context.showAppSnackBar('Error: $e', isError: true);
     } finally {
       if (mounted) {
         setState(() => isSubmitting = false);

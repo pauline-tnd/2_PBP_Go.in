@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:frontend/extensions/snackbar.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:frontend/models/nominatim.dart';
 import 'package:frontend/providers/location_provider.dart';
@@ -321,9 +322,7 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
         _pickedAddress = provider.address;
       });
     } else if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to get GPS location')),
-      );
+      context.showAppSnackBar('Failed to get GPS location', isError: true);
     }
   }
 
