@@ -52,7 +52,7 @@ class MyApp extends StatelessWidget {
                 seedColor: const Color(0xFF3B82F6),
               ),
             ),
-            home: const MainShell(),
+            home: const LandingPage(),
             routes: {'/search-results': (context) => const SearchResultsPage()},
           );
         },
