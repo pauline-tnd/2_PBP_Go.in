@@ -52,21 +52,11 @@ class MyApp extends StatelessWidget {
                 seedColor: const Color(0xFF3B82F6),
               ),
             ),
-<<<<<<< HEAD
-          ),
-          home: const LandingPage(),
-          routes: {
-            '/search-results': (context) => const SearchResultsPage(),
-          },
-        );
-      },
-=======
             home: const MainShell(),
             routes: {'/search-results': (context) => const SearchResultsPage()},
           );
         },
       ),
->>>>>>> 8123059e60711c6cc7d74ea5d7b51a1d21a45500
     );
   }
 }
