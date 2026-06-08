@@ -276,7 +276,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 child: ClipOval(
                   child: Image.asset(
-                    'assets/images/profile-photo.jpg',
+                    'assets/images/profile-photo.png',
                     width: isTablet ? 80 : 64,
                     height: isTablet ? 80 : 64,
                     fit: BoxFit.cover,

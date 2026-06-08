@@ -135,7 +135,7 @@ class _AccountInformationPageState extends State<AccountInformationPage> {
                         ),
                         child: ClipOval(
                           child: Image.asset(
-                            'assets/images/profile-photo.jpg',
+                            'assets/images/profile-photo.png',
                             fit: BoxFit.cover,
                           ),
                         ),

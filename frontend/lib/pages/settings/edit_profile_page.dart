@@ -146,7 +146,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   ),
                   child: const CircleAvatar(
                     radius: 45,
-                    backgroundImage: AssetImage("assets/images/profile-photo.jpg"),
+                    backgroundImage: AssetImage("assets/images/profile-photo.png"),
                   ),
                 ),
                 Positioned(
