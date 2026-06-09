@@ -45,8 +45,15 @@ class FilterState {
 
 class SearchResultsPage extends StatefulWidget {
   final String? initialQuery;
+  final String? location;
+  final String? dateRange;
 
-  const SearchResultsPage({super.key, this.initialQuery});
+  const SearchResultsPage({
+    super.key, 
+    this.initialQuery,
+    this.location,
+    this.dateRange,
+  });
 
   @override
   State<SearchResultsPage> createState() => _SearchResultsPageState();
@@ -358,11 +365,11 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'London, United Kingdom',
+                  widget.location ?? widget.initialQuery ?? 'Anywhere',
                   style: TextStyle(
                     fontSize: 16.sp,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF1E293B),
+                    color: const Color(0xFF1E293B),
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -370,21 +377,10 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
                 const SizedBox(height: 3),
                 Row(
                   mainAxisSize: MainAxisSize.min,
-                  children: const [
+                  children: [
                     Text(
-                      'FEB 29 - FEB 31',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: Color(0xFF94A3B8),
-                      ),
-                    ),
-                    SizedBox(width: 6),
-                    Icon(Icons.circle, size: 4, color: Color(0xFF94A3B8)),
-                    SizedBox(width: 6),
-                    Text(
-                      '2 GUESTS',
-                      style: TextStyle(
+                      widget.dateRange ?? 'ANY DATE',
+                      style: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
                         color: Color(0xFF94A3B8),

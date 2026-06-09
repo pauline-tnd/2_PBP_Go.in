@@ -117,6 +117,7 @@ class _HomeSearchCardState extends State<HomeSearchCard> {
       MaterialPageRoute(
         builder: (_) => SearchResultsPage(
           initialQuery: searchQuery.isEmpty ? null : searchQuery,
+          dateRange: _getDateRangeText(),
         ),
       ),
     );
