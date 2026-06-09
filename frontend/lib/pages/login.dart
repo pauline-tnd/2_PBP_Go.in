@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:frontend/extensions/snackbar.dart';
 import 'package:http/http.dart' as http;
 
 import 'register.dart';
@@ -385,12 +386,9 @@ class _LoginPageState extends State<LoginPage> {
                               alignment: Alignment.centerRight,
                               child: TextButton(
                                 onPressed: () {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        'Forgot password is not available yet.',
-                                      ),
-                                    ),
+                                  context.showAppSnackBar(
+                                    'Forgot password is not available yet',
+                                    isError: true,
                                   );
                                 },
                                 style: TextButton.styleFrom(

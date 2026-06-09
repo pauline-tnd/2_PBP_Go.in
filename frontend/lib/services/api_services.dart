@@ -16,7 +16,7 @@ class ApiService {
   static const String nominatimUrl = 'https://nominatim.openstreetmap.org';
   static const Map<String, String> headersNominatim = {
     'User-Agent': 'GoInApp/1.0',
-    'Accept-Language': 'id',
+    'Accept-Language': 'en',
   };
 
   static Future<void> _saveToken(String token) async {

@@ -10,9 +10,11 @@ class WishlistController extends Controller
 {
     public function index()
     {
+        $user_id = Auth::user()->id;
+
         $wishlist = Wishlist::with([
-            'hotel' => fn ($q) => $q->hotelCard(),
-        ])->get();
+            'hotel' => fn($q) => $q->hotelCard()
+        ])->where('user_id', '=', $user_id)->get();
 
         return response()->json([
             'message' => 'Wishlist successfully loaded',

@@ -1,6 +1,24 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:dotted_border/dotted_border.dart';
+import 'package:frontend/extensions/snackbar.dart';
+import 'package:frontend/services/api_services.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
+
+class Facility {
+  final String name;
+  final String icon;
+
+  Facility({required this.name, required this.icon});
+
+  factory Facility.fromJson(Map<String, dynamic> json) {
+    return Facility(
+      name: json['name'] ?? '',
+      icon: json['icon']?['icon']?.toString().trim() ?? '',
+    );
+  }
+}
 
 class HotelReviewDetail {
   final String hotelName;
@@ -103,43 +121,42 @@ class _ReviewPageState extends State<ReviewPage> {
 
   void submitReview() async {
     if (selectedRating == 0) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Select rating first")));
+      context.showAppSnackBar('Select the rating first', isWarning: true);
       return;
     }
-
+    if (hotelDetail == null) return;
+    if (
+    // hotelDetail?.userId == null ||
+    hotelDetail?.roomId == null || hotelDetail?.bookingDetailId == null) {
+      context.showAppSnackBar('Review data incomplete', isWarning: true);
+      return;
+    }
+    if (!mounted) return;
+    if (isSubmitting) return;
     setState(() => isSubmitting = true);
-
     try {
-      final payload = {
-        'user_id': 1,
-        'room_id': 1,
-        'booking_detail_id': int.parse(widget.bookingId),
-        'rating': selectedRating,
-        'description': reviewController.text,
-        'created_at': DateTime.now().toIso8601String(),
-      };
-
-      final response = await http.post(
-        Uri.parse("http://localhost:8000/api/reviews"),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(payload),
+      await ApiService.storeReview(
+        // userId: hotelDetail!.userId!,
+        roomId: hotelDetail!.roomId!,
+        bookingDetailId: hotelDetail!.bookingDetailId!,
+        rating: selectedRating,
+        description: reviewController.text,
+        createdAt: DateTime.now().toIso8601String(),
+        image: selectedImage,
       );
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text("Review submitted!")));
-        Navigator.pop(context);
-      } else {
-        throw Exception("Save failed");
+      if (!mounted) return;
+
+      context.showAppSnackBar('Review submitted successfully');
+
+      if (!mounted) return;
+      if (Navigator.of(context).canPop()) {
+        Navigator.of(context).pop();
       }
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Error: $e")));
+      if (!mounted) return;
+
+      context.showAppSnackBar('Error: $e', isError: true);
     } finally {
       if (mounted) setState(() => isSubmitting = false);
     }

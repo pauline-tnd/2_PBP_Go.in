@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:frontend/extensions/snackbar.dart';
 import 'package:frontend/models/booking.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -72,9 +73,7 @@ Future<void> showReceiptPreview(BuildContext context, Booking booking) async {
   } catch (e) {
     if (context.mounted) {
       Navigator.pop(context); // dismiss loader
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to generate receipt: $e')));
+      context.showAppSnackBar('Failed to generate receipt: $e', isError: true);
     }
   }
 }
