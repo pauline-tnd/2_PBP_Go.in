@@ -23,7 +23,7 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
       child: Switch(
         value: value,
         onChanged: onChanged,
-        activeColor: Colors.white,
+        activeThumbColor: Colors.white,
         activeTrackColor: const Color(0xFF3B82F6),
         inactiveThumbColor: Colors.white,
         inactiveTrackColor: const Color(0xFF3B82F6).withAlpha(64),

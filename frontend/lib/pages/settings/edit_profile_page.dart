@@ -273,9 +273,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         "Mobile Number",
                         style: TextStyle(
+                          fontSize: 14.sp,
                           fontWeight: FontWeight.w500,
                           color: Color(0xFF64748B),
                         ),

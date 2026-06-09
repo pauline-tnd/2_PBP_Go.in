@@ -2,11 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 import 'package:frontend/models/hotel.dart';
-import 'package:frontend/widgets/bottom_navbar.dart';
 import 'package:frontend/widgets/hotel_card.dart';
 import 'package:frontend/widgets/sorting_bar.dart';
 import 'package:frontend/widgets/skeleton_loader.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:frontend/services/api_services.dart';
 import 'package:frontend/pages/main_shell.dart';
 
@@ -97,36 +95,6 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
         _isLoading = false;
       });
     } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
-
-  Future<void> _fetchHotelsFromSupabase() async {
-    try {
-      final response = await Supabase.instance.client.from('hotels').select('''
-          *, 
-          hotel_images(image),
-          hotel_facilities(name),
-          rooms(
-            price,
-            reviews(rating)
-          )
-        ''');
-
-      final List<Hotel> fetchedHotels = (response as List<dynamic>).map((item) {
-        return Hotel.fromMap(item as Map<String, dynamic>);
-      }).toList();
-
-      if (!mounted) return;
-      setState(() {
-        _allHotels = fetchedHotels;
-        _hotelBadges = assignBadges(_allHotels);
-        _isLoading = false;
-      });
-    } catch (error) {
       if (!mounted) return;
       setState(() {
         _isLoading = false;

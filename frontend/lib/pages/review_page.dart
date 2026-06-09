@@ -143,7 +143,7 @@ class _ReviewPageState extends State<ReviewPage> {
   void _showImagePreview(String imageUrl) {
     showDialog(
       context: context,
-      barrierColor: Colors.black.withOpacity(0.9),
+      barrierColor: Colors.black.withAlpha(230),
       builder: (context) {
         return GestureDetector(
           onTap: () => Navigator.pop(context),
@@ -210,36 +210,6 @@ class _ReviewPageState extends State<ReviewPage> {
       if (_isDisposed) rethrow;
       rethrow;
     }
-  }
-
-  Widget _buildPickerOption({
-    required String title,
-    required IconData icon,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(24),
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                title,
-                style: const TextStyle(
-                  fontFamily: 'Plus Jakarta Sans',
-                  fontSize: 18,
-                  fontWeight: FontWeight.w500,
-                  color: Color(0xFF0F172A),
-                ),
-              ),
-            ),
-            Icon(icon, size: 28, color: const Color(0xFF0F172A)),
-          ],
-        ),
-      ),
-    );
   }
 
   void _showImagePickerOptions(TapDownDetails details) async {
@@ -550,7 +520,7 @@ class _ReviewPageState extends State<ReviewPage> {
                                           ? const Color(0xFF3B82F6)
                                           : const Color(
                                               0xFF94A3B8,
-                                            ).withOpacity(0.75),
+                                            ).withAlpha(192),
                                     ),
                                   ),
                                 );
@@ -623,7 +593,7 @@ class _ReviewPageState extends State<ReviewPage> {
                                   fontSize: 12,
                                   color: const Color(
                                     0xFF94A3B8,
-                                  ).withOpacity(0.75),
+                                  ).withAlpha(192),
                                 ),
                               ),
                             ),
@@ -728,7 +698,7 @@ class _ReviewPageState extends State<ReviewPage> {
                                       shape: BoxShape.circle,
                                       boxShadow: [
                                         BoxShadow(
-                                          color: Colors.black.withOpacity(0.15),
+                                          color: Colors.black.withAlpha(38),
                                           blurRadius: 6,
                                         ),
                                       ],
@@ -869,12 +839,12 @@ class _ReviewPageState extends State<ReviewPage> {
                               foregroundColor: Colors.white,
                               disabledBackgroundColor: const Color(
                                 0xFF3B82F6,
-                              ).withOpacity(0.6),
+                              ).withAlpha(153),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(25),
                               ),
                               elevation: 3,
-                              shadowColor: Colors.black.withOpacity(0.25),
+                              shadowColor: Colors.black.withAlpha(64),
                             ),
                             child: isSubmitting
                                 ? const SizedBox(

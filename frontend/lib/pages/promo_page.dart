@@ -130,7 +130,7 @@ class PromoPage extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFD97706).withOpacity(.10),
+            color: const Color(0xFFD97706).withAlpha(26),
             blurRadius: 20,
             spreadRadius: -2,
             offset: const Offset(0, 4),
