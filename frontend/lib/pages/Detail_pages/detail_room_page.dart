@@ -334,13 +334,9 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                           if (_getRoomAmenities().length > 4)
                             GestureDetector(
                               onTap: () {},
-                              child: const Text(
-                                'See all',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: Color(0xFF3B82F6),
-                                  fontWeight: FontWeight.w500,
-                                ),
+                              child: const Icon(
+                                Icons.more_vert_outlined,
+                                color: Color(0xFF3B82F6),
                               ),
                             ),
                         ],

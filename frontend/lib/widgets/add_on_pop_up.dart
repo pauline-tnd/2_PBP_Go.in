@@ -9,6 +9,7 @@ class AddOnPopUp extends StatefulWidget {
   final List<AddOnItem> addOns;
   final Room room;
   final String roomImage;
+  final String initialNotes;
   final void Function(List<AddOnItem> selected, String notes)? onContinue;
 
   const AddOnPopUp({
@@ -17,6 +18,7 @@ class AddOnPopUp extends StatefulWidget {
     required this.addOns,
     required this.room,
     required this.roomImage,
+    this.initialNotes = '',
     this.onContinue,
   });
 
@@ -29,9 +31,60 @@ class _AddOnPopUpState extends State<AddOnPopUp> {
   final TextEditingController _notesController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    _notesController.text = widget.initialNotes;
+  }
+
+  @override
   void dispose() {
     _notesController.dispose();
     super.dispose();
+  }
+
+  void _handleContinue() {
+    final selected = _selectedIndexes.map((i) => widget.addOns[i]).toList();
+
+    if (widget.onContinue != null) {
+      widget.onContinue!(selected, _notesController.text);
+      Navigator.pop(context);
+      return;
+    }
+
+    Navigator.pop(context);
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => BookingConfirmationPopUp(
+        bookingDetails: [
+          BookingDetail(
+            id: 0,
+            room: widget.room,
+            quantity: 1,
+            roomImage: widget.roomImage,
+            notes: _notesController.text,
+            selectedAddOns: selected,
+          ),
+        ],
+        onCustomAnother: () {
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            backgroundColor: Colors.transparent,
+            builder: (_) => AddOnPopUp(
+              roomType: widget.roomType,
+              addOns: widget.addOns,
+              room: widget.room,
+              roomImage: widget.roomImage,
+            ),
+          );
+        },
+        onBookNow: () {
+          Navigator.pop(context);
+        },
+      ),
+    );
   }
 
   @override
@@ -178,6 +231,8 @@ class _AddOnPopUpState extends State<AddOnPopUp> {
 
                   TextField(
                     controller: _notesController,
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: (_) => _handleContinue(),
                     style: const TextStyle(
                       fontSize: 13,
                       color: Color(0xFF1E293B),
@@ -215,48 +270,7 @@ class _AddOnPopUpState extends State<AddOnPopUp> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: () {
-                        final selected = _selectedIndexes
-                            .map((i) => widget.addOns[i])
-                            .toList();
-                        Navigator.pop(context);
-                        showModalBottomSheet(
-                          context: context,
-                          isScrollControlled: true,
-                          backgroundColor: Colors.transparent,
-                          builder: (_) => BookingConfirmationPopUp(
-                            bookingDetails: [
-                              BookingDetail(
-                                id: 0,
-                                room: widget.room,
-                                quantity: 1,
-                                roomImage: widget.roomImage,
-                                notes: _notesController.text,
-                                selectedAddOns: selected,
-                              ),
-                            ],
-
-                            onCustomAnother: () {
-                              showModalBottomSheet(
-                                context: context,
-                                isScrollControlled: true,
-                                backgroundColor: Colors.transparent,
-
-                                builder: (_) => AddOnPopUp(
-                                  roomType: widget.roomType,
-                                  addOns: widget.addOns,
-                                  room: widget.room,
-                                  roomImage: widget.roomImage,
-                                ),
-                              );
-                            },
-
-                            onBookNow: () {
-                              Navigator.pop(context);
-                            },
-                          ),
-                        );
-                      },
+                      onPressed: _handleContinue,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF3B82F6),
                         foregroundColor: Colors.white,

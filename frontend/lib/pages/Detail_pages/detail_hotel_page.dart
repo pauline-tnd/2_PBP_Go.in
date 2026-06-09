@@ -266,18 +266,18 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
 
     final facilities =
         (_hotelDetail?['hotel_facilities'] as List<dynamic>? ?? []);
-    final displayFacilities = facilities.take(3).toList();
-    final hasMoreFacilities = facilities.length > 3;
+    final displayFacilities = facilities.take(6).toList();
+    final hasMoreFacilities = facilities.length > 6;
 
     final description = _hotelDetail?['description']?.toString() ?? '';
-    final truncated = description.length > 150
-        ? description.substring(0, 150)
+    final truncated = description.length > 120
+        ? description.substring(0, 120)
         : description;
     final aboutText = description.isEmpty
         ? 'No description available.'
         : _isExpanded
         ? description
-        : description.length > 150
+        : description.length > 120
         ? '$truncated...'
         : description;
 
@@ -539,13 +539,9 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
                   if (hasMoreFacilities)
                     GestureDetector(
                       onTap: _showAmenitiesSheet,
-                      child: const Text(
-                        'See all',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Color(0xFF3B82F6),
-                          fontWeight: FontWeight.w500,
-                        ),
+                      child: Icon(
+                        Icons.more_vert_outlined,
+                        color: Color(0xFF3B82F6),
                       ),
                     ),
                 ],

@@ -5,9 +5,9 @@ class BookingDetail {
   final int id;
   final Room room;
   final int quantity;
-  final String notes;
+  String notes;
   final String roomImage;
-  final List<AddOnItem> selectedAddOns;
+  List<AddOnItem> selectedAddOns;
 
   BookingDetail({
     required this.id,

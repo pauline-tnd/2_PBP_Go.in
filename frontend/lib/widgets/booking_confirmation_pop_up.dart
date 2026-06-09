@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:frontend/models/bookingDetail.dart';
+import 'package:frontend/widgets/add_on_pop_up.dart';
 
 class BookingConfirmationPopUp extends StatefulWidget {
   final List<BookingDetail> bookingDetails;
@@ -8,6 +9,7 @@ class BookingConfirmationPopUp extends StatefulWidget {
   final void Function()? onBookNow;
   final void Function(int index)? onEditItem;
   final void Function(int index)? onDeleteItem;
+  final void Function()? onNavigateToHotel;
 
   const BookingConfirmationPopUp({
     super.key,
@@ -16,6 +18,7 @@ class BookingConfirmationPopUp extends StatefulWidget {
     this.onBookNow,
     this.onEditItem,
     this.onDeleteItem,
+    this.onNavigateToHotel,
   });
 
   @override
@@ -114,15 +117,12 @@ class _BookingConfirmationPopUpState extends State<BookingConfirmationPopUp> {
                       ),
                       _IconAction(
                         icon: Icons.edit_outlined,
-                        onPressed: widget.onEditItem == null
-                            ? null
-                            : () => widget.onEditItem!(index),
+                        onPressed: () => _showEditPopUp(context, detail),
                       ),
                       _IconAction(
                         icon: Icons.delete_outline,
-                        onPressed: widget.onDeleteItem == null
-                            ? null
-                            : () => widget.onDeleteItem!(index),
+                        onPressed: () =>
+                            _showDeleteConfirmation(context, index),
                       ),
                       const SizedBox(width: 4),
                       Text(
@@ -171,6 +171,81 @@ class _BookingConfirmationPopUpState extends State<BookingConfirmationPopUp> {
           ],
         );
       },
+    );
+  }
+
+  void _showEditPopUp(BuildContext context, BookingDetail detail) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => AddOnPopUp(
+        roomType: detail.room.type,
+        addOns: detail.selectedAddOns,
+        room: detail.room,
+        roomImage: detail.roomImage,
+        initialNotes: detail.notes,
+        onContinue: (selected, notes) {
+          setState(() {
+            detail.selectedAddOns.clear();
+            detail.selectedAddOns.addAll(selected);
+            detail.notes = notes;
+          });
+          Future.delayed(Duration.zero, () {
+            setState(() {});
+          });
+        },
+      ),
+    );
+  }
+
+  void _showDeleteConfirmation(BuildContext context, int index) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        content: const Text(
+          'Remove from booking?',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF1E293B),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'No',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: Color.fromARGB(255, 29, 44, 68),
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              if (widget.bookingDetails.length == 1) {
+                Navigator.pop(context);
+                widget.onNavigateToHotel?.call();
+              } else {
+                setState(() {
+                  widget.bookingDetails.removeAt(index);
+                });
+              }
+            },
+            child: const Text(
+              'Yes',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: Color.fromARGB(155, 29, 44, 68),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

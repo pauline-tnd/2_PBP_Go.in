@@ -21,6 +21,7 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _passwordFocusNode = FocusNode();
   final _emailRegex = RegExp(r'^[A-Za-z0-9._%+-]+@gmail\.com$');
 
   bool _obscurePassword = true;
@@ -35,6 +36,7 @@ class _LoginPageState extends State<LoginPage> {
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _passwordFocusNode.dispose();
     super.dispose();
   }
 
@@ -76,11 +78,13 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     try {
-      final response = await http.post(
-        Uri.parse('$_authBaseUrl/login'),
-        headers: {'Accept': 'application/json'},
-        body: {'email': email, 'password': password},
-      ).timeout(const Duration(seconds: 10));
+      final response = await http
+          .post(
+            Uri.parse('$_authBaseUrl/login'),
+            headers: {'Accept': 'application/json'},
+            body: {'email': email, 'password': password},
+          )
+          .timeout(const Duration(seconds: 10));
 
       final Map<String, dynamic>? data = response.body.isNotEmpty
           ? jsonDecode(response.body) as Map<String, dynamic>
@@ -93,6 +97,8 @@ class _LoginPageState extends State<LoginPage> {
         if (token != null && token.isNotEmpty) {
           await ApiService.saveToken(token);
         }
+
+        if (!mounted) return;
 
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (_) => const MainShell()),
@@ -115,9 +121,7 @@ class _LoginPageState extends State<LoginPage> {
         setState(() {
           _emailError = _extractFirstError(errors, 'email');
           _passwordError = _extractFirstError(errors, 'password');
-          _generalError =
-              _extractAnyError(errors) ??
-              backendMessage;
+          _generalError = _extractAnyError(errors) ?? backendMessage;
         });
       } else {
         setState(() {
@@ -185,17 +189,35 @@ class _LoginPageState extends State<LoginPage> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isTablet = AppResponsive.isTablet(context);
     final isDesktop = AppResponsive.isDesktop(context);
-    final panelTopSpacing = screenHeight * (isDesktop ? 0.18 : isTablet ? 0.22 : 0.25);
+    final panelTopSpacing =
+        screenHeight *
+        (isDesktop
+            ? 0.18
+            : isTablet
+            ? 0.22
+            : 0.25);
     final panelMaxWidth = AppResponsive.contentMaxWidth(
       context,
       mobile: 420,
       tablet: 520,
       desktop: 560,
     );
-    final panelPadding = isDesktop ? 36.0 : isTablet ? 32.0 : 28.0;
-    final logoShellSize = isDesktop ? 138.0 : isTablet ? 130.0 : 122.0;
+    final panelPadding = isDesktop
+        ? 36.0
+        : isTablet
+        ? 32.0
+        : 28.0;
+    final logoShellSize = isDesktop
+        ? 138.0
+        : isTablet
+        ? 130.0
+        : 122.0;
     final logoShellPadding = isDesktop ? 18.0 : 16.0;
-    final titleFontSize = isDesktop ? 24.0 : isTablet ? 23.0 : 22.0;
+    final titleFontSize = isDesktop
+        ? 24.0
+        : isTablet
+        ? 23.0
+        : 22.0;
     final actionFontSize = isDesktop ? 19.0 : 18.0;
 
     return Scaffold(
@@ -322,6 +344,10 @@ class _LoginPageState extends State<LoginPage> {
                               controller: _emailController,
                               hintText: 'Enter your email address',
                               keyboardType: TextInputType.emailAddress,
+                              textInputAction: TextInputAction.next,
+                              onSubmitted: (_) {
+                                _passwordFocusNode.requestFocus();
+                              },
                               errorText: _emailError,
                             ),
                             const SizedBox(height: 18),
@@ -329,8 +355,15 @@ class _LoginPageState extends State<LoginPage> {
                             const SizedBox(height: 8),
                             _buildTextField(
                               controller: _passwordController,
+                              focusNode: _passwordFocusNode,
                               hintText: 'Enter your valid password',
                               obscureText: _obscurePassword,
+                              textInputAction: TextInputAction.done,
+                              onSubmitted: (_) {
+                                if (!_isSubmitting) {
+                                  _handleSignIn();
+                                }
+                              },
                               errorText: _passwordError,
                               suffixIcon: IconButton(
                                 onPressed: () {
@@ -408,8 +441,8 @@ class _LoginPageState extends State<LoginPage> {
                                           strokeWidth: 2.2,
                                           valueColor:
                                               AlwaysStoppedAnimation<Color>(
-                                            Colors.white,
-                                          ),
+                                                Colors.white,
+                                              ),
                                         ),
                                       )
                                     : Text(
@@ -418,7 +451,7 @@ class _LoginPageState extends State<LoginPage> {
                                           fontSize: actionFontSize,
                                           fontWeight: FontWeight.w600,
                                         ),
-                                    ),
+                                      ),
                               ),
                             ),
                             const SizedBox(height: 20),
@@ -543,11 +576,14 @@ class _LoginPageState extends State<LoginPage> {
 
   Widget _buildTextField({
     required TextEditingController controller,
+    FocusNode? focusNode,
     required String hintText,
     TextInputType? keyboardType,
+    TextInputAction? textInputAction,
     bool obscureText = false,
     Widget? suffixIcon,
     String? errorText,
+    ValueChanged<String>? onSubmitted,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -556,8 +592,11 @@ class _LoginPageState extends State<LoginPage> {
           height: 56,
           child: TextField(
             controller: controller,
+            focusNode: focusNode,
             keyboardType: keyboardType,
+            textInputAction: textInputAction,
             obscureText: obscureText,
+            onSubmitted: onSubmitted,
             inputFormatters: keyboardType == TextInputType.emailAddress
                 ? [
                     FilteringTextInputFormatter.allow(
