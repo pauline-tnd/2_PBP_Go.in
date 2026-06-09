@@ -7,6 +7,8 @@ import 'package:frontend/widgets/hotel_card.dart';
 import 'package:frontend/widgets/sorting_bar.dart';
 import 'package:frontend/widgets/skeleton_loader.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:frontend/services/api_services.dart';
+import 'package:frontend/pages/main_shell.dart';
 
 class FilterState {
   final RangeValues priceRange;
@@ -70,7 +72,36 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
   @override
   void initState() {
     super.initState();
-    _fetchHotelsFromSupabase();
+    // _fetchHotelsFromSupabase();
+    _fetchHotels();
+  }
+
+  Future<void> _fetchHotels() async {
+    try {
+      final response = await ApiService.fetchHotels();
+      final data = response['data'];
+      final List<dynamic> hotelItems =
+          data is List
+              ? data
+              : (data is Map<String, dynamic> && data['data'] is List)
+                  ? data['data']
+                  : [];
+      final List<Hotel> fetchedHotels =
+          hotelItems
+              .map((item) => Hotel.fromMap(item as Map<String, dynamic>))
+              .toList();
+      if (!mounted) return;
+      setState(() {
+        _allHotels = fetchedHotels;
+        _hotelBadges = assignBadges(_allHotels);
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   Future<void> _fetchHotelsFromSupabase() async {
@@ -265,7 +296,7 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
               ),
             ],
           ),
-          BottomNavbar(currentIndex: 0, onTap: (_) {}),
+            const SizedBox(height: 120),
         ],
       ),
     );
@@ -345,7 +376,11 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
       child: Row(
         children: [
           GestureDetector(
-            onTap: () => Navigator.pop(context),
+            onTap: () {
+              final mainShell =
+                  context.findAncestorStateOfType<MainShellState>();
+              mainShell?.hideOverlayPage();
+            },
             child: const SizedBox(
               width: 32,
               height: 40,

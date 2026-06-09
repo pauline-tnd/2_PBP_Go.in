@@ -3,6 +3,7 @@ import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:frontend/pages/search_results_page.dart';
 import 'package:frontend/widgets/home/home_search_field.dart';
 import 'package:intl/intl.dart';
+import 'package:frontend/pages/main_shell.dart';
 
 class HomeSearchCard extends StatefulWidget {
   final VoidCallback? onSearch;
@@ -112,13 +113,11 @@ class _HomeSearchCardState extends State<HomeSearchCard> {
 
   void _openSearchResults([String? query]) {
     final searchQuery = query?.trim() ?? _hotelQuery.trim();
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => SearchResultsPage(
-          initialQuery: searchQuery.isEmpty ? null : searchQuery,
-          dateRange: _getDateRangeText(),
-        ),
+    final mainShell = context.findAncestorStateOfType<MainShellState>();
+    mainShell?.showOverlayPage(
+      SearchResultsPage(
+        initialQuery: searchQuery.isEmpty ? null : searchQuery,
+        dateRange: _getDateRangeText(),
       ),
     );
   }
