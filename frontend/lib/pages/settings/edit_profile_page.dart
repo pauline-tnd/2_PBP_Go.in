@@ -1,5 +1,3 @@
-//DO NOT PUSH
-
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
@@ -44,7 +42,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
         selectedDate = picked;
         isLoading = false;
       });
-      context.showAppSnackBar(e.toString(), isError: true);
+      context.showAppSnackBar("Please select a date", isError: true);
+      // jujur, saya bingung ini context atau gmn
     }
   }
 

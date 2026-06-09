@@ -1,78 +1,14 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:dotted_border/dotted_border.dart';
+import 'package:frontend/models/hotelReviewDetail.dart';
 import 'package:frontend/extensions/snackbar.dart';
 import 'package:frontend/services/api_services.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
-
-class Facility {
-  final String name;
-  final String icon;
-
-  Facility({required this.name, required this.icon});
-
-  factory Facility.fromJson(Map<String, dynamic> json) {
-    return Facility(
-      name: json['name'] ?? '',
-      icon: json['icon']?['icon']?.toString().trim() ?? '',
-    );
-  }
-}
-
-class HotelReviewDetail {
-  final String hotelName;
-  final String roomType;
-  final String imageName;
-  final DateTime checkOutDate;
-  final List<String> facilities;
-
-  HotelReviewDetail({
-    required this.hotelName,
-    required this.roomType,
-    required this.imageName,
-    required this.checkOutDate,
-    required this.facilities,
-  });
-
-  factory HotelReviewDetail.fromJson(Map<String, dynamic> json) {
-    var facilityList = json['hotel']['hotel_facilities'] as List? ?? [];
-    List<String> parsedFacilities = facilityList
-        .map((f) => f['name'].toString())
-        .toList();
-
-    var imageList = json['hotel']['hotel_images'] as List? ?? [];
-    String img = '';
-    if (imageList.isNotEmpty && imageList[0]['image'] != null) {
-      img = imageList[0]['image'].toString();
-    }
-    return HotelReviewDetail(
-      hotelName: json['hotel']['name'] ?? 'Unknown Hotel',
-      roomType: json['room_type'] ?? 'Standard Room',
-      imageName: img,
-      checkOutDate: DateTime.parse(json['check_out']),
-      facilities: parsedFacilities,
-    );
-  }
-
-  String get relativeTime {
-    final today = DateTime.now();
-    final cleanToday = DateTime(today.year, today.month, today.day);
-    final cleanCheckOut = DateTime(
-      checkOutDate.year,
-      checkOutDate.month,
-      checkOutDate.day,
-    );
-    final difference = cleanToday.difference(cleanCheckOut).inDays;
-    if (difference <= 0) {
-      return "STAYED TODAY";
-    } else if (difference == 1) {
-      return "STAYED 1 DAY AGO";
-    } else {
-      return "STAYED $difference DAYS AGO";
-    }
-  }
-}
+import 'package:http/http.dart' as http;
+import 'package:frontend/models/facility.dart';
+import 'package:frontend/models/hotelReviewDetail.dart';
 
 class ReviewPage extends StatefulWidget {
   final String bookingId;
@@ -93,10 +29,8 @@ class _ReviewPageState extends State<ReviewPage> {
     super.initState();
     _hotelDetailFuture = _fetchHotelDetail();
   }
-  // In _ReviewPageState class:
 
   Future<HotelReviewDetail> _fetchHotelDetail() async {
-    // Get from bookings endpoint instead
     final String apiUrl =
         "http://localhost:8000/api/bookings/${widget.bookingId}";
     try {
@@ -111,7 +45,11 @@ class _ReviewPageState extends State<ReviewPage> {
 
       if (response.statusCode == 200) {
         final bookingData = jsonDecode(response.body)['data'];
-        return HotelReviewDetail.fromJson(bookingData);
+        final parsedData = HotelReviewDetail.fromJson(bookingData);
+
+        hotelDetail = parsedData;
+
+        return parsedData;
       }
       throw Exception("Failed ${response.statusCode}");
     } catch (e) {
@@ -329,7 +267,7 @@ class _ReviewPageState extends State<ReviewPage> {
                                           ? const Color(0xFFFFB800)
                                           : const Color(
                                               0xFF94A3B8,
-                                            ).withOpacity(0.75),
+                                            ).withAlpha(191),
                                     ),
                                   ),
                                 );
@@ -399,9 +337,7 @@ class _ReviewPageState extends State<ReviewPage> {
                                   fontFamily: 'Plus Jakarta Sans',
                                   fontWeight: FontWeight.w400,
                                   fontSize: 12,
-                                  color: const Color(
-                                    0xFF94A3B8,
-                                  ).withOpacity(0.75),
+                                  color: const Color(0xFF94A3B8).withAlpha(191),
                                 ),
                               ),
                             ),
@@ -487,7 +423,7 @@ class _ReviewPageState extends State<ReviewPage> {
                               fontSize: 14,
                               color: isSelected
                                   ? Colors.white
-                                  : const Color(0xFF3B82F6).withOpacity(0.88),
+                                  : const Color(0xFF3B82F6).withAlpha(224),
                             ),
                             backgroundColor: Colors.white,
                             selectedColor: const Color(0xFF3B82F6),
@@ -496,7 +432,7 @@ class _ReviewPageState extends State<ReviewPage> {
                               side: BorderSide(
                                 color: isSelected
                                     ? const Color(0xFF3B82F6)
-                                    : const Color(0xFF3B82F6).withOpacity(0.38),
+                                    : const Color(0xFF3B82F6).withAlpha(97),
                               ),
                             ),
                             showCheckmark: false,
@@ -562,12 +498,12 @@ class _ReviewPageState extends State<ReviewPage> {
                             foregroundColor: Colors.white,
                             disabledBackgroundColor: const Color(
                               0xFF3B82F6,
-                            ).withOpacity(0.6),
+                            ).withAlpha(153),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(25),
                             ),
                             elevation: 3,
-                            shadowColor: Colors.black.withOpacity(0.25),
+                            shadowColor: Colors.black.withAlpha(64),
                           ),
                           child: isSubmitting
                               ? const SizedBox(

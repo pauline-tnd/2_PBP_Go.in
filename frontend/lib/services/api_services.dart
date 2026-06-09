@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:frontend/models/booking.dart';
-// import 'package:frontend/models/nominatim.dart';
+import 'package:frontend/models/nominatim.dart';
 import 'package:frontend/models/review.dart';
 import 'package:frontend/models/room.dart';
 import 'package:frontend/models/wishlist.dart';
@@ -217,29 +217,29 @@ class ApiService {
     }
   }
 
-  // static Future<List<NominatimResult>> search(String query) async {
-  //   if (query.trim().isEmpty) return [];
+  static Future<List<NominatimResult>> search(String query) async {
+    if (query.trim().isEmpty) return [];
 
-  //   final response = await http.get(
-  //     Uri.parse('$nominatimUrl/search').replace(
-  //       queryParameters: {
-  //         'q': query,
-  //         'format': 'json',
-  //         'limit': '5',
-  //         'addressdetails': '1',
-  //         'countrycodes': 'id',
-  //       },
-  //     ),
-  //     headers: headersNominatim,
-  //   );
+    final response = await http.get(
+      Uri.parse('$nominatimUrl/search').replace(
+        queryParameters: {
+          'q': query,
+          'format': 'json',
+          'limit': '5',
+          'addressdetails': '1',
+          'countrycodes': 'id',
+        },
+      ),
+      headers: headersNominatim,
+    );
 
-  //   if (response.statusCode == 200) {
-  //     final List data = jsonDecode(response.body);
-  //     return data.map((e) => NominatimResult.fromJson(e)).toList();
-  //   } else {
-  //     throw Exception('Failed to load location: ${response.body}');
-  //   }
-  // }
+    if (response.statusCode == 200) {
+      final List data = jsonDecode(response.body);
+      return data.map((e) => NominatimResult.fromJson(e)).toList();
+    } else {
+      throw Exception('Failed to load location: ${response.body}');
+    }
+  }
 
   static Future<String> reverseGeocode(double lat, double lon) async {
     final response = await http.get(
