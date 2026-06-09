@@ -120,15 +120,18 @@ class BookingController extends Controller
             'bookingDetails.room.hotel.hotelImages',
             'bookingDetails.room.hotel.hotelFacilities',
         ])->find($id);
+
         if (! $booking) {
             return response()->json([
                 'message' => 'Booking tidak ditemukan',
             ], 404);
         }
-        $room = $booking->bookingDetails->first()->room ?? null;
+        $bookingDetail = $booking->bookingDetails->first() ?? null;
+        $room = $bookingDetail->room ?? null;
 
         return response()->json([
             'data' => [
+                'user_id' => $booking->user_id,
                 'hotel' => [
                     'name' => $room->hotel->name ?? 'Unknown Hotel',
                     'hotel_images' => $room->hotel->hotelImages ?? [],
@@ -136,6 +139,8 @@ class BookingController extends Controller
                 ],
                 'room_type' => $room->type ?? 'Standard Room',
                 'check_out' => $booking->check_out,
+                'room_id' => $room->id ?? null,
+                'booking_detail_id' => $bookingDetail->id ?? null,
             ],
         ], 200);
     }

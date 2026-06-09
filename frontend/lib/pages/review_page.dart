@@ -24,6 +24,9 @@ class _ReviewPageState extends State<ReviewPage> {
   bool isSubmitting = false;
   final Set<String> selectedHighlights = {};
   late Future<HotelReviewDetail> _hotelDetailFuture;
+  HotelReviewDetail? hotelDetail;
+  File? selectedImage;
+
   @override
   void initState() {
     super.initState();
@@ -32,7 +35,7 @@ class _ReviewPageState extends State<ReviewPage> {
 
   Future<HotelReviewDetail> _fetchHotelDetail() async {
     final String apiUrl =
-        "http://localhost:8000/api/bookings/${widget.bookingId}";
+        "http://localhost:8000/api/bookings/${widget.bookingId}/review-details";
     try {
       final response = await http.get(
         Uri.parse(apiUrl),
@@ -46,8 +49,9 @@ class _ReviewPageState extends State<ReviewPage> {
       if (response.statusCode == 200) {
         final bookingData = jsonDecode(response.body)['data'];
         final parsedData = HotelReviewDetail.fromJson(bookingData);
-
-        hotelDetail = parsedData;
+        setState(() {
+          hotelDetail = parsedData;
+        });
 
         return parsedData;
       }
@@ -63,9 +67,9 @@ class _ReviewPageState extends State<ReviewPage> {
       return;
     }
     if (hotelDetail == null) return;
-    if (
-    // hotelDetail?.userId == null ||
-    hotelDetail?.roomId == null || hotelDetail?.bookingDetailId == null) {
+    if (hotelDetail?.userId == null ||
+        hotelDetail?.roomId == null ||
+        hotelDetail?.bookingDetailId == null) {
       context.showAppSnackBar('Review data incomplete', isWarning: true);
       return;
     }
@@ -74,7 +78,7 @@ class _ReviewPageState extends State<ReviewPage> {
     setState(() => isSubmitting = true);
     try {
       await ApiService.storeReview(
-        // userId: hotelDetail!.userId!,
+        userId: hotelDetail!.userId!,
         roomId: hotelDetail!.roomId!,
         bookingDetailId: hotelDetail!.bookingDetailId!,
         rating: selectedRating,

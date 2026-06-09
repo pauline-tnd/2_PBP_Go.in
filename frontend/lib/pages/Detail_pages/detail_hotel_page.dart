@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/models/hotel.dart';
+import 'package:frontend/models/review.dart';
 import 'package:frontend/models/room.dart';
+import 'package:frontend/pages/settings/review_detail_page.dart';
 import 'package:frontend/widgets/room_card.dart';
 import 'package:frontend/widgets/hotel_image.dart';
-import 'package:frontend/widgets/header.dart';
 import 'package:frontend/services/api_services.dart';
 import 'package:frontend/extensions/snackbar.dart';
 import 'package:frontend/models/facility.dart';
@@ -182,35 +183,17 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
         controller: _scrollController,
         slivers: [
           SliverAppBar(
-            expandedHeight: 280, // photo height
+            expandedHeight: 0,
+            toolbarHeight: kToolbarHeight,
             pinned: true,
-            backgroundColor: const Color(0xFF0E4399),
+            backgroundColor: const Color.fromARGB(
+              255,
+              3,
+              49,
+              122,
+            ).withAlpha(240),
             elevation: 0,
             automaticallyImplyLeading: false,
-            flexibleSpace: FlexibleSpaceBar(
-              background: Stack(
-                fit: StackFit.expand,
-                children: [
-                  // hotel photo fills header
-                  widget.hotel.imagePath != null
-                      ? Image.network(
-                          widget.hotel.imagePath!,
-                          fit: BoxFit.cover,
-                        )
-                      : Container(color: const Color(0xFF1E3A5F)),
-                  // transparent-to-dark gradient overlay
-                  const DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [Colors.transparent, Colors.black26],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
             leading: GestureDetector(
               onTap: () => Navigator.pop(context),
               child: Container(
@@ -292,191 +275,224 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-          child: Container(
-            padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.10),
-                  blurRadius: 24,
-                  offset: const Offset(0, 8),
-                ),
-              ],
+        Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Positioned(
+              child: SizedBox(
+                height: 280,
+                width: double.infinity,
+                child: widget.hotel.imagePath != null
+                    ? Image.network(widget.hotel.imagePath!, fit: BoxFit.cover)
+                    : Container(color: const Color(0xFF1E3A5F)),
+              ),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+
+            Positioned(
+              left: 16,
+              right: 16,
+              bottom: -90,
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.10),
+                      blurRadius: 24,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: Text(
-                        hotel.name,
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF1E293B),
-                          height: 1.2,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
                     Row(
-                      children: List.generate(
-                        hotel.starRating,
-                        (_) => const Icon(
-                          Icons.star_rounded,
-                          size: 18,
-                          color: Color(0xFFFBBF24),
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            hotel.name,
+                            style: const TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFF1E293B),
+                              height: 1.2,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Row(
+                          children: List.generate(
+                            5,
+                            (index) => Icon(
+                              index < num.parse(rating)
+                                  ? Icons.star
+                                  : Icons.star_border_outlined,
+                              size: 18,
+                              color: Color(0xFFFBBF24),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+
+                    Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () {
+                          _scrollToMap();
+                        },
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.location_on_outlined,
+                              size: 15,
+                              color: Color(0xFF3B82F6),
+                            ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                hotel.location,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Color(0xFF3B82F6),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const Icon(
+                              Icons.chevron_right_rounded,
+                              size: 18,
+                              color: Color(0xFF3B82F6),
+                            ),
+                          ],
                         ),
                       ),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 12),
 
-                GestureDetector(
-                  onTap: _scrollToMap,
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.location_on_outlined,
-                        size: 15,
-                        color: Color(0xFF3B82F6),
-                      ),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          hotel.location,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: Color(0xFF3B82F6),
-                            fontWeight: FontWeight.w500,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      const Icon(
-                        Icons.chevron_right_rounded,
-                        size: 18,
-                        color: Color(0xFF3B82F6),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 12),
-                Container(height: 1, color: const Color(0xFFF1F5F9)),
-                const SizedBox(height: 10),
-                // rating + reviews row (keep as-is)
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                const ReviewPage(bookingId: '0'),
-                          ),
-                        );
-                      },
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 7,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFFEF3C7),
-                              borderRadius: BorderRadius.circular(24),
-                            ),
-                            child: Row(
-                              children: [
-                                const Icon(
-                                  Icons.star_outline_rounded,
-                                  color: Color(0xFFF59E0B),
-                                  size: 16,
+                    const SizedBox(height: 12),
+                    Container(height: 1, color: const Color(0xFFF1F5F9)),
+                    const SizedBox(height: 10),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const ReviewPage(
+                                  bookingId: '0',
+                                ), // BARU PROTO, MSH MIKIR
+                              ),
+                            );
+                          },
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 7,
                                 ),
-                                const SizedBox(width: 5),
-                                Text(
-                                  '$rating / 5',
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w700,
-                                    color: Color(0xFFF59E0B),
-                                  ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFEF3C7),
+                                  borderRadius: BorderRadius.circular(24),
                                 ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 14),
-                          SizedBox(
-                            width: 72,
-                            height: 30,
-                            child: Stack(
-                              children: [
-                                for (int i = 0; i < 3; i++)
-                                  Positioned(
-                                    left: i * 20.0,
-                                    child: Container(
-                                      width: 30,
-                                      height: 30,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: [
-                                          const Color(0xFF94A3B8),
-                                          const Color(0xFF64748B),
-                                          const Color(0xFF3B82F6),
-                                        ][i],
-                                        border: Border.all(
-                                          color: Colors.white,
-                                          width: 2,
-                                        ),
-                                      ),
-                                      child: const Icon(
-                                        Icons.person,
-                                        size: 16,
-                                        color: Colors.white,
+                                child: Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.star_outline_rounded,
+                                      color: Color(0xFFF59E0B),
+                                      size: 16,
+                                    ),
+                                    const SizedBox(width: 5),
+                                    Text(
+                                      '$rating / 5',
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w700,
+                                        color: Color(0xFFF59E0B),
                                       ),
                                     ),
-                                  ),
-                              ],
-                            ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 14),
+                              SizedBox(
+                                width: 72,
+                                height: 30,
+                                child: Stack(
+                                  children: [
+                                    for (int i = 0; i < 3; i++)
+                                      Positioned(
+                                        left: i * 20.0,
+                                        child: Container(
+                                          width: 30,
+                                          height: 30,
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color: [
+                                              const Color(0xFF94A3B8),
+                                              const Color(0xFF64748B),
+                                              const Color(0xFF3B82F6),
+                                            ][i],
+                                            border: Border.all(
+                                              color: Colors.white,
+                                              width: 2,
+                                            ),
+                                          ),
+                                          child: const Icon(
+                                            Icons.person,
+                                            size: 16,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                '${totalReviews > 99 ? '99+' : totalReviews}',
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: Color(0xFF64748B),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(width: 6),
-                          Text(
-                            '${totalReviews > 99 ? '99+' : totalReviews}',
-                            style: const TextStyle(
-                              fontSize: 13,
-                              color: Color(0xFF64748B),
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ],
+              ),
             ),
-          ),
+          ],
         ),
 
-        const SizedBox(height: 24),
+        const SizedBox(height: 144),
 
         if (hotelImages.length >= 2)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Carousel(imageUrls: hotelImages, height: 220),
+          ),
+
+        if (hotelImages.length < 2)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Container(
+              height: 2,
+              color: const Color.fromARGB(255, 213, 218, 224),
+            ),
           ),
 
         const SizedBox(height: 24),
@@ -615,56 +631,60 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
               Container(height: 1, color: const Color(0xFFF1F5F9)),
               const SizedBox(height: 20),
 
-              const Text(
-                'Locations',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF1E293B),
-                ),
-              ),
-              const SizedBox(height: 16),
-              // new
-              ClipRRect(
+              Container(
                 key: _mapKey,
-                borderRadius: BorderRadius.circular(16),
-                child: SizedBox(
-                  height: 220,
-                  child: FlutterMap(
-                    mapController: _mapController,
-                    options: MapOptions(
-                      initialCenter: _center,
-                      initialZoom: 16,
-                      interactionOptions: const InteractionOptions(
-                        flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Locations',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF1E293B),
                       ),
                     ),
-                    children: [
-                      TileLayer(
-                        urlTemplate:
-                            'https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=$_maptilerKey',
-                        userAgentPackageName: 'com.example.frontend',
-                      ),
-                      MarkerLayer(
-                        markers: [
-                          Marker(
-                            point: _center,
-                            width: 50,
-                            height: 50,
-                            alignment: Alignment.topCenter,
-                            child: const Icon(
-                              Icons.location_on,
-                              color: Color(0xFFEF4444),
-                              size: 45,
-                            ),
+                    const SizedBox(height: 16),
+
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: SizedBox(
+                        height: 220,
+                        child: FlutterMap(
+                          mapController: _mapController,
+                          options: MapOptions(
+                            initialCenter: _center,
+                            initialZoom: 16,
                           ),
-                        ],
+                          children: [
+                            TileLayer(
+                              urlTemplate:
+                                  'https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=$_maptilerKey',
+                              userAgentPackageName: 'com.example.frontend',
+                            ),
+                            MarkerLayer(
+                              markers: [
+                                Marker(
+                                  point: _center,
+                                  width: 50,
+                                  height: 50,
+                                  alignment: Alignment.topCenter,
+                                  child: const Icon(
+                                    Icons.location_on,
+                                    color: Color(0xFFEF4444),
+                                    size: 45,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 32),
+                  ],
                 ),
               ),
-              const SizedBox(height: 32),
             ],
           ),
         ),

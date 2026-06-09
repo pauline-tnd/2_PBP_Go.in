@@ -50,9 +50,9 @@ Route::middleware('auth:sanctum')->group(function () {
         ->only(['index', 'store', 'destroy']);
 
     // Bookings
+    Route::get('bookings/{id}/review-details', [BookingController::class, 'reviewDetails']);
     Route::apiResource('bookings', BookingController::class);
     // Route::get('users/{user}/bookings', [BookingController::class, 'userBookings']);
-    Route::get('/bookings/{id}/review-details', [BookingController::class, 'reviewDetails']);
 
     // Booking Details
     Route::apiResource('booking-details', BookingDetailController::class);
