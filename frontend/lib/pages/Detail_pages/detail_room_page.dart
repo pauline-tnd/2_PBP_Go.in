@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/widgets/booking_confirmation_pop_up.dart';
 import 'package:intl/intl.dart';
 import 'package:frontend/models/bookingDetail.dart' as booking_detail;
 import 'package:frontend/models/room.dart';
@@ -16,6 +17,7 @@ class DetailRoomPage extends StatefulWidget {
   final List<Map<String, dynamic>> reviews;
   final String hotelName;
   final double reviewScore;
+  final List<booking_detail.BookingDetail> tempBookedList;
 
   const DetailRoomPage({
     super.key,
@@ -27,6 +29,7 @@ class DetailRoomPage extends StatefulWidget {
     required this.reviews,
     required this.hotelName,
     required this.reviewScore,
+    this.tempBookedList = const [],
   });
 
   @override
@@ -36,6 +39,13 @@ class DetailRoomPage extends StatefulWidget {
 class _DetailRoomPageState extends State<DetailRoomPage> {
   int _currentImageIndex = 0;
   final PageController _pageController = PageController();
+  late List<booking_detail.BookingDetail> _localTempList;
+
+  @override
+  void initState() {
+    super.initState();
+    _localTempList = List.from(widget.tempBookedList);
+  }
 
   List<Map<String, dynamic>> _getMainAmenities() {
     const mainAmenitiesList = [
@@ -69,6 +79,46 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
     super.dispose();
   }
 
+  void _openAddOnPopUp() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => AddOnPopUp(
+        roomType: widget.room.type,
+        addOns: widget.addOns,
+        room: booking_detail.Room(
+          id: widget.room.id,
+          type: widget.room.type,
+          price: widget.room.price,
+        ),
+        roomImage: widget.imageUrls.isNotEmpty ? widget.imageUrls.first : '',
+        existingBookings: _localTempList,
+        onConfirmationCustomAnother: (updatedList) {
+          setState(() {
+            _localTempList = List.from(updatedList);
+          });
+
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            backgroundColor: Colors.transparent,
+            builder: (popupContext) => BookingConfirmationPopUp(
+              bookingDetails: updatedList,
+              onCustomAnother: () {
+                Navigator.pop(popupContext);
+
+                Future.delayed(Duration(milliseconds: 150), () {
+                  _openAddOnPopUp();
+                });
+              },
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final room = widget.room;
@@ -87,7 +137,7 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
             pinned: true,
             expandedHeight: 0,
             leading: GestureDetector(
-              onTap: () => Navigator.pop(context),
+              onTap: () => Navigator.pop(context, _localTempList),
               child: Container(
                 margin: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
@@ -504,43 +554,79 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
       bottomNavigationBar: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-          child: SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () {
-                showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  backgroundColor: Colors.transparent,
-                  builder: (_) => AddOnPopUp(
-                    roomType: widget.room.type,
-                    addOns: widget.addOns,
-                    room: booking_detail.Room(
-                      id: widget.room.id,
-                      type: widget.room.type,
-                      price: widget.room.price,
+          child: _localTempList.isEmpty
+              ? SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _openAddOnPopUp,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF3B82F6),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      elevation: 0,
                     ),
-                    roomImage: widget.imageUrls.isNotEmpty
-                        ? widget.imageUrls.first
-                        : '',
+                    child: const Text(
+                      'Book Now',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF3B82F6),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
+                )
+              : Row(
+                  children: [
+                    Expanded(
+                      child: SizedBox(
+                        height: 52,
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: Color(0xFFE2E8F0)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                          ),
+                          child: const Text(
+                            'Cancel',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF64748B),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: SizedBox(
+                        height: 52,
+                        child: ElevatedButton(
+                          onPressed: _openAddOnPopUp,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF3B82F6),
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            elevation: 0,
+                          ),
+                          child: const Text(
+                            'Add New Room',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                elevation: 0,
-              ),
-              child: const Text(
-                'Book Now',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-              ),
-            ),
-          ),
         ),
       ),
     );

@@ -11,6 +11,9 @@ class AddOnPopUp extends StatefulWidget {
   final String roomImage;
   final String initialNotes;
   final void Function(List<AddOnItem> selected, String notes)? onContinue;
+  final List<BookingDetail>? existingBookings;
+  final int? editIndex;
+  final void Function(List<BookingDetail>)? onConfirmationCustomAnother;
 
   const AddOnPopUp({
     super.key,
@@ -20,6 +23,9 @@ class AddOnPopUp extends StatefulWidget {
     required this.roomImage,
     this.initialNotes = '',
     this.onContinue,
+    this.existingBookings,
+    this.editIndex,
+    this.onConfirmationCustomAnother,
   });
 
   @override
@@ -51,40 +57,29 @@ class _AddOnPopUpState extends State<AddOnPopUp> {
       return;
     }
 
-    Navigator.pop(context);
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => BookingConfirmationPopUp(
-        bookingDetails: [
-          BookingDetail(
-            id: 0,
-            room: widget.room,
-            quantity: 1,
-            roomImage: widget.roomImage,
-            notes: _notesController.text,
-            selectedAddOns: selected,
-          ),
-        ],
-        onCustomAnother: () {
-          showModalBottomSheet(
-            context: context,
-            isScrollControlled: true,
-            backgroundColor: Colors.transparent,
-            builder: (_) => AddOnPopUp(
-              roomType: widget.roomType,
-              addOns: widget.addOns,
-              room: widget.room,
-              roomImage: widget.roomImage,
-            ),
-          );
-        },
-        onBookNow: () {
-          Navigator.pop(context);
-        },
-      ),
+    final newDetail = BookingDetail(
+      id: 0,
+      room: widget.room,
+      quantity: 1,
+      roomImage: widget.roomImage,
+      notes: _notesController.text,
+      selectedAddOns: selected,
     );
+    final int? editIndex;
+    final List<BookingDetail> allDetails = List.from(
+      widget.existingBookings ?? <BookingDetail>[],
+    );
+
+    if (widget.editIndex != null && widget.editIndex! < allDetails.length) {
+      allDetails[widget.editIndex!] = newDetail;
+    } else {
+      allDetails.add(newDetail);
+    }
+    Navigator.pop(context);
+
+    Future.delayed(Duration(milliseconds: 100), () {
+      widget.onConfirmationCustomAnother?.call(allDetails);
+    });
   }
 
   @override

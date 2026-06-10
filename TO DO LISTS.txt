@@ -18,6 +18,5 @@ add on
 - link ke list review untuk reviewnya
 
 booking
-- custom another button
-- Book Now button 
-- pastikan kalau ada 2 item, ada warning
+- [DONE] custom another button (ON GOING)
+- Book Now button (tugas Abi)

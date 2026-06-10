@@ -4,7 +4,7 @@ import 'package:frontend/models/addOn.dart';
 class BookingDetail {
   final int id;
   final Room room;
-  final int quantity;
+  int quantity;
   String notes;
   final String roomImage;
   List<AddOnItem> selectedAddOns;

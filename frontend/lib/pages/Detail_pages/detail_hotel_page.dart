@@ -1,19 +1,25 @@
 import 'package:flutter/material.dart';
+
 import 'package:frontend/models/hotel.dart';
 import 'package:frontend/models/review.dart';
 import 'package:frontend/models/room.dart';
-import 'package:frontend/pages/settings/review_detail_page.dart';
+import 'package:frontend/models/facility.dart';
+import 'package:frontend/models/bookingDetail.dart' as details;
+
 import 'package:frontend/widgets/room_card.dart';
 import 'package:frontend/widgets/hotel_image.dart';
+import 'package:frontend/widgets/common/carousel.dart';
+import 'package:frontend/widgets/booking_confirmation_pop_up.dart';
+
 import 'package:frontend/services/api_services.dart';
 import 'package:frontend/extensions/snackbar.dart';
-import 'package:frontend/models/facility.dart';
-import 'package:frontend/widgets/common/carousel.dart';
-import 'package:frontend/pages/review_page.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+
+import 'package:frontend/pages/settings/review_detail_page.dart';
+import 'package:frontend/pages/review_page.dart';
 
 class DetailHotelPage extends StatefulWidget {
   final Hotel hotel;
@@ -33,6 +39,7 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
   int? _wishlistId;
   Map<String, dynamic>? _hotelDetail;
   List<Room> _rooms = [];
+  List<details.BookingDetail> _tempBookedList = [];
   bool _loading = true;
   String? _error;
   final MapController _mapController = MapController();
@@ -168,6 +175,90 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
     super.dispose();
   }
 
+  Widget _buildMiniBookingBar() {
+    final count = _tempBookedList.length;
+    final title = count == 1
+        ? _tempBookedList.first.room.type
+        : '$count rooms selected';
+
+    return GestureDetector(
+      onTap: _showFullConfirmation,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.12),
+              blurRadius: 20,
+              offset: const Offset(0, -4),
+            ),
+          ],
+        ),
+        child: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 10),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF94A3B8),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF1E293B),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const Icon(
+                      Icons.keyboard_arrow_up_rounded,
+                      color: Color(0xFF94A3B8),
+                      size: 24,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showFullConfirmation() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) => BookingConfirmationPopUp(
+        bookingDetails: _tempBookedList,
+        onCustomAnother: () => Navigator.pop(sheetContext),
+        onBookingListChanged: (updatedList) {
+          setState(() {
+            _tempBookedList = List.from(updatedList);
+          });
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_loading) {
@@ -238,6 +329,9 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
           SliverToBoxAdapter(child: _buildBody(widget.hotel)),
         ],
       ),
+      bottomNavigationBar: _tempBookedList.isNotEmpty
+          ? _buildMiniBookingBar()
+          : null,
     );
   }
 
@@ -624,6 +718,14 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
                     imageUrls: roomImages,
                     hotelName: hotel.name,
                     reviewScore: double.tryParse(rating) ?? hotel.userRating,
+                    tempBookedList: _tempBookedList,
+                    onNavigatedBack: (updatedList) {
+                      if (mounted) {
+                        setState(
+                          () => _tempBookedList = List.from(updatedList),
+                        );
+                      }
+                    },
                   );
                 }),
 

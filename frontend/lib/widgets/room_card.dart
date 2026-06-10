@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:frontend/pages/Detail_pages/detail_room_page.dart';
 import 'package:frontend/models/addOn.dart';
+import 'package:frontend/models/facility.dart';
+import 'package:frontend/models/bookingDetail.dart' as details;
 
 import '../models/room.dart';
 import 'package:frontend/widgets/common/carousel.dart';
@@ -16,6 +18,8 @@ class RoomCard extends StatefulWidget {
   final List<Map<String, dynamic>> reviews;
   final String hotelName;
   final double reviewScore;
+  final List<details.BookingDetail> tempBookedList;
+  final void Function(List<details.BookingDetail>)? onNavigatedBack;
 
   const RoomCard({
     super.key,
@@ -28,6 +32,8 @@ class RoomCard extends StatefulWidget {
     this.reviews = const [],
     this.hotelName = 'Hotel',
     this.reviewScore = 0,
+    this.tempBookedList = const [],
+    this.onNavigatedBack,
   });
 
   @override
@@ -35,7 +41,7 @@ class RoomCard extends StatefulWidget {
 }
 
 class _RoomCardState extends State<RoomCard> {
-  void _openDetailRoomPage() {
+  Future<void> _openDetailRoomPage() async {
     final imageUrls = widget.room.roomImages.isNotEmpty
         ? widget.room.roomImages
         : widget.imageUrls.isNotEmpty
@@ -43,7 +49,7 @@ class _RoomCardState extends State<RoomCard> {
         : [if (widget.imageUrl != null) widget.imageUrl!];
     final addOns = widget.addOns ?? widget.room.addOns;
 
-    Navigator.push(
+    final result = await Navigator.push<List<details.BookingDetail>>(
       context,
       MaterialPageRoute(
         builder: (context) => DetailRoomPage(
@@ -55,9 +61,15 @@ class _RoomCardState extends State<RoomCard> {
           reviews: widget.reviews,
           hotelName: widget.hotelName,
           reviewScore: widget.reviewScore,
+
+          tempBookedList: widget.tempBookedList,
         ),
       ),
     );
+
+    if (result != null) {
+      widget.onNavigatedBack?.call(result);
+    }
   }
 
   @override

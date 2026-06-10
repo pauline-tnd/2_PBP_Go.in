@@ -10,6 +10,7 @@ class BookingConfirmationPopUp extends StatefulWidget {
   final void Function(int index)? onEditItem;
   final void Function(int index)? onDeleteItem;
   final void Function()? onNavigateToHotel;
+  final void Function(List<BookingDetail>)? onBookingListChanged;
 
   const BookingConfirmationPopUp({
     super.key,
@@ -19,6 +20,7 @@ class BookingConfirmationPopUp extends StatefulWidget {
     this.onEditItem,
     this.onDeleteItem,
     this.onNavigateToHotel,
+    this.onBookingListChanged,
   });
 
   @override
@@ -117,7 +119,7 @@ class _BookingConfirmationPopUpState extends State<BookingConfirmationPopUp> {
                       ),
                       _IconAction(
                         icon: Icons.edit_outlined,
-                        onPressed: () => _showEditPopUp(context, detail),
+                        onPressed: () => _showEditPopUp(context, detail, index),
                       ),
                       _IconAction(
                         icon: Icons.delete_outline,
@@ -125,12 +127,54 @@ class _BookingConfirmationPopUpState extends State<BookingConfirmationPopUp> {
                             _showDeleteConfirmation(context, index),
                       ),
                       const SizedBox(width: 4),
-                      Text(
-                        '${detail.quantity}x',
-                        style: TextStyle(
-                          fontSize: titleSize,
-                          fontWeight: FontWeight.w700,
-                          color: _dark,
+                      Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey.shade300),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            InkWell(
+                              onTap: () {
+                                if (detail.quantity > 1) {
+                                  setState(() {
+                                    detail.quantity--;
+                                  });
+                                }
+                              },
+                              child: const Padding(
+                                padding: EdgeInsets.all(4),
+                                child: Icon(Icons.remove, size: 18),
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                              ),
+                              child: Text(
+                                detail.quantity.toString(),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            InkWell(
+                              onTap: () {
+                                setState(() {
+                                  detail.quantity++;
+                                });
+
+                                widget.onBookingListChanged?.call(
+                                  List.from(widget.bookingDetails),
+                                );
+                              },
+                              child: const Padding(
+                                padding: EdgeInsets.all(4),
+                                child: Icon(Icons.add, size: 18),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
@@ -174,7 +218,7 @@ class _BookingConfirmationPopUpState extends State<BookingConfirmationPopUp> {
     );
   }
 
-  void _showEditPopUp(BuildContext context, BookingDetail detail) {
+  void _showEditPopUp(BuildContext context, BookingDetail detail, int index) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -185,6 +229,15 @@ class _BookingConfirmationPopUpState extends State<BookingConfirmationPopUp> {
         room: detail.room,
         roomImage: detail.roomImage,
         initialNotes: detail.notes,
+        existingBookings: widget.bookingDetails,
+        editIndex: index,
+        onConfirmationCustomAnother: (updatedList) {
+          setState(() {
+            widget.bookingDetails
+              ..clear()
+              ..addAll(updatedList);
+          });
+        },
         onContinue: (selected, notes) {
           setState(() {
             detail.selectedAddOns.clear();
@@ -226,13 +279,18 @@ class _BookingConfirmationPopUpState extends State<BookingConfirmationPopUp> {
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-              if (widget.bookingDetails.length == 1) {
+              setState(() {
+                widget.bookingDetails.removeAt(index);
+              });
+
+              widget.onDeleteItem?.call(index);
+
+              widget.onBookingListChanged?.call(
+                List.from(widget.bookingDetails),
+              );
+
+              if (widget.bookingDetails.isEmpty) {
                 Navigator.pop(context);
-                widget.onNavigateToHotel?.call();
-              } else {
-                setState(() {
-                  widget.bookingDetails.removeAt(index);
-                });
               }
             },
             child: const Text(
@@ -357,6 +415,9 @@ class _BookingConfirmationPopUpState extends State<BookingConfirmationPopUp> {
                         child: _BottomActionButton(
                           label: 'Book Now',
                           onPressed: widget.onBookNow,
+                          // to Abi: panggilnya lewat sini. Lalu plis,
+                          // ini textcontroller untuk jmlh msh angka
+                          // jadi harus diubah menjadi list dulu
                         ),
                       ),
                     ],
