@@ -41,13 +41,13 @@ class Room {
     final rawFacilities = json['room_facilities'] as List<dynamic>? ?? [];
 
     return Room(
-      id: json['id'] ?? 0,
-      hotelId: json['hotel_id'] ?? 0,
-      type: json['type'] ?? 'No Type',
-      description: json['description'] ?? 'No Description',
-      price: json['price'] ?? 0.0,
-      capacity: json['capacity'] ?? 0,
-      roomSize: json['room_size'] ?? 'No Size',
+      id: parseInt(json['id']),
+      hotelId: parseInt(json['hotel_id']),
+      price: parseDouble(json['price']),
+      capacity: parseInt(json['capacity']),
+      type: json['type']?.toString() ?? 'No Type',
+      description: json['description']?.toString() ?? 'No Description',
+      roomSize: json['room_size']?.toString() ?? 'No Size',
       addOns: rawAddOns
           .map(
             (e) => AddOnItem(

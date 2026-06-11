@@ -117,10 +117,21 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
       setState(() {
         _hotelDetail = hotelDetail;
         _isWishlisted = data['is_wishlist'] ?? false;
-        _rooms = roomsRaw
-            .whereType<Map<String, dynamic>>()
-            .map((r) => Room.fromJson({...r, 'hotel': hotelDetail}))
-            .toList();
+        _rooms = [];
+
+        for (final r in roomsRaw) {
+          try {
+            final roomData = Map<String, dynamic>.from(r);
+
+            roomData['price'] =
+                double.tryParse(roomData['price']?.toString() ?? '') ?? 0.0;
+
+            _rooms.add(Room.fromJson({...roomData, 'hotel': hotelDetail}));
+          } catch (e, s) {
+            debugPrint('ROOM ERROR: $e');
+            debugPrint('$s');
+          }
+        }
 
         if (lat != null && lng != null) {
           _center = LatLng(lat, lng);
@@ -476,14 +487,39 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
                       children: [
                         GestureDetector(
                           onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const ReviewPage(
-                                  bookingId: '0',
-                                ), // BARU PROTO, MSH MIKIR
-                              ),
-                            );
+                            try {
+                              final reviews =
+                                  (_hotelDetail?['reviews'] as List<dynamic>? ??
+                                          [])
+                                      .whereType<Map<String, dynamic>>()
+                                      .map((r) {
+                                        final review =
+                                            Map<String, dynamic>.from(r);
+
+                                        review['description'] =
+                                            review['description']?.toString() ??
+                                            '';
+
+                                        review['created_at'] =
+                                            review['created_at']?.toString();
+
+                                        review['image'] = review['image']
+                                            ?.toString();
+
+                                        return Review.fromJson(review);
+                                      })
+                                      .toList();
+
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      ReviewDetailPage(reviews: reviews),
+                                ),
+                              );
+                            } catch (e) {
+                              debugPrint('Review parse error: $e');
+                            }
                           },
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.end,
@@ -666,9 +702,12 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
                   spacing: 8,
                   runSpacing: 8,
                   children: displayFacilities.map((f) {
-                    final facility = Facility.fromJson(
+                    final raw = Map<String, dynamic>.from(
                       f as Map<String, dynamic>,
                     );
+
+                    final facility = Facility.fromJson(raw);
+
                     return _FacilityChip(facility: facility);
                   }).toList(),
                 ),
@@ -835,9 +874,13 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
                   spacing: 8,
                   runSpacing: 8,
                   children: facilities.map((f) {
-                    final facility = Facility.fromJson(
+                    final raw = Map<String, dynamic>.from(
                       f as Map<String, dynamic>,
                     );
+
+                    raw['name'] = raw['name']?.toString() ?? '';
+
+                    final facility = Facility.fromJson(raw);
                     return _FacilityChip(facility: facility);
                   }).toList(),
                 ),
@@ -854,10 +897,34 @@ class _FacilityChip extends StatelessWidget {
   final Facility facility;
   const _FacilityChip({required this.facility});
 
+  IconData getFacilityIcon(String icon) {
+    switch (icon) {
+      case 'wifi_rounded':
+        return Icons.wifi_rounded;
+
+      case 'spa_rounded':
+        return Icons.spa_rounded;
+
+      case 'restaurant_rounded':
+        return Icons.restaurant_rounded;
+
+      case 'local_laundry_service_rounded':
+        return Icons.local_laundry_service_rounded;
+
+      case 'pool_rounded':
+        return Icons.pool_rounded;
+
+      case 'airport_shuttle_rounded':
+        return Icons.airport_shuttle_rounded;
+
+      default:
+        return Icons.check_circle_outline_rounded;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final icon =
-        Facility.iconMap[facility.icon] ?? Icons.check_circle_outline_rounded;
+    final icon = getFacilityIcon(facility.icon);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
