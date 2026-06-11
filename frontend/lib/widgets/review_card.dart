@@ -52,7 +52,13 @@ class ReviewCard extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             // Description review
-            Text(review.description),
+            Expanded(
+              child: Text(
+                review.description,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
             if (review.image != null) ...[
               const SizedBox(height: 10),
               GestureDetector(

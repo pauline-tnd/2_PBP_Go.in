@@ -4,6 +4,7 @@ import 'package:frontend/models/hotel.dart';
 import 'package:frontend/models/review.dart';
 import 'package:frontend/models/room.dart';
 import 'package:frontend/models/bookingDetail.dart' as details;
+import 'package:frontend/models/facilityIcons.dart';
 
 import 'package:frontend/widgets/room_card.dart';
 import 'package:frontend/widgets/hotel_image.dart';
@@ -154,29 +155,45 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
 
   Future<void> _toggleWishlist() async {
     if (_isWishlistLoading) return;
+
     setState(() => _isWishlistLoading = true);
+
     try {
       if (_isWishlisted) {
         if (_wishlistId != null) {
           await ApiService.deleteWishlist(_wishlistId!);
-          // } else {
-          //   await ApiService.deleteWishlistByHotelId(widget.hotel.id);
         }
-        _wishlistId = null;
-        if (mounted) context.showAppSnackBar('Removed from wishlist');
+
+        if (mounted) {
+          setState(() {
+            _isWishlisted = false;
+            _wishlistId = null;
+          });
+
+          context.showAppSnackBar('Removed from wishlist');
+        }
       } else {
-        final response = await ApiService.storeWishlist(widget.hotel.id);
-        final data = response['data'];
-        _wishlistId = data is Map<String, dynamic>
-            ? int.tryParse(data['id'].toString())
-            : null;
-        if (mounted) context.showAppSnackBar('Added to wishlist');
+        await ApiService.storeWishlist(widget.hotel.id);
+
+        if (mounted) {
+          setState(() {
+            _isWishlisted = true;
+          });
+
+          context.showAppSnackBar('Added to wishlist');
+        }
       }
-      if (mounted) setState(() => _isWishlisted = !_isWishlisted);
-    } catch (e) {
-      if (mounted) context.showAppSnackBar('Failed: $e', isError: true);
+    } catch (e, s) {
+      debugPrint('Wishlist error: $e');
+      debugPrint('$s');
+
+      if (mounted) {
+        context.showAppSnackBar('Failed: $e', isError: true);
+      }
     } finally {
-      if (mounted) setState(() => _isWishlistLoading = false);
+      if (mounted) {
+        setState(() => _isWishlistLoading = false);
+      }
     }
   }
 
@@ -351,6 +368,18 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
         .whereType<String>()
         .toList();
 
+    final List<String> carouselImages = [];
+
+    if (hotelImages.isNotEmpty) {
+      carouselImages.add(hotelImages.first);
+    }
+    if (_rooms.isNotEmpty && _rooms.first.roomImages.isNotEmpty) {
+      carouselImages.add(_rooms.first.roomImages[0]);
+    }
+    if (_rooms.isNotEmpty && _rooms.first.roomImages.length > 1) {
+      carouselImages.add(_rooms.first.roomImages[1]);
+    }
+
     final facilities =
         (_hotelDetail?['hotel_facilities'] as List<dynamic>? ?? []);
     final displayFacilities = facilities.take(6).toList();
@@ -379,243 +408,253 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Stack(
-          clipBehavior: Clip.none,
-          children: [
-            Positioned(
-              child: SizedBox(
-                height: 280,
-                width: double.infinity,
-                child: widget.hotel.imagePath != null
-                    ? Image.network(widget.hotel.imagePath!, fit: BoxFit.cover)
-                    : Container(color: const Color(0xFF1E3A5F)),
-              ),
-            ),
-
-            Positioned(
-              left: 16,
-              right: 16,
-              bottom: -90,
-              child: Container(
-                padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.10),
-                      blurRadius: 24,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
+        SizedBox(
+          height: 300,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Positioned(
+                child: SizedBox(
+                  height: 280,
+                  width: double.infinity,
+                  child: widget.hotel.imagePath != null
+                      ? Image.network(
+                          widget.hotel.imagePath!,
+                          fit: BoxFit.cover,
+                        )
+                      : Container(color: const Color(0xFF1E3A5F)),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            hotel.name,
-                            style: const TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.w800,
-                              color: Color(0xFF1E293B),
-                              height: 1.2,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Row(
-                          children: List.generate(
-                            5,
-                            (index) => Icon(
-                              index < num.parse(rating)
-                                  ? Icons.star
-                                  : Icons.star_border_outlined,
-                              size: 18,
-                              color: Color(0xFFFBBF24),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
+              ),
 
-                    Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () {
-                          _scrollToMap();
-                        },
-                        child: Row(
-                          children: [
-                            const Icon(
-                              Icons.location_on_outlined,
-                              size: 15,
-                              color: Color(0xFF3B82F6),
-                            ),
-                            const SizedBox(width: 4),
-                            Expanded(
-                              child: Text(
-                                hotel.location,
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  color: Color(0xFF3B82F6),
-                                  fontWeight: FontWeight.w500,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+              Positioned(
+                left: 16,
+                right: 16,
+                bottom: -90,
+                child: Container(
+                  padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.10),
+                        blurRadius: 24,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              hotel.name,
+                              style: const TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFF1E293B),
+                                height: 1.2,
                               ),
                             ),
-                            const Icon(
-                              Icons.chevron_right_rounded,
-                              size: 18,
-                              color: Color(0xFF3B82F6),
+                          ),
+                          const SizedBox(width: 8),
+                          Row(
+                            children: List.generate(
+                              5,
+                              (index) => Icon(
+                                // index < num.parse(rating) ?
+                                Icons
+                                    .star, // plan awalnya sesuai review, tapi mengikuti desain
+                                // : Icons.star_border_outlined
+                                size: 18,
+                                color: Color(0xFFFBBF24),
+                              ),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                    ),
+                      const SizedBox(height: 12),
 
-                    const SizedBox(height: 12),
-                    Container(height: 1, color: const Color(0xFFF1F5F9)),
-                    const SizedBox(height: 10),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        GestureDetector(
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(
                           onTap: () {
-                            try {
-                              final reviews =
-                                  (_hotelDetail?['reviews'] as List<dynamic>? ??
-                                          [])
-                                      .whereType<Map<String, dynamic>>()
-                                      .map((r) {
-                                        final review =
-                                            Map<String, dynamic>.from(r);
-
-                                        review['description'] =
-                                            review['description']?.toString() ??
-                                            '';
-
-                                        review['created_at'] =
-                                            review['created_at']?.toString();
-
-                                        review['image'] = review['image']
-                                            ?.toString();
-
-                                        return Review.fromJson(review);
-                                      })
-                                      .toList();
-
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      ReviewDetailPage(reviews: reviews),
-                                ),
-                              );
-                            } catch (e) {
-                              debugPrint('Review parse error: $e');
-                            }
+                            _scrollToMap();
                           },
                           child: Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
                             children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 7,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFFEF3C7),
-                                  borderRadius: BorderRadius.circular(24),
-                                ),
-                                child: Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.star_outline_rounded,
-                                      color: Color(0xFFF59E0B),
-                                      size: 16,
-                                    ),
-                                    const SizedBox(width: 5),
-                                    Text(
-                                      '$rating / 5',
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w700,
-                                        color: Color(0xFFF59E0B),
-                                      ),
-                                    ),
-                                  ],
+                              const Icon(
+                                Icons.location_on_outlined,
+                                size: 15,
+                                color: Color(0xFF3B82F6),
+                              ),
+                              const SizedBox(width: 4),
+                              Expanded(
+                                child: Text(
+                                  hotel.location,
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    color: Color(0xFF3B82F6),
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
-                              const SizedBox(width: 14),
-                              SizedBox(
-                                width: 72,
-                                height: 30,
-                                child: Stack(
-                                  children: [
-                                    for (int i = 0; i < 3; i++)
-                                      Positioned(
-                                        left: i * 20.0,
-                                        child: Container(
-                                          width: 30,
-                                          height: 30,
-                                          decoration: BoxDecoration(
-                                            shape: BoxShape.circle,
-                                            color: [
-                                              const Color(0xFF94A3B8),
-                                              const Color(0xFF64748B),
-                                              const Color(0xFF3B82F6),
-                                            ][i],
-                                            border: Border.all(
-                                              color: Colors.white,
-                                              width: 2,
-                                            ),
-                                          ),
-                                          child: const Icon(
-                                            Icons.person,
-                                            size: 16,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                '${totalReviews > 99 ? '99+' : totalReviews}',
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  color: Color(0xFF64748B),
-                                  fontWeight: FontWeight.w500,
-                                ),
+                              const Icon(
+                                Icons.chevron_right_rounded,
+                                size: 18,
+                                color: Color(0xFF3B82F6),
                               ),
                             ],
                           ),
                         ),
-                      ],
-                    ),
-                  ],
+                      ),
+
+                      const SizedBox(height: 12),
+                      Container(height: 1, color: const Color(0xFFF1F5F9)),
+                      const SizedBox(height: 10),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            onTap: () {
+                              try {
+                                final reviews =
+                                    (_hotelDetail?['reviews']
+                                                as List<dynamic>? ??
+                                            [])
+                                        .whereType<Map<String, dynamic>>()
+                                        .map((r) {
+                                          final review =
+                                              Map<String, dynamic>.from(r);
+
+                                          review['description'] =
+                                              review['description']
+                                                  ?.toString() ??
+                                              '';
+
+                                          review['created_at'] =
+                                              review['created_at']?.toString();
+
+                                          review['image'] = review['image']
+                                              ?.toString();
+
+                                          return Review.fromJson(review);
+                                        })
+                                        .toList();
+
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        ReviewDetailPage(reviews: reviews),
+                                  ),
+                                );
+                              } catch (e) {
+                                debugPrint('Review parse error: $e');
+                              }
+                            },
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 7,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFFEF3C7),
+                                    borderRadius: BorderRadius.circular(24),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.star_outline_rounded,
+                                        color: Color(0xFFF59E0B),
+                                        size: 16,
+                                      ),
+                                      const SizedBox(width: 5),
+                                      Text(
+                                        '$rating / 5',
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w700,
+                                          color: Color(0xFFF59E0B),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 14),
+                                SizedBox(
+                                  width: 72,
+                                  height: 30,
+                                  child: Stack(
+                                    children: [
+                                      for (int i = 0; i < 3; i++)
+                                        Positioned(
+                                          left: i * 20.0,
+                                          child: Container(
+                                            width: 30,
+                                            height: 30,
+                                            decoration: BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              color: [
+                                                const Color(0xFF94A3B8),
+                                                const Color(0xFF64748B),
+                                                const Color(0xFF3B82F6),
+                                              ][i],
+                                              border: Border.all(
+                                                color: Colors.white,
+                                                width: 2,
+                                              ),
+                                            ),
+                                            child: const Icon(
+                                              Icons.person,
+                                              size: 16,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  '${totalReviews > 99 ? '99+' : totalReviews}',
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    color: Color(0xFF64748B),
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
 
         const SizedBox(height: 144),
 
-        if (hotelImages.length >= 2)
+        if (carouselImages.isNotEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Carousel(imageUrls: hotelImages, height: 220),
+            child: Carousel(imageUrls: carouselImages, height: 220),
           ),
 
-        if (hotelImages.length < 2)
+        if (carouselImages.isEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Container(
@@ -706,7 +745,7 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
                       f as Map<String, dynamic>,
                     );
 
-                    final facility = Facility.fromJson(raw);
+                    final facility = FacilityIcons.fromJson(raw);
 
                     return _FacilityChip(facility: facility);
                   }).toList(),
@@ -880,7 +919,7 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
 
                     raw['name'] = raw['name']?.toString() ?? '';
 
-                    final facility = Facility.fromJson(raw);
+                    final facility = FacilityIcons.fromJson(raw);
                     return _FacilityChip(facility: facility);
                   }).toList(),
                 ),
@@ -894,32 +933,11 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
 }
 
 class _FacilityChip extends StatelessWidget {
-  final Facility facility;
+  final FacilityIcons facility;
   const _FacilityChip({required this.facility});
 
   IconData getFacilityIcon(String icon) {
-    switch (icon) {
-      case 'wifi_rounded':
-        return Icons.wifi_rounded;
-
-      case 'spa_rounded':
-        return Icons.spa_rounded;
-
-      case 'restaurant_rounded':
-        return Icons.restaurant_rounded;
-
-      case 'local_laundry_service_rounded':
-        return Icons.local_laundry_service_rounded;
-
-      case 'pool_rounded':
-        return Icons.pool_rounded;
-
-      case 'airport_shuttle_rounded':
-        return Icons.airport_shuttle_rounded;
-
-      default:
-        return Icons.check_circle_outline_rounded;
-    }
+    return FacilityIcons.iconMap[icon] ?? Icons.help_outline_rounded;
   }
 
   @override

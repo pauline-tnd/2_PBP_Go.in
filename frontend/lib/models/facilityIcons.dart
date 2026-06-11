@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-class Facility {
+class FacilityIcons {
   final String name;
   final String icon;
 
-  Facility({required this.name, required this.icon});
+  FacilityIcons({required this.name, required this.icon});
 
   static final Map<String, IconData> iconMap = {
     'wifi_rounded': Icons.wifi_rounded,
@@ -19,8 +19,8 @@ class Facility {
     'hot_tub_rounded': Icons.hot_tub_rounded,
   };
 
-  factory Facility.fromJson(Map<String, dynamic> json) {
-    return Facility(
+  factory FacilityIcons.fromJson(Map<String, dynamic> json) {
+    return FacilityIcons(
       name: json['name'] ?? '',
       icon: json['icon']?['icon']?.toString().trim() ?? '',
     );

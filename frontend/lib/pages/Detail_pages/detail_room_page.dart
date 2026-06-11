@@ -7,6 +7,8 @@ import 'package:frontend/models/addOn.dart';
 import 'package:frontend/widgets/room_image.dart';
 import 'package:frontend/widgets/add_on_pop_up.dart';
 import 'package:frontend/pages/review_page.dart';
+import 'package:frontend/models/review.dart';
+import 'package:frontend/widgets/review_card.dart';
 
 class DetailRoomPage extends StatefulWidget {
   final Room room;
@@ -522,24 +524,42 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                       const SizedBox(height: 12),
 
                       SizedBox(
-                        height: 120,
-                        child: ListView.separated(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: widget.reviews.length,
-                          separatorBuilder: (_, _) => const SizedBox(width: 12),
-                          itemBuilder: (context, index) => GestureDetector(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) =>
-                                      ReviewPage(bookingId: room.id.toString()),
+                        height: 200,
+                        child: widget.reviews.isEmpty
+                            ? const Center(
+                                child: Text(
+                                  'No reviews yet',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: Color(0xFF94A3B8),
+                                  ),
                                 ),
-                              );
-                            },
-                            // child: ReviewCard(review: widget.reviews[index]),
-                          ),
-                        ),
+                              )
+                            : ListView.separated(
+                                scrollDirection: Axis.horizontal,
+                                itemCount: widget.reviews.length,
+                                separatorBuilder: (_, __) =>
+                                    const SizedBox(width: 12),
+                                itemBuilder: (context, index) {
+                                  final review = Review.fromJson(
+                                    widget.reviews[index],
+                                  );
+                                  return SizedBox(
+                                    width: 260,
+                                    child: GestureDetector(
+                                      onTap: () => Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => ReviewPage(
+                                            bookingId: room.id.toString(),
+                                          ),
+                                        ),
+                                      ),
+                                      child: ReviewCard(review: review),
+                                    ),
+                                  );
+                                },
+                              ),
                       ),
 
                       const SizedBox(height: 32),

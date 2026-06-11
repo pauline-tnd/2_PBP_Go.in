@@ -41,14 +41,10 @@ class _CarouselState extends State<Carousel>
 
   void _goTo(int index) {
     if (index == _current || index < 0 || index >= _images.length) return;
-    setState(() => _animatingFrom = _current);
-    _animController.forward(from: 0).then((_) {
-      setState(() {
-        _current = index;
-        _animatingFrom = null;
-      });
+
+    setState(() {
+      _current = index;
     });
-    setState(() => _current = index);
   }
 
   int? get _leftIndex {
@@ -66,10 +62,10 @@ class _CarouselState extends State<Carousel>
     if (_images.isEmpty) return const SizedBox.shrink();
 
     final screenW = MediaQuery.of(context).size.width;
-    final centerW = screenW * 0.60;
-    final sideW = screenW * 0.38;
-    final centerH = widget.height;
-    final sideH = widget.height * 0.78;
+    final centerH = 150.0;
+    final centerW = 220.0;
+    final sideH = 105.0;
+    final sideW = 168.0;
 
     return GestureDetector(
       onHorizontalDragEnd: (details) {
@@ -81,14 +77,14 @@ class _CarouselState extends State<Carousel>
         }
       },
       child: SizedBox(
-        height: centerH + 12,
+        height: centerH + 20,
         child: Stack(
           alignment: Alignment.center,
           clipBehavior: Clip.none,
           children: [
             if (_leftIndex != null)
               Positioned(
-                left: 0,
+                left: 20,
                 bottom: 0,
                 child: GestureDetector(
                   onTap: () => _goTo(_leftIndex!),
@@ -117,7 +113,7 @@ class _CarouselState extends State<Carousel>
 
             if (_rightIndex != null && _rightIndex != _leftIndex)
               Positioned(
-                right: 0,
+                right: 20,
                 bottom: 0,
                 child: GestureDetector(
                   onTap: () => _goTo(_rightIndex!),

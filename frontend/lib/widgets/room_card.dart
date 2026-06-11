@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:frontend/pages/Detail_pages/detail_room_page.dart';
 import 'package:frontend/models/addOn.dart';
-import 'package:frontend/models/facility.dart';
+import 'package:frontend/models/facilityIcons.dart';
 import 'package:frontend/models/bookingDetail.dart' as details;
 
 import '../models/room.dart';
@@ -195,11 +195,16 @@ class _RoomCardState extends State<RoomCard> {
                       color: Color(0xFF94A3B8),
                     ),
                     const SizedBox(width: 4),
-                    Text(
-                      '1 ${room.type} bed',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: Color(0xFF64748B),
+
+                    Expanded(
+                      child: Text(
+                        '1 ${room.type} bed',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFF64748B),
+                        ),
                       ),
                     ),
                   ],
