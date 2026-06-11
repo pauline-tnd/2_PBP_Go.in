@@ -19,7 +19,7 @@ class _PasswordSecurityPageState extends State<PasswordSecurityPage> {
       child: Switch(
         value: value,
         onChanged: onChanged,
-        activeColor: Colors.white,
+        activeThumbColor: Colors.white,
         activeTrackColor: const Color(0xFF3B82F6),
         inactiveThumbColor: Colors.white,
         inactiveTrackColor: const Color(0xFF3B82F6).withAlpha(90),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:intl/intl.dart';
+import 'package:frontend/pages/main_shell.dart';
 
 class HomeSearchCard extends StatefulWidget {
   final VoidCallback? onSearch;
@@ -104,6 +105,17 @@ class _HomeSearchCardState extends State<HomeSearchCard> {
           ),
         );
       },
+    );
+  }
+
+  void _openSearchResults([String? query]) {
+    final searchQuery = query?.trim() ?? _hotelQuery.trim();
+    final mainShell = context.findAncestorStateOfType<MainShellState>();
+    mainShell?.showOverlayPage(
+      SearchResultsPage(
+        initialQuery: searchQuery.isEmpty ? null : searchQuery,
+        dateRange: _getDateRangeText(),
+      ),
     );
   }
 

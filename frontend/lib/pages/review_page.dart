@@ -30,7 +30,64 @@ class _ReviewPageState extends State<ReviewPage> {
   @override
   void initState() {
     super.initState();
-    _hotelDetailFuture = _fetchHotelDetail();
+    _hotelDetailFuture = Future.microtask(() => _fetchHotelDetail());
+  }
+
+  @override
+  void dispose() {
+    _isDisposed = true;
+    reviewController.dispose();
+    super.dispose();
+  }
+
+  void safeSetState(VoidCallback fn) {
+    if (mounted && !_isDisposed) {
+      setState(fn);
+    }
+  }
+
+  void _showImagePreview(String imageUrl) {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withAlpha(230),
+      builder: (context) {
+        return GestureDetector(
+          onTap: () => Navigator.pop(context),
+          child: Scaffold(
+            backgroundColor: Colors.transparent,
+            body: Stack(
+              children: [
+                Center(
+                  child: InteractiveViewer(
+                    child: Image.network(imageUrl, fit: BoxFit.contain),
+                  ),
+                ),
+                // tombol close
+                Positioned(
+                  top: 40,
+                  right: 20,
+                  child: GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.6),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.close,
+                        color: Colors.white,
+                        size: 22,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   Future<HotelReviewDetail> _fetchHotelDetail() async {
@@ -61,7 +118,96 @@ class _ReviewPageState extends State<ReviewPage> {
     }
   }
 
-  void submitReview() async {
+  void _showImagePickerOptions(TapDownDetails details) async {
+    final RenderBox overlay =
+        Overlay.of(context).context.findRenderObject() as RenderBox;
+
+    final selected = await showMenu(
+      context: context,
+      position: RelativeRect.fromRect(
+        Rect.fromLTWH(
+          details.globalPosition.dx,
+          details.globalPosition.dy,
+          0,
+          0,
+        ),
+        Offset.zero & overlay.size,
+      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      color: Colors.white,
+      elevation: 8,
+      items: [
+        PopupMenuItem(
+          value: 'gallery',
+          child: Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  'Gallery',
+                  style: TextStyle(
+                    fontFamily: 'Plus Jakarta Sans',
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              Icon(
+                Icons.photo_library_outlined,
+                color: const Color(0xFF0F172A),
+              ),
+            ],
+          ),
+        ),
+
+        PopupMenuItem(
+          value: 'camera',
+          child: Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  'Camera',
+                  style: TextStyle(
+                    fontFamily: 'Plus Jakarta Sans',
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              Icon(Icons.camera_alt_outlined, color: const Color(0xFF0F172A)),
+            ],
+          ),
+        ),
+      ],
+    );
+
+    if (selected == 'gallery') {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 80,
+      );
+
+      if (image != null && mounted) {
+        safeSetState(() {
+          selectedImage = File(image.path);
+        });
+      }
+    }
+
+    if (selected == 'camera') {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.camera,
+        imageQuality: 80,
+      );
+
+      if (image != null && mounted) {
+        safeSetState(() {
+          selectedImage = File(image.path);
+        });
+      }
+    }
+  }
+
+  Future<void> submitReview() async {
     if (selectedRating == 0) {
       context.showAppSnackBar('Select the rating first', isWarning: true);
       return;
@@ -271,7 +417,7 @@ class _ReviewPageState extends State<ReviewPage> {
                                           ? const Color(0xFFFFB800)
                                           : const Color(
                                               0xFF94A3B8,
-                                            ).withAlpha(191),
+                                            ).withAlpha(192),
                                     ),
                                   ),
                                 );
@@ -341,7 +487,9 @@ class _ReviewPageState extends State<ReviewPage> {
                                   fontFamily: 'Plus Jakarta Sans',
                                   fontWeight: FontWeight.w400,
                                   fontSize: 12,
-                                  color: const Color(0xFF94A3B8).withAlpha(191),
+                                  color: const Color(
+                                    0xFF94A3B8,
+                                  ).withAlpha(192),
                                 ),
                               ),
                             ),
@@ -388,6 +536,34 @@ class _ReviewPageState extends State<ReviewPage> {
                                 color: Color(0xFF94A3B8),
                               ),
                             ),
+
+                            // ICON EDIT
+                            if (selectedImage != null && !widget.isReadOnly)
+                              Positioned(
+                                top: 4,
+                                right: 4,
+                                child: GestureDetector(
+                                  onTapDown: _showImagePickerOptions,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(6),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      shape: BoxShape.circle,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withAlpha(38),
+                                          blurRadius: 6,
+                                        ),
+                                      ],
+                                    ),
+                                    child: const Icon(
+                                      Icons.edit_rounded,
+                                      size: 16,
+                                      color: Color(0xFF0F172A),
+                                    ),
+                                  ),
+                                ),
+                              ),
                           ],
                         ),
                       ),
@@ -461,19 +637,119 @@ class _ReviewPageState extends State<ReviewPage> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      GestureDetector(
-                        onTap: () => setState(() => isAnonymous = !isAnonymous),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Icon(
-                              isAnonymous
-                                  ? Icons.check_circle
-                                  : Icons.radio_button_unchecked,
-                              color: isAnonymous
-                                  ? const Color(0xFF3B82F6)
-                                  : const Color(0xFF94A3B8),
-                              size: 20,
+                      const SizedBox(height: 16),
+                      if (!widget.isReadOnly)
+                        SizedBox(
+                          width: double.infinity,
+                          height: 48,
+                          child: ElevatedButton(
+                            onPressed: (isSubmitting || widget.isReadOnly)
+                                ? null
+                                : () async {
+                                    if (!mounted) return;
+                                    final confirm = await showDialog<bool>(
+                                      context: context,
+                                      barrierDismissible: false,
+                                      builder: (dialogContext) {
+                                        return AlertDialog(
+                                          backgroundColor: Colors.white,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              24,
+                                            ),
+                                          ),
+                                          title: const Text(
+                                            "Confirm Submit Review",
+                                            style: TextStyle(
+                                              fontFamily: 'Plus Jakarta Sans',
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 20,
+                                              color: Color(0xFF0F172A),
+                                            ),
+                                          ),
+                                          content: const Text(
+                                            "Are you sure you want to submit this review?",
+                                            style: TextStyle(
+                                              fontFamily: 'Plus Jakarta Sans',
+                                              fontSize: 14,
+                                              color: Color(0xFF64748B),
+                                            ),
+                                          ),
+                                          actionsPadding:
+                                              const EdgeInsets.fromLTRB(
+                                                20,
+                                                0,
+                                                20,
+                                                20,
+                                              ),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () {
+                                                Navigator.pop(
+                                                  dialogContext,
+                                                  false,
+                                                );
+                                              },
+                                              child: const Text(
+                                                "CANCEL",
+                                                style: TextStyle(
+                                                  color: Colors.red,
+                                                  fontWeight: FontWeight.w600,
+                                                  fontFamily:
+                                                      'Plus Jakarta Sans',
+                                                ),
+                                              ),
+                                            ),
+                                            ElevatedButton(
+                                              onPressed: () {
+                                                Navigator.pop(
+                                                  dialogContext,
+                                                  true,
+                                                );
+                                              },
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor: const Color(
+                                                  0xFF3B82F6,
+                                                ),
+                                                foregroundColor: Colors.white,
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(20),
+                                                ),
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 24,
+                                                      vertical: 10,
+                                                    ),
+                                              ),
+                                              child: const Text(
+                                                "CONFIRM",
+                                                style: TextStyle(
+                                                  fontFamily:
+                                                      'Plus Jakarta Sans',
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        );
+                                      },
+                                    );
+                                    if (confirm == true && mounted) {
+                                      submitReview();
+                                    }
+                                  },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF3B82F6),
+                              foregroundColor: Colors.white,
+                              disabledBackgroundColor: const Color(
+                                0xFF3B82F6,
+                              ).withAlpha(153),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(25),
+                              ),
+                              elevation: 3,
+                              shadowColor: Colors.black.withAlpha(64),
                             ),
                             const SizedBox(width: 8),
                             const Expanded(

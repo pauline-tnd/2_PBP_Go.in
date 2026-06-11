@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:frontend/pages/main_shell.dart';
 import 'package:frontend/models/hotel.dart';
 import 'package:frontend/models/wishlist.dart';
-import 'package:frontend/pages/promo_page.dart';
 import 'package:frontend/services/api_services.dart';
 import 'package:frontend/widgets/home/home_header.dart';
 import 'package:frontend/widgets/home/home_search_card.dart';

@@ -60,7 +60,7 @@ class ContactUsPage extends StatelessWidget {
                     width: 80,
                     height: 80,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF3B82F6).withOpacity(0.16),
+                      color: const Color(0xFF3B82F6).withAlpha(26),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
@@ -119,7 +119,7 @@ class ContactUsPage extends StatelessWidget {
                         width: 48,
                         height: 48,
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.25),
+                          color: Colors.white.withAlpha(64),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: const Icon(
@@ -206,10 +206,10 @@ class ContactUsPage extends StatelessWidget {
                   height: 80,
                   padding: const EdgeInsets.symmetric(horizontal: 22),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF3B82F6).withOpacity(0.18),
+                    color: const Color(0xFF3B82F6).withAlpha(20),
                     borderRadius: BorderRadius.circular(18),
                     border: Border.all(
-                      color: const Color(0xFF3B82F6),
+                      color: const Color(0xFF3B82F6).withAlpha(38),
                       style: BorderStyle.solid,
                     ),
                   ),
@@ -305,7 +305,7 @@ class ContactUsPage extends StatelessWidget {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: const Color(0xFF3B82F6).withOpacity(0.16),
+              color: const Color(0xFF3B82F6).withAlpha(26),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Icon(

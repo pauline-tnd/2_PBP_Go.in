@@ -49,9 +49,24 @@ class MainShellState extends State<MainShell> {
     });
   }
 
+  Widget? _overlayPage;
+
+  void showOverlayPage(Widget page) {
+    setState(() {
+      _overlayPage = page;
+    });
+  }
+
+  void hideOverlayPage() {
+    setState(() {
+      _overlayPage = null;
+    });
+  }
+
   void switchTab(int index) {
     setState(() {
       _showWishlist = false;
+      _overlayPage = null;
       _currentIndex = index;
     });
   }
@@ -83,7 +98,7 @@ class MainShellState extends State<MainShell> {
                 key: ValueKey(_showWishlist ? 'wishlist' : _currentIndex),
                 child: _showWishlist
                     ? WishlistPage(onBack: _hideWishlist)
-                    : _pages[_currentIndex],
+                    : _overlayPage ?? _pages[_currentIndex],
               ),
             ),
             BottomNavbar(currentIndex: _currentIndex, onTap: _handleNavTap),

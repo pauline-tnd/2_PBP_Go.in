@@ -6,12 +6,11 @@ import '../widgets/bottom_navbar.dart';
 import '../widgets/hotel_card.dart';
 import '../widgets/sorting_bar.dart';
 import 'package:frontend/models/hotel.dart';
-import 'package:frontend/widgets/bottom_navbar.dart';
 import 'package:frontend/widgets/hotel_card.dart';
 import 'package:frontend/widgets/sorting_bar.dart';
 import 'package:frontend/widgets/skeleton_loader.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-// import 'package:frontend/pages/loading_page.dart';
+import 'package:frontend/services/api_services.dart';
+import 'package:frontend/pages/main_shell.dart';
 
 class FilterState {
   final RangeValues priceRange;
@@ -49,7 +48,16 @@ class FilterState {
 }
 
 class SearchResultsPage extends StatefulWidget {
-  const SearchResultsPage({super.key});
+  final String? initialQuery;
+  final String? location;
+  final String? dateRange;
+
+  const SearchResultsPage({
+    super.key,
+    this.initialQuery,
+    this.location,
+    this.dateRange,
+  });
 
   @override
   State<SearchResultsPage> createState() => _SearchResultsPageState();
@@ -66,32 +74,29 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
   @override
   void initState() {
     super.initState();
-    _fetchHotelsFromSupabase();
+    // _fetchHotelsFromSupabase();
+    _fetchHotels();
   }
 
-  Future<void> _fetchHotelsFromSupabase() async {
+  Future<void> _fetchHotels() async {
     try {
-      final response = await Supabase.instance.client.from('hotels').select('''
-          *, 
-          hotel_images(image),
-          hotel_facilities(name),
-          rooms(
-            price,
-            reviews(rating)
-          )
-        ''');
-
-      final List<Hotel> fetchedHotels = (response as List<dynamic>).map((item) {
-        return Hotel.fromMap(item as Map<String, dynamic>);
-      }).toList();
-
+      final response = await ApiService.fetchHotels();
+      final data = response['data'];
+      final List<dynamic> hotelItems = data is List
+          ? data
+          : (data is Map<String, dynamic> && data['data'] is List)
+          ? data['data']
+          : [];
+      final List<Hotel> fetchedHotels = hotelItems
+          .map((item) => Hotel.fromMap(item as Map<String, dynamic>))
+          .toList();
       if (!mounted) return;
       setState(() {
         _allHotels = fetchedHotels;
         _hotelBadges = assignBadges(_allHotels);
         _isLoading = false;
       });
-    } catch (error) {
+    } catch (e) {
       if (!mounted) return;
       setState(() {
         _isLoading = false;
@@ -252,7 +257,7 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
               ),
             ],
           ),
-          BottomNavbar(currentIndex: 0, onTap: (_) {}),
+          const SizedBox(height: 120),
         ],
       ),
     );
@@ -332,7 +337,11 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
       child: Row(
         children: [
           GestureDetector(
-            onTap: () => Navigator.pop(context),
+            onTap: () {
+              final mainShell = context
+                  .findAncestorStateOfType<MainShellState>();
+              mainShell?.hideOverlayPage();
+            },
             child: const SizedBox(
               width: 32,
               height: 40,
@@ -352,11 +361,11 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'London, United Kingdom',
+                  widget.location ?? widget.initialQuery ?? 'Anywhere',
                   style: TextStyle(
                     fontSize: 16.sp,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF1E293B),
+                    color: const Color(0xFF1E293B),
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -364,21 +373,10 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
                 const SizedBox(height: 3),
                 Row(
                   mainAxisSize: MainAxisSize.min,
-                  children: const [
+                  children: [
                     Text(
-                      'FEB 29 - FEB 31',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: Color(0xFF94A3B8),
-                      ),
-                    ),
-                    SizedBox(width: 6),
-                    Icon(Icons.circle, size: 4, color: Color(0xFF94A3B8)),
-                    SizedBox(width: 6),
-                    Text(
-                      '2 GUESTS',
-                      style: TextStyle(
+                      widget.dateRange ?? 'ANY DATE',
+                      style: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
                         color: Color(0xFF94A3B8),
