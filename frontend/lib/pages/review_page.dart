@@ -11,6 +11,15 @@ class Facility {
 
   Facility({required this.name, required this.icon});
 
+  static const Map<String, IconData> iconMap = {
+    'wifi': Icons.wifi,
+    'pool': Icons.pool,
+    'restaurant': Icons.restaurant,
+    'parking': Icons.local_parking,
+    'gym': Icons.fitness_center,
+    'ac': Icons.ac_unit,
+  };
+
   factory Facility.fromJson(Map<String, dynamic> json) {
     return Facility(
       name: json['name'] ?? '',
@@ -591,9 +600,7 @@ class _ReviewPageState extends State<ReviewPage> {
                                   fontFamily: 'Plus Jakarta Sans',
                                   fontWeight: FontWeight.w400,
                                   fontSize: 12,
-                                  color: const Color(
-                                    0xFF94A3B8,
-                                  ).withAlpha(192),
+                                  color: const Color(0xFF94A3B8).withAlpha(192),
                                 ),
                               ),
                             ),

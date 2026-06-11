@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:frontend/models/hotel.dart';
 import 'package:frontend/models/review.dart';
 import 'package:frontend/models/room.dart';
-import 'package:frontend/models/facility.dart';
 import 'package:frontend/models/bookingDetail.dart' as details;
 
 import 'package:frontend/widgets/room_card.dart';
