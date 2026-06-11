@@ -8,16 +8,11 @@ import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:frontend/models/facility.dart';
+import 'package:frontend/models/hotelReviewDetail.dart';
 
 class ReviewPage extends StatefulWidget {
   final String bookingId;
-  final bool isReadOnly;
-
-  const ReviewPage({
-    super.key,
-    required this.bookingId,
-    this.isReadOnly = false,
-  });
+  const ReviewPage({super.key, required this.bookingId});
   @override
   State<ReviewPage> createState() => _ReviewPageState();
 }
@@ -27,12 +22,10 @@ class _ReviewPageState extends State<ReviewPage> {
   final TextEditingController reviewController = TextEditingController();
   bool isAnonymous = false;
   bool isSubmitting = false;
-  bool _isDisposed = false;
   final Set<String> selectedHighlights = {};
   late Future<HotelReviewDetail> _hotelDetailFuture;
   HotelReviewDetail? hotelDetail;
   File? selectedImage;
-  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
@@ -113,7 +106,7 @@ class _ReviewPageState extends State<ReviewPage> {
       if (response.statusCode == 200) {
         final bookingData = jsonDecode(response.body)['data'];
         final parsedData = HotelReviewDetail.fromJson(bookingData);
-        safeSetState(() {
+        setState(() {
           hotelDetail = parsedData;
         });
 
@@ -494,7 +487,9 @@ class _ReviewPageState extends State<ReviewPage> {
                                   fontFamily: 'Plus Jakarta Sans',
                                   fontWeight: FontWeight.w400,
                                   fontSize: 12,
-                                  color: const Color(0xFF94A3B8).withAlpha(192),
+                                  color: const Color(
+                                    0xFF94A3B8,
+                                  ).withAlpha(192),
                                 ),
                               ),
                             ),
@@ -512,72 +507,64 @@ class _ReviewPageState extends State<ReviewPage> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      GestureDetector(
-                        onTapDown: _showImagePickerOptions,
-                        child: Container(
-                          width: 96,
-                          height: 96,
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              color: const Color(0xFFCBD5E1),
-                              width: 2,
-                            ),
-                            borderRadius: BorderRadius.circular(16),
+                      Container(
+                        width: 96,
+                        height: 96,
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: const Color(0xFFCBD5E1),
+                            width: 2,
                           ),
-                          child: Stack(
-                            children: [
-                              const Center(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.camera_alt_outlined,
-                                      color: Color(0xFF94A3B8),
-                                      size: 28,
-                                    ),
-                                    SizedBox(height: 6),
-                                    Text(
-                                      "CAMERA/\nGALLERY",
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        fontFamily: 'Rubik',
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 10,
-                                        color: Color(0xFF94A3B8),
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: const Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.camera_alt_outlined,
+                              color: Color(0xFF94A3B8),
+                              size: 28,
+                            ),
+                            SizedBox(height: 6),
+                            Text(
+                              "CAMERA/\nGALLERY",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontFamily: 'Rubik',
+                                fontWeight: FontWeight.w600,
+                                fontSize: 10,
+                                color: Color(0xFF94A3B8),
                               ),
+                            ),
 
-                              if (selectedImage != null && !widget.isReadOnly)
-                                Positioned(
-                                  top: 4,
-                                  right: 4,
-                                  child: GestureDetector(
-                                    onTapDown: _showImagePickerOptions,
-                                    child: Container(
-                                      padding: const EdgeInsets.all(6),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        shape: BoxShape.circle,
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.black.withAlpha(38),
-                                            blurRadius: 6,
-                                          ),
-                                        ],
-                                      ),
-                                      child: const Icon(
-                                        Icons.edit_rounded,
-                                        size: 16,
-                                        color: Color(0xFF0F172A),
-                                      ),
+                            // ICON EDIT
+                            if (selectedImage != null && !widget.isReadOnly)
+                              Positioned(
+                                top: 4,
+                                right: 4,
+                                child: GestureDetector(
+                                  onTapDown: _showImagePickerOptions,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(6),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      shape: BoxShape.circle,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withAlpha(38),
+                                          blurRadius: 6,
+                                        ),
+                                      ],
+                                    ),
+                                    child: const Icon(
+                                      Icons.edit_rounded,
+                                      size: 16,
+                                      color: Color(0xFF0F172A),
                                     ),
                                   ),
                                 ),
-                            ],
-                          ),
+                              ),
+                          ],
                         ),
                       ),
                       const SizedBox(height: 24),
@@ -652,14 +639,117 @@ class _ReviewPageState extends State<ReviewPage> {
                     children: [
                       const SizedBox(height: 16),
                       if (!widget.isReadOnly)
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Checkbox(
-                              value: isAnonymous,
-                              onChanged: (val) =>
-                                  setState(() => isAnonymous = val ?? false),
-                              activeColor: const Color(0xFF3B82F6),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 48,
+                          child: ElevatedButton(
+                            onPressed: (isSubmitting || widget.isReadOnly)
+                                ? null
+                                : () async {
+                                    if (!mounted) return;
+                                    final confirm = await showDialog<bool>(
+                                      context: context,
+                                      barrierDismissible: false,
+                                      builder: (dialogContext) {
+                                        return AlertDialog(
+                                          backgroundColor: Colors.white,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              24,
+                                            ),
+                                          ),
+                                          title: const Text(
+                                            "Confirm Submit Review",
+                                            style: TextStyle(
+                                              fontFamily: 'Plus Jakarta Sans',
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 20,
+                                              color: Color(0xFF0F172A),
+                                            ),
+                                          ),
+                                          content: const Text(
+                                            "Are you sure you want to submit this review?",
+                                            style: TextStyle(
+                                              fontFamily: 'Plus Jakarta Sans',
+                                              fontSize: 14,
+                                              color: Color(0xFF64748B),
+                                            ),
+                                          ),
+                                          actionsPadding:
+                                              const EdgeInsets.fromLTRB(
+                                                20,
+                                                0,
+                                                20,
+                                                20,
+                                              ),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () {
+                                                Navigator.pop(
+                                                  dialogContext,
+                                                  false,
+                                                );
+                                              },
+                                              child: const Text(
+                                                "CANCEL",
+                                                style: TextStyle(
+                                                  color: Colors.red,
+                                                  fontWeight: FontWeight.w600,
+                                                  fontFamily:
+                                                      'Plus Jakarta Sans',
+                                                ),
+                                              ),
+                                            ),
+                                            ElevatedButton(
+                                              onPressed: () {
+                                                Navigator.pop(
+                                                  dialogContext,
+                                                  true,
+                                                );
+                                              },
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor: const Color(
+                                                  0xFF3B82F6,
+                                                ),
+                                                foregroundColor: Colors.white,
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(20),
+                                                ),
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 24,
+                                                      vertical: 10,
+                                                    ),
+                                              ),
+                                              child: const Text(
+                                                "CONFIRM",
+                                                style: TextStyle(
+                                                  fontFamily:
+                                                      'Plus Jakarta Sans',
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        );
+                                      },
+                                    );
+                                    if (confirm == true && mounted) {
+                                      submitReview();
+                                    }
+                                  },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF3B82F6),
+                              foregroundColor: Colors.white,
+                              disabledBackgroundColor: const Color(
+                                0xFF3B82F6,
+                              ).withAlpha(153),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(25),
+                              ),
+                              elevation: 3,
+                              shadowColor: Colors.black.withAlpha(64),
                             ),
                             const SizedBox(width: 8),
                             const Expanded(
@@ -676,100 +766,13 @@ class _ReviewPageState extends State<ReviewPage> {
                             ),
                           ],
                         ),
+                      ),
                       const SizedBox(height: 16),
                       SizedBox(
                         width: double.infinity,
                         height: 48,
                         child: ElevatedButton(
-                          onPressed: (isSubmitting || widget.isReadOnly)
-                              ? null
-                              : () async {
-                                  if (!mounted) return;
-                                  final confirm = await showDialog<bool>(
-                                    context: context,
-                                    barrierDismissible: false,
-                                    builder: (dialogContext) {
-                                      return AlertDialog(
-                                        backgroundColor: Colors.white,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            24,
-                                          ),
-                                        ),
-                                        title: const Text(
-                                          "Confirm Submit Review",
-                                          style: TextStyle(
-                                            fontFamily: 'Plus Jakarta Sans',
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 20,
-                                            color: Color(0xFF0F172A),
-                                          ),
-                                        ),
-                                        content: const Text(
-                                          "Are you sure you want to submit this review?",
-                                          style: TextStyle(
-                                            fontFamily: 'Plus Jakarta Sans',
-                                            fontSize: 14,
-                                            color: Color(0xFF64748B),
-                                          ),
-                                        ),
-                                        actionsPadding:
-                                            const EdgeInsets.fromLTRB(
-                                              20,
-                                              0,
-                                              20,
-                                              20,
-                                            ),
-                                        actions: [
-                                          TextButton(
-                                            onPressed: () => Navigator.pop(
-                                              dialogContext,
-                                              false,
-                                            ),
-                                            child: const Text(
-                                              "CANCEL",
-                                              style: TextStyle(
-                                                color: Colors.red,
-                                                fontWeight: FontWeight.w600,
-                                                fontFamily: 'Plus Jakarta Sans',
-                                              ),
-                                            ),
-                                          ),
-                                          ElevatedButton(
-                                            onPressed: () => Navigator.pop(
-                                              dialogContext,
-                                              true,
-                                            ),
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor: const Color(
-                                                0xFF3B82F6,
-                                              ),
-                                              foregroundColor: Colors.white,
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(20),
-                                              ),
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    horizontal: 24,
-                                                    vertical: 10,
-                                                  ),
-                                            ),
-                                            child: const Text(
-                                              "CONFIRM",
-                                              style: TextStyle(
-                                                fontFamily: 'Plus Jakarta Sans',
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      );
-                                    },
-                                  );
-                                  if (confirm == true && mounted)
-                                    submitReview();
-                                },
+                          onPressed: isSubmitting ? null : submitReview,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF3B82F6),
                             foregroundColor: Colors.white,

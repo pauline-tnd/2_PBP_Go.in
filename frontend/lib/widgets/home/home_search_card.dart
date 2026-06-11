@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:intl/intl.dart';
 import 'package:frontend/pages/main_shell.dart';
-import 'package:frontend/pages/search_results_page.dart';
 
 class HomeSearchCard extends StatefulWidget {
   final VoidCallback? onSearch;
@@ -14,8 +13,6 @@ class HomeSearchCard extends StatefulWidget {
 }
 
 class _HomeSearchCardState extends State<HomeSearchCard> {
-  String _hotelQuery = '';
-
   List<DateTime?> _dates = [
     DateTime.now(),
     DateTime.now().add(const Duration(days: 1)),
@@ -173,7 +170,7 @@ class _HomeSearchCardState extends State<HomeSearchCard> {
                 onPressed:
                     widget.onSearch ??
                     () {
-                      _openSearchResults();
+                      Navigator.pushNamed(context, '/search-results');
                     },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF3B82F6),
