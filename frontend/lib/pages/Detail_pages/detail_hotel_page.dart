@@ -368,17 +368,16 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
         .whereType<String>()
         .toList();
 
-    final List<String> carouselImages = [];
+    final roomsRaw = _hotelDetail?['rooms'] as List<dynamic>? ?? [];
 
-    if (hotelImages.isNotEmpty) {
-      carouselImages.add(hotelImages.first);
-    }
-    if (_rooms.isNotEmpty && _rooms.first.roomImages.isNotEmpty) {
-      carouselImages.add(_rooms.first.roomImages[0]);
-    }
-    if (_rooms.isNotEmpty && _rooms.first.roomImages.length > 1) {
-      carouselImages.add(_rooms.first.roomImages[1]);
-    }
+    final List<String> allRoomImages = roomsRaw.expand((r) {
+      if (r is! Map<String, dynamic>) return <String>[];
+      return (r['room_images'] as List<dynamic>? ?? [])
+          .map((e) => e['image']?.toString() ?? '')
+          .where((img) => img.isNotEmpty);
+    }).toList();
+
+    final List<String> carouselImages = [...hotelImages, ...allRoomImages];
 
     final facilities =
         (_hotelDetail?['hotel_facilities'] as List<dynamic>? ?? []);
@@ -785,14 +784,18 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
                           .map((e) => e['image']?.toString() ?? '')
                           .where((image) => image.isNotEmpty)
                           .toList();
-                  final firstImage = roomImages.isNotEmpty
-                      ? roomImages.first
-                      : null;
+                  final combinedImages = [
+                    ...roomImages,
+                    if (hotelImages.isNotEmpty && roomImages.isEmpty)
+                      hotelImages.first,
+                  ];
 
                   return RoomCard(
                     room: room,
-                    imageUrl: firstImage,
-                    imageUrls: roomImages,
+                    imageUrl: combinedImages.isNotEmpty
+                        ? combinedImages.first
+                        : null,
+                    imageUrls: combinedImages,
                     hotelName: hotel.name,
                     reviewScore: double.tryParse(rating) ?? hotel.userRating,
                     tempBookedList: _tempBookedList,

@@ -4,9 +4,8 @@ import 'package:frontend/pages/Detail_pages/detail_room_page.dart';
 import 'package:frontend/models/addOn.dart';
 import 'package:frontend/models/facilityIcons.dart';
 import 'package:frontend/models/bookingDetail.dart' as details;
-
-import '../models/room.dart';
-import 'package:frontend/widgets/common/carousel.dart';
+import 'package:frontend/models/room.dart';
+import 'package:frontend/widgets/room_image.dart';
 
 class RoomCard extends StatefulWidget {
   final Room room;
@@ -114,7 +113,16 @@ class _RoomCardState extends State<RoomCard> {
                       size: 48,
                     ),
                   )
-                : Carousel(imageUrls: images, height: 200),
+                : RoomImage(
+                    imagePath: images.first,
+                    placeholderColor: const Color(0xFF94A3B8),
+                    width: double.infinity,
+                    height: 200,
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(20),
+                      topRight: Radius.circular(20),
+                    ),
+                  ),
           ),
 
           Padding(

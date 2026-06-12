@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/widgets/hotel_image.dart';
+import 'package:frontend/widgets/room_image.dart';
 
 class Carousel extends StatefulWidget {
   final List<String> imageUrls;
@@ -65,7 +65,7 @@ class _CarouselState extends State<Carousel>
     final centerH = 150.0;
     final centerW = 220.0;
     final sideH = 105.0;
-    final sideW = 168.0;
+    final sideW = 150.0;
 
     return GestureDetector(
       onHorizontalDragEnd: (details) {
@@ -80,31 +80,25 @@ class _CarouselState extends State<Carousel>
         height: centerH + 20,
         child: Stack(
           alignment: Alignment.center,
-          clipBehavior: Clip.none,
+          clipBehavior: Clip.hardEdge,
           children: [
             if (_leftIndex != null)
               Positioned(
-                left: 20,
-                bottom: 0,
+                left: (screenW - centerW) / 2 - sideW + 60,
+                top: (centerH - sideH) / 2,
                 child: GestureDetector(
                   onTap: () => _goTo(_leftIndex!),
-                  child: Transform(
-                    alignment: Alignment.centerRight,
-                    transform: Matrix4.identity()
-                      ..translate(-8.0, 0.0)
-                      ..rotateZ(-0.08),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(20),
-                      child: SizedBox(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: SizedBox(
+                      width: sideW,
+                      height: sideH,
+                      child: RoomImage(
+                        imagePath: _images[_leftIndex!],
+                        placeholderColor: const Color(0xFF1E3A5F),
                         width: sideW,
                         height: sideH,
-                        child: HotelImage(
-                          imagePath: _images[_leftIndex!],
-                          placeholderColor: const Color(0xFF1E3A5F),
-                          width: sideW,
-                          height: sideH,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
+                        borderRadius: BorderRadius.circular(20),
                       ),
                     ),
                   ),
@@ -113,27 +107,21 @@ class _CarouselState extends State<Carousel>
 
             if (_rightIndex != null && _rightIndex != _leftIndex)
               Positioned(
-                right: 20,
-                bottom: 0,
+                right: (screenW - centerW) / 2 - sideW + 60,
+                top: (centerH - sideH) / 2,
                 child: GestureDetector(
                   onTap: () => _goTo(_rightIndex!),
-                  child: Transform(
-                    alignment: Alignment.centerLeft,
-                    transform: Matrix4.identity()
-                      ..translate(8.0, 0.0)
-                      ..rotateZ(0.08),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(20),
-                      child: SizedBox(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: SizedBox(
+                      width: sideW,
+                      height: sideH,
+                      child: RoomImage(
+                        imagePath: _images[_rightIndex!],
+                        placeholderColor: const Color(0xFF1E3A5F),
                         width: sideW,
                         height: sideH,
-                        child: HotelImage(
-                          imagePath: _images[_rightIndex!],
-                          placeholderColor: const Color(0xFF1E3A5F),
-                          width: sideW,
-                          height: sideH,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
+                        borderRadius: BorderRadius.circular(20),
                       ),
                     ),
                   ),
@@ -152,7 +140,7 @@ class _CarouselState extends State<Carousel>
                 height: centerH,
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(22),
-                  child: HotelImage(
+                  child: RoomImage(
                     imagePath: _images[_current],
                     placeholderColor: const Color(0xFF1E3A5F),
                     width: centerW,
