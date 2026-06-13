@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend/models/hotel.dart';
 import 'package:frontend/providers/hotel_search_provider.dart';
+import 'package:frontend/utils/image_path.dart';
 
 class HomeSearchField extends StatefulWidget {
   final void Function(Hotel hotel) onHotelSelected;
@@ -145,6 +146,9 @@ class _HomeSearchFieldState extends State<HomeSearchField> {
   }
 
   Widget _buildTile(Hotel hotel) {
+    final normalizedPath = normalizeImagePath(hotel.imagePath);
+    final isNetworkImage = isNetworkImagePath(normalizedPath);
+
     return InkWell(
       onTapDown: (_) => _hideOverlayTimer?.cancel(),
       onTap: () {
@@ -164,15 +168,21 @@ class _HomeSearchFieldState extends State<HomeSearchField> {
               decoration: BoxDecoration(
                 color: _lightBlue,
                 borderRadius: BorderRadius.circular(10),
-                image: hotel.imagePath != null
+                image: normalizedPath.isNotEmpty
                     ? DecorationImage(
-                        image: NetworkImage(hotel.imagePath!),
+                        image: isNetworkImage
+                            ? NetworkImage(
+                                normalizedPath.startsWith('//')
+                                    ? 'https:$normalizedPath'
+                                    : normalizedPath,
+                              )
+                            : AssetImage(normalizedPath) as ImageProvider,
                         fit: BoxFit.cover,
                         onError: (error, stackTrace) {},
                       )
                     : null,
               ),
-              child: hotel.imagePath == null
+              child: normalizedPath.isEmpty
                   ? const Icon(Icons.hotel_rounded, color: _darkBlue, size: 22)
                   : null,
             ),

@@ -7,6 +7,8 @@
 	<string>Enable location to find nearby hotels</string>
 	<key>NSLocationAlwaysUsageDescription</key>
 	<string>Enable location to find nearby hotels</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Use biometric authentication to confirm your payment</string>
 
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>

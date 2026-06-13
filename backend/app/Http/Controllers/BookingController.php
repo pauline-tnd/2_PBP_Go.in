@@ -134,7 +134,8 @@ class BookingController extends Controller
                 $addOnPrice += ($detailAddOn->addOn->price ?? 0) * $detailAddOn->qty;
             }
 
-            $subTotal = ($roomPrice + $addOnPrice) * $detail->total_room;
+            $roomSubTotal = $roomPrice * $detail->total_room;
+            $subTotal = $roomSubTotal + $addOnPrice;
             BookingDetail::where('id', $detail->id)->update(['sub_total' => $subTotal]);
 
             $totalPrice += $subTotal;

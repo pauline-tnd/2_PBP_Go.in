@@ -17,6 +17,7 @@ class RoomCard extends StatefulWidget {
   final List<AddOnItem>? addOns;
   final List<Map<String, dynamic>> reviews;
   final String hotelName;
+  final String hotelLocation;
   final double reviewScore;
   final List<details.BookingDetail> tempBookedList;
   final void Function(List<details.BookingDetail>)? onNavigatedBack;
@@ -31,6 +32,7 @@ class RoomCard extends StatefulWidget {
     this.addOns,
     this.reviews = const [],
     this.hotelName = 'Hotel',
+    this.hotelLocation = '',
     this.reviewScore = 0,
     this.tempBookedList = const [],
     this.onNavigatedBack,
@@ -60,6 +62,7 @@ class _RoomCardState extends State<RoomCard> {
           addOns: addOns,
           reviews: widget.reviews,
           hotelName: widget.hotelName,
+          hotelLocation: widget.hotelLocation,
           reviewScore: widget.reviewScore,
 
           tempBookedList: widget.tempBookedList,

@@ -20,6 +20,7 @@ import 'package:http/http.dart' as http;
 
 import 'package:frontend/pages/settings/review_detail_page.dart';
 import 'package:frontend/pages/review_page.dart';
+import 'package:frontend/pages/payment_confirmation_page.dart';
 
 class DetailHotelPage extends StatefulWidget {
   final Hotel hotel;
@@ -276,7 +277,23 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
       backgroundColor: Colors.transparent,
       builder: (sheetContext) => BookingConfirmationPopUp(
         bookingDetails: _tempBookedList,
+        hotelName: widget.hotel.name,
+        hotelLocation: widget.hotel.location,
+        previewImageUrl: widget.hotel.imagePath ?? '',
         onCustomAnother: () => Navigator.pop(sheetContext),
+        onBookNow: (bookingList) {
+          Navigator.pop(sheetContext);
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => PaymentConfirmationPage(
+                hotelName: widget.hotel.name,
+                hotelLocation: widget.hotel.location,
+                previewImageUrl: widget.hotel.imagePath ?? '',
+                bookingDetails: List.from(bookingList),
+              ),
+            ),
+          );
+        },
         onBookingListChanged: (updatedList) {
           setState(() {
             _tempBookedList = List.from(updatedList);
@@ -418,9 +435,12 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
                   height: 280,
                   width: double.infinity,
                   child: widget.hotel.imagePath != null
-                      ? Image.network(
-                          widget.hotel.imagePath!,
-                          fit: BoxFit.cover,
+                      ? HotelImage(
+                          imagePath: widget.hotel.imagePath,
+                          placeholderColor: const Color(0xFF1E3A5F),
+                          width: double.infinity,
+                          height: 280,
+                          borderRadius: BorderRadius.zero,
                         )
                       : Container(color: const Color(0xFF1E3A5F)),
                 ),
@@ -794,6 +814,7 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
                     imageUrl: firstImage,
                     imageUrls: roomImages,
                     hotelName: hotel.name,
+                    hotelLocation: hotel.location,
                     reviewScore: double.tryParse(rating) ?? hotel.userRating,
                     tempBookedList: _tempBookedList,
                     onNavigatedBack: (updatedList) {

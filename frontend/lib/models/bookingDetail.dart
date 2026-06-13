@@ -33,6 +33,7 @@ class BookingDetail {
       selectedAddOns: ((json['add_ons'] ?? json['addOns'] ?? []) as List)
           .map<AddOnItem>((e) {
             return AddOnItem(
+              id: int.tryParse(e['id']?.toString() ?? '') ?? 0,
               name: e['name']?.toString() ?? '',
 
               price: double.tryParse(e['price'].toString()) ?? 0,
@@ -57,7 +58,7 @@ class BookingDetail {
       "room_image": roomImage,
 
       "add_ons": selectedAddOns
-          .map((e) => {"name": e.name, "price": e.price})
+          .map((e) => {"id": e.id, "name": e.name, "price": e.price})
           .toList(),
     };
   }

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/utils/image_path.dart';
+import 'package:frontend/widgets/adaptive_image.dart';
 
 class RoomImage extends StatefulWidget {
   final String? imagePath;
@@ -27,7 +29,9 @@ class _RoomImageState extends State<RoomImage> {
   Widget build(BuildContext context) {
     final borderRadius = widget.borderRadius ?? BorderRadius.circular(12);
 
-    if (widget.imagePath == null || widget.imagePath!.isEmpty) {
+    final normalizedPath = normalizeImagePath(widget.imagePath);
+
+    if (normalizedPath.isEmpty) {
       return _buildPlaceholder(borderRadius);
     }
 
@@ -37,8 +41,8 @@ class _RoomImageState extends State<RoomImage> {
 
     return ClipRRect(
       borderRadius: borderRadius,
-      child: Image.network(
-        widget.imagePath!,
+      child: AdaptiveImage(
+        imagePath: normalizedPath,
         width: widget.width,
         height: widget.height,
         fit: BoxFit.cover,
