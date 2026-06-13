@@ -60,9 +60,7 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
       'Telephone',
       'Non-smoking room',
     ];
-    return widget.facilities
-        .where((f) => mainAmenitiesList.contains(f['name']))
-        .toList();
+    return widget.facilities.toList();
   }
 
   List<Map<String, dynamic>> _getRoomAmenities() {
@@ -392,12 +390,15 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      ..._getMainAmenities().map(
-                        (f) => _FacilityRow(
-                          icon: f['icon'] as IconData,
-                          name: f['name'] as String,
-                        ),
-                      ),
+                      ..._getMainAmenities().map((f) {
+                        final icon = f['icon'];
+                        return _FacilityRow(
+                          icon: icon is IconData
+                              ? icon
+                              : Icons.check_circle_outline_rounded,
+                          name: f['name']?.toString() ?? '',
+                        );
+                      }),
                       const SizedBox(height: 20),
 
                       Row(

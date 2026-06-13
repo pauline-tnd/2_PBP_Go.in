@@ -816,6 +816,13 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
                         ? combinedImages.first
                         : null,
                     imageUrls: combinedImages,
+                    facilities: facilities
+                        .map(
+                          (f) => Map<String, dynamic>.from(
+                            f as Map<String, dynamic>,
+                          ),
+                        )
+                        .toList(),
                     hotelName: hotel.name,
                     hotelLocation: hotel.location,
                     reviewScore: double.tryParse(rating) ?? hotel.userRating,

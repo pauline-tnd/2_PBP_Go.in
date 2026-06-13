@@ -17,11 +17,13 @@ class FacilityIcons {
     'fitness_center_rounded': Icons.fitness_center_rounded,
     'pets_rounded': Icons.pets_rounded,
     'hot_tub_rounded': Icons.hot_tub_rounded,
+    'bed_outlined': Icons.bed_rounded,
+    'access_time_outlined': Icons.access_time_rounded,
   };
 
   factory FacilityIcons.fromJson(Map<String, dynamic> json) {
     return FacilityIcons(
-      name: json['name'] ?? '',
+      name: json['name'] ?? json['icon']?['name'] ?? '',
       icon: json['icon']?['icon']?.toString().trim() ?? '',
     );
   }
