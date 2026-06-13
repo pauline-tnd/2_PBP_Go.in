@@ -34,7 +34,7 @@ class AppConfig {
   static String get mobileAuthBaseUrl => '$apiBaseUrl/mobile-auth';
 
   static String get _defaultApiBaseUrl {
-    return '2pbpgoin-production.up.railway.app';
+    return 'https://2pbpgoin-production.up.railway.app/api';
     // if (kIsWeb) {
     //   return 'http://127.0.0.1:8000/api';
     // }
