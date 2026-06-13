@@ -51,6 +51,7 @@ class Room {
       addOns: rawAddOns
           .map(
             (e) => AddOnItem(
+              id: parseInt(e['id']),
               name: e['name'] ?? '',
               price: double.tryParse(e['price'].toString()) ?? 0.0,
               icon: Icons.add_circle_outline_rounded,

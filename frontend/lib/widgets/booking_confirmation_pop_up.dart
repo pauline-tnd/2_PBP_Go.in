@@ -2,11 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:frontend/models/bookingDetail.dart';
 import 'package:frontend/widgets/add_on_pop_up.dart';
+import 'package:frontend/widgets/adaptive_image.dart';
 
 class BookingConfirmationPopUp extends StatefulWidget {
   final List<BookingDetail> bookingDetails;
+  final String hotelName;
+  final String hotelLocation;
+  final String previewImageUrl;
+  final DateTime? checkIn;
+  final DateTime? checkOut;
   final void Function()? onCustomAnother;
-  final void Function()? onBookNow;
+  final void Function(List<BookingDetail> bookingDetails)? onBookNow;
   final void Function(int index)? onEditItem;
   final void Function(int index)? onDeleteItem;
   final void Function()? onNavigateToHotel;
@@ -15,6 +21,11 @@ class BookingConfirmationPopUp extends StatefulWidget {
   const BookingConfirmationPopUp({
     super.key,
     required this.bookingDetails,
+    this.hotelName = 'Hotel',
+    this.hotelLocation = '',
+    this.previewImageUrl = '',
+    this.checkIn,
+    this.checkOut,
     this.onCustomAnother,
     this.onBookNow,
     this.onEditItem,
@@ -73,8 +84,8 @@ class _BookingConfirmationPopUpState extends State<BookingConfirmationPopUp> {
 
     if (imageUrl.isEmpty) return placeholder;
 
-    return Image.network(
-      imageUrl,
+    return AdaptiveImage(
+      imagePath: imageUrl,
       width: size,
       height: size,
       fit: BoxFit.cover,
@@ -141,6 +152,9 @@ class _BookingConfirmationPopUpState extends State<BookingConfirmationPopUp> {
                                   setState(() {
                                     detail.quantity--;
                                   });
+                                  widget.onBookingListChanged?.call(
+                                    List.from(widget.bookingDetails),
+                                  );
                                 }
                               },
                               child: const Padding(
@@ -237,6 +251,7 @@ class _BookingConfirmationPopUpState extends State<BookingConfirmationPopUp> {
               ..clear()
               ..addAll(updatedList);
           });
+          widget.onBookingListChanged?.call(List.from(widget.bookingDetails));
         },
         onContinue: (selected, notes) {
           setState(() {
@@ -244,6 +259,7 @@ class _BookingConfirmationPopUpState extends State<BookingConfirmationPopUp> {
             detail.selectedAddOns.addAll(selected);
             detail.notes = notes;
           });
+          widget.onBookingListChanged?.call(List.from(widget.bookingDetails));
           Future.delayed(Duration.zero, () {
             setState(() {});
           });
@@ -414,10 +430,11 @@ class _BookingConfirmationPopUpState extends State<BookingConfirmationPopUp> {
                       Expanded(
                         child: _BottomActionButton(
                           label: 'Book Now',
-                          onPressed: widget.onBookNow,
-                          // to Abi: panggilnya lewat sini. Lalu plis,
-                          // ini textcontroller untuk jmlh msh angka
-                          // jadi harus diubah menjadi list dulu
+                          onPressed: widget.onBookNow == null
+                              ? null
+                              : () => widget.onBookNow!(
+                                  List.from(widget.bookingDetails),
+                                ),
                         ),
                       ),
                     ],

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/widgets/adaptive_image.dart';
 
 enum BookingStatus { paid, completed, cancelled }
 
@@ -80,8 +81,8 @@ class ActivityCard extends StatelessWidget {
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.circular(10),
-                  child: Image.network(
-                    item.imageUrl,
+                  child: AdaptiveImage(
+                    imagePath: item.imageUrl,
                     width: 80,
                     height: 80,
                     fit: BoxFit.cover,

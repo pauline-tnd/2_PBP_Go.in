@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\BookingController;
 use App\Models\BookingDetailAddOn;
 use Illuminate\Http\Request;
 
@@ -33,6 +34,8 @@ class BookingDetailAddOnController extends Controller
             'sub_total' => 'required|numeric|min:0',
         ]);
         $addon = BookingDetailAddOn::create($validated);
+        $addon->load('bookingDetail');
+        BookingController::calculateTotal($addon->bookingDetail->booking_id);
         return response()->json([
             'message' => 'Add-on berhasil ditambahkan ke booking detail',
             'addon' => $addon
@@ -49,6 +52,8 @@ class BookingDetailAddOnController extends Controller
         ]);
 
         $addon->update($validated);
+        $addon->load('bookingDetail');
+        BookingController::calculateTotal($addon->bookingDetail->booking_id);
 
         return response()->json([
             'message' => 'Add-on booking detail berhasil diperbarui',
@@ -66,7 +71,9 @@ class BookingDetailAddOnController extends Controller
             ], 404);
         }
 
+        $bookingId = $addon->bookingDetail->booking_id;
         $addon->delete();
+        BookingController::calculateTotal($bookingId);
 
         return response()->json([
             'message' => 'Add-on booking detail berhasil dihapus'

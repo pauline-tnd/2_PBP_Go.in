@@ -7,6 +7,7 @@ import 'package:frontend/models/addOn.dart';
 import 'package:frontend/widgets/room_image.dart';
 import 'package:frontend/widgets/add_on_pop_up.dart';
 import 'package:frontend/pages/review_page.dart';
+import 'package:frontend/pages/payment_confirmation_page.dart';
 import 'package:frontend/models/review.dart';
 import 'package:frontend/widgets/review_card.dart';
 
@@ -18,6 +19,7 @@ class DetailRoomPage extends StatefulWidget {
   final List<Map<String, dynamic>> roomAmenities;
   final List<Map<String, dynamic>> reviews;
   final String hotelName;
+  final String hotelLocation;
   final double reviewScore;
   final List<booking_detail.BookingDetail> tempBookedList;
 
@@ -30,6 +32,7 @@ class DetailRoomPage extends StatefulWidget {
     required this.roomAmenities,
     required this.reviews,
     required this.hotelName,
+    this.hotelLocation = '',
     required this.reviewScore,
     this.tempBookedList = const [],
   });
@@ -107,11 +110,36 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
             backgroundColor: Colors.transparent,
             builder: (popupContext) => BookingConfirmationPopUp(
               bookingDetails: updatedList,
+              hotelName: widget.hotelName,
+              hotelLocation: widget.hotelLocation,
+              previewImageUrl: widget.imageUrls.isNotEmpty
+                  ? widget.imageUrls.first
+                  : '',
               onCustomAnother: () {
                 Navigator.pop(popupContext);
 
                 Future.delayed(Duration(milliseconds: 150), () {
                   _openAddOnPopUp();
+                });
+              },
+              onBookNow: (bookingList) {
+                Navigator.pop(popupContext);
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => PaymentConfirmationPage(
+                      hotelName: widget.hotelName,
+                      hotelLocation: widget.hotelLocation,
+                      previewImageUrl: widget.imageUrls.isNotEmpty
+                          ? widget.imageUrls.first
+                          : '',
+                      bookingDetails: List.from(bookingList),
+                    ),
+                  ),
+                );
+              },
+              onBookingListChanged: (bookingList) {
+                setState(() {
+                  _localTempList = List.from(bookingList);
                 });
               },
             ),

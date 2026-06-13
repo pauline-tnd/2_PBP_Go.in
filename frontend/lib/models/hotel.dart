@@ -36,9 +36,16 @@ class Hotel {
     final image = map['hotel_image'];
     String? imageUrl;
     if (images != null && images.isNotEmpty) {
-      imageUrl = images.first['image'];
+      final firstImage = images.first;
+      if (firstImage is Map<String, dynamic>) {
+        imageUrl = firstImage['image']?.toString();
+      } else {
+        imageUrl = firstImage?.toString();
+      }
     } else if (image is Map<String, dynamic>) {
-      imageUrl = image['image'];
+      imageUrl = image['image']?.toString();
+    } else if (image != null) {
+      imageUrl = image.toString();
     }
 
     final List<dynamic> roomsData = map['rooms'] as List<dynamic>? ?? [];
