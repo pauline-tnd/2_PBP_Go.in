@@ -6,7 +6,7 @@ import 'package:frontend/models/room.dart';
 import 'package:frontend/models/addOn.dart';
 import 'package:frontend/widgets/room_image.dart';
 import 'package:frontend/widgets/add_on_pop_up.dart';
-import 'package:frontend/pages/review_page.dart';
+import 'package:frontend/pages/settings/review_detail_page.dart';
 import 'package:frontend/pages/payment_confirmation_page.dart';
 import 'package:frontend/models/review.dart';
 import 'package:frontend/widgets/review_card.dart';
@@ -524,8 +524,11 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (_) =>
-                                      ReviewPage(bookingId: room.id.toString()),
+                                  builder: (_) => ReviewDetailPage(
+                                    reviews: widget.reviews
+                                        .map((r) => Review.fromJson(r))
+                                        .toList(),
+                                  ),
                                 ),
                               );
                             },
@@ -579,8 +582,10 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                                       onTap: () => Navigator.push(
                                         context,
                                         MaterialPageRoute(
-                                          builder: (_) => ReviewPage(
-                                            bookingId: room.id.toString(),
+                                          builder: (_) => ReviewDetailPage(
+                                            reviews: widget.reviews
+                                                .map((r) => Review.fromJson(r))
+                                                .toList(),
                                           ),
                                         ),
                                       ),
