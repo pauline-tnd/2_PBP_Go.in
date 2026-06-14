@@ -12,4 +12,13 @@ class AddOnItem {
     required this.price,
     required this.icon,
   });
+
+  factory AddOnItem.fromJson(Map<String, dynamic> json) {
+    return AddOnItem(
+      id: json['id'] ?? 0,
+      name: json['name'] ?? '',
+      price: double.tryParse(json['price']?.toString() ?? '') ?? 0.0,
+      icon: Icons.room_service_outlined,
+    );
+  }
 }

@@ -458,12 +458,18 @@ class ApiService {
       headers: headers,
     );
 
+    final body = jsonDecode(response.body);
+
     if (response.statusCode == 200) {
-      final data = jsonDecode(response.body) as List;
+      final data = body as List;
       return data.map<Review>((item) => Review.fromJson(item)).toList();
-    } else {
-      throw Exception('Failed to load room reviews: ${response.body}');
     }
+
+    if (body is Map && body['message'] == 'Belum ada data review') {
+      return [];
+    }
+
+    throw Exception('Failed to load room reviews: ${response.body}');
   }
 
   static Future<List<Review>> fetchUserReviews(int userId) async {

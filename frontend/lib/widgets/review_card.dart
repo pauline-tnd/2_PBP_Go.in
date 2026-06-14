@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:frontend/models/review.dart';
 import 'package:frontend/widgets/star_rating.dart';
 
@@ -36,13 +37,22 @@ class ReviewCard extends StatelessWidget {
                       Text(
                         review.user?.username ?? 'Unknown',
                         style: const TextStyle(fontWeight: FontWeight.w600),
+                        overflow: TextOverflow.ellipsis,
                       ),
                       Text(
-                        review.createdAt ?? 'Date not found',
+                        review.createdAt != null
+                            ? review.createdAt!.length >= 19
+                                  ? review.createdAt!.substring(0, 10) +
+                                        '  ' +
+                                        review.createdAt!.substring(11, 19)
+                                  : review.createdAt!
+                            : 'Date not found',
                         style: const TextStyle(
                           fontSize: 12,
                           color: Colors.grey,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
@@ -52,12 +62,10 @@ class ReviewCard extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             // Description review
-            Expanded(
-              child: Text(
-                review.description,
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-              ),
+            Text(
+              review.description,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
             ),
             if (review.image != null) ...[
               const SizedBox(height: 10),

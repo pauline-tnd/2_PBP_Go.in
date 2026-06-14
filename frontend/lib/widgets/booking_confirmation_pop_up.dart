@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:frontend/models/bookingDetail.dart';
+import 'package:frontend/models/addOn.dart';
 import 'package:frontend/widgets/add_on_pop_up.dart';
 import 'package:frontend/widgets/adaptive_image.dart';
 
 class BookingConfirmationPopUp extends StatefulWidget {
   final List<BookingDetail> bookingDetails;
+  final List<AddOnItem> allAddOns;
   final String hotelName;
   final String hotelLocation;
   final String previewImageUrl;
@@ -21,6 +23,7 @@ class BookingConfirmationPopUp extends StatefulWidget {
   const BookingConfirmationPopUp({
     super.key,
     required this.bookingDetails,
+    required this.allAddOns,
     this.hotelName = 'Hotel',
     this.hotelLocation = '',
     this.previewImageUrl = '',
@@ -239,7 +242,7 @@ class _BookingConfirmationPopUpState extends State<BookingConfirmationPopUp> {
       backgroundColor: Colors.transparent,
       builder: (_) => AddOnPopUp(
         roomType: detail.room.type,
-        addOns: detail.selectedAddOns,
+        addOns: widget.allAddOns,
         room: detail.room,
         roomImage: detail.roomImage,
         initialNotes: detail.notes,

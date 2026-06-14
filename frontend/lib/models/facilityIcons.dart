@@ -19,6 +19,13 @@ class FacilityIcons {
     'hot_tub_rounded': Icons.hot_tub_rounded,
     'bed_outlined': Icons.bed_rounded,
     'access_time_outlined': Icons.access_time_rounded,
+
+    'free_breakfast_rounded': Icons.free_breakfast_rounded,
+    'room_service_rounded': Icons.room_service_rounded,
+    'self_improvement_rounded': Icons.self_improvement_rounded,
+    'login_rounded': Icons.login_rounded,
+    'logout_rounded': Icons.logout_rounded,
+    'king_bed_rounded': Icons.king_bed_rounded,
   };
 
   factory FacilityIcons.fromJson(Map<String, dynamic> json) {

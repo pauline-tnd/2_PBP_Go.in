@@ -32,7 +32,8 @@ class _HotelCardState extends State<HotelCard> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => DetailHotelPage(hotel: widget.hotel),
+        builder: (context) =>
+            DetailHotelPage(hotel: widget.hotel, addOns: const []),
       ),
     );
   }

@@ -6,6 +6,7 @@ import 'package:frontend/models/facilityIcons.dart';
 import 'package:frontend/models/bookingDetail.dart' as details;
 import 'package:frontend/models/room.dart';
 import 'package:frontend/widgets/room_image.dart';
+import 'package:frontend/services/api_services.dart';
 
 class RoomCard extends StatefulWidget {
   final Room room;
@@ -50,6 +51,12 @@ class _RoomCardState extends State<RoomCard> {
         : [if (widget.imageUrl != null) widget.imageUrl!];
     final addOns = widget.addOns ?? widget.room.addOns;
 
+    final fetchedReviews = await ApiService.fetchRoomReviews(widget.room.id);
+    final reviewScore = fetchedReviews.isEmpty
+        ? 0.0
+        : fetchedReviews.map((r) => r.rating).reduce((a, b) => a + b) /
+              fetchedReviews.length;
+
     final result = await Navigator.push<List<details.BookingDetail>>(
       context,
       MaterialPageRoute(
@@ -59,7 +66,7 @@ class _RoomCardState extends State<RoomCard> {
           facilities: widget.facilities,
           roomAmenities: widget.room.roomFacilities,
           addOns: addOns,
-          reviews: widget.reviews,
+          reviews: fetchedReviews.map((r) => r.toJson()).toList(),
           hotelName: widget.hotelName,
           hotelLocation: widget.hotelLocation,
           reviewScore: widget.reviewScore,

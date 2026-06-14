@@ -24,10 +24,12 @@ class Review extends Model
     ];
 
     protected $casts = [
-        'rating' => 'integer',
-        'description' => 'string',
-        'image' => 'string',
-    ];
+    'rating' => 'integer',
+    'description' => 'string',
+    'image' => 'string',
+    'created_at' => 'datetime:Y-m-d H:i:s',
+    'updated_at' => 'datetime:Y-m-d H:i:s',
+];
 
     protected $appends = ['image_url'];
 

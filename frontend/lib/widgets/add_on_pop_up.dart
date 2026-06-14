@@ -40,6 +40,16 @@ class _AddOnPopUpState extends State<AddOnPopUp> {
   void initState() {
     super.initState();
     _notesController.text = widget.initialNotes;
+
+    if (widget.editIndex != null && widget.existingBookings != null) {
+      final existing = widget.existingBookings![widget.editIndex!];
+      _notesController.text = existing.notes;
+      for (int i = 0; i < widget.addOns.length; i++) {
+        if (existing.selectedAddOns.any((a) => a.id == widget.addOns[i].id)) {
+          _selectedIndexes.add(i);
+        }
+      }
+    }
   }
 
   @override

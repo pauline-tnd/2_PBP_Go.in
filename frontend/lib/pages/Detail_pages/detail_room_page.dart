@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/widgets/booking_confirmation_pop_up.dart';
 import 'package:intl/intl.dart';
+
 import 'package:frontend/models/bookingDetail.dart' as booking_detail;
 import 'package:frontend/models/room.dart';
 import 'package:frontend/models/addOn.dart';
-import 'package:frontend/widgets/room_image.dart';
-import 'package:frontend/widgets/add_on_pop_up.dart';
+import 'package:frontend/models/review.dart';
+import 'package:frontend/models/facilityIcons.dart';
 import 'package:frontend/pages/settings/review_detail_page.dart';
 import 'package:frontend/pages/payment_confirmation_page.dart';
-import 'package:frontend/models/review.dart';
 import 'package:frontend/widgets/review_card.dart';
+import 'package:frontend/widgets/booking_confirmation_pop_up.dart';
+import 'package:frontend/widgets/room_image.dart';
+import 'package:frontend/widgets/add_on_pop_up.dart';
 
 class DetailRoomPage extends StatefulWidget {
   final Room room;
@@ -53,13 +55,6 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
   }
 
   List<Map<String, dynamic>> _getMainAmenities() {
-    const mainAmenitiesList = [
-      'Free WiFi',
-      'Housekeeping',
-      '24-hour room service',
-      'Telephone',
-      'Non-smoking room',
-    ];
     return widget.facilities.toList();
   }
 
@@ -82,7 +77,7 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
     super.dispose();
   }
 
-  void _openAddOnPopUp() {
+  void _openAddOnPopUp({int? editIndex}) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -97,6 +92,7 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
         ),
         roomImage: widget.imageUrls.isNotEmpty ? widget.imageUrls.first : '',
         existingBookings: _localTempList,
+        editIndex: editIndex,
         onConfirmationCustomAnother: (updatedList) {
           setState(() {
             _localTempList = List.from(updatedList);
@@ -108,6 +104,7 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
             backgroundColor: Colors.transparent,
             builder: (popupContext) => BookingConfirmationPopUp(
               bookingDetails: updatedList,
+              allAddOns: widget.addOns,
               hotelName: widget.hotelName,
               hotelLocation: widget.hotelLocation,
               previewImageUrl: widget.imageUrls.isNotEmpty
@@ -155,43 +152,32 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
       'id_ID',
     ).format(room.price.toInt());
 
+    debugPrint('Review JSON: ${widget.reviews}');
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF8FAFC),
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
             backgroundColor: Colors.white,
+            surfaceTintColor: Colors.white,
             elevation: 0,
             pinned: true,
             expandedHeight: 0,
-            leading: GestureDetector(
-              onTap: () => Navigator.pop(context, _localTempList),
-              child: Container(
-                margin: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.08),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: const Icon(
-                  Icons.chevron_left_rounded,
-                  color: Color(0xFF1E293B),
-                  size: 24,
-                ),
+            leading: IconButton(
+              onPressed: () => Navigator.pop(context, _localTempList),
+              icon: const Icon(
+                Icons.chevron_left_rounded,
+                color: Color(0xFF0F172A),
+                size: 28,
               ),
             ),
             title: const Text(
               'Room Detail',
               style: TextStyle(
-                color: Color(0xFF1E293B),
+                color: Color(0xFF111827),
                 fontSize: 16,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w500,
               ),
             ),
             centerTitle: true,
@@ -280,8 +266,10 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                                 height: 6,
                                 decoration: BoxDecoration(
                                   color: i == _currentImageIndex
-                                      ? Colors.white
-                                      : Colors.white.withValues(alpha: 0.5),
+                                      ? const Color(0xFFCBD5E1)
+                                      : const Color(
+                                          0xFF94A3B8,
+                                        ).withValues(alpha: 0.55),
                                   borderRadius: BorderRadius.circular(3),
                                 ),
                               ),
@@ -304,9 +292,9 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                           Text(
                             widget.hotelName,
                             style: const TextStyle(
-                              fontSize: 13,
+                              fontSize: 16,
                               fontWeight: FontWeight.w500,
-                              color: Color(0xFF3B82F6),
+                              color: Color(0xFF4F8DF7),
                             ),
                           ),
                           const Spacer(),
@@ -316,9 +304,9 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                               Text(
                                 'Rp $priceFormatted',
                                 style: const TextStyle(
-                                  fontSize: 16,
+                                  fontSize: 18,
                                   fontWeight: FontWeight.w700,
-                                  color: Color(0xFF3B82F6),
+                                  color: Color(0xFF4F8DF7),
                                 ),
                               ),
                               const Text(
@@ -338,7 +326,7 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                       Text(
                         room.type,
                         style: const TextStyle(
-                          fontSize: 22,
+                          fontSize: 24,
                           fontWeight: FontWeight.w700,
                           color: Color(0xFF1E293B),
                         ),
@@ -349,9 +337,9 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                       Text(
                         room.description,
                         style: const TextStyle(
-                          fontSize: 13,
-                          color: Color(0xFF64748B),
-                          height: 1.5,
+                          fontSize: 12,
+                          color: Color(0xFF94A3B8),
+                          height: 1.3,
                         ),
                       ),
 
@@ -366,13 +354,13 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                           ),
                           const SizedBox(width: 8),
                           _InfoChip(
-                            icon: Icons.straighten_rounded,
+                            icon: Icons.square_foot_rounded,
                             label: 'SIZE',
                             value: '${room.roomSize} m\u00B2',
                           ),
                           const SizedBox(width: 8),
                           const _InfoChip(
-                            icon: Icons.bed_outlined,
+                            icon: Icons.hotel_outlined,
                             label: 'BED TYPE',
                             value: '1 King',
                           ),
@@ -391,13 +379,11 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                       ),
                       const SizedBox(height: 12),
                       ..._getMainAmenities().map((f) {
-                        final icon = f['icon'];
-                        return _FacilityRow(
-                          icon: icon is IconData
-                              ? icon
-                              : Icons.check_circle_outline_rounded,
-                          name: f['name']?.toString() ?? '',
-                        );
+                        final facility = FacilityIcons.fromJson(f);
+                        final icon =
+                            FacilityIcons.iconMap[facility.icon] ??
+                            Icons.check_circle_outline_rounded;
+                        return _FacilityRow(icon: icon, name: facility.name);
                       }),
                       const SizedBox(height: 20),
 
@@ -417,7 +403,7 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                               onTap: () {},
                               child: const Icon(
                                 Icons.more_vert_outlined,
-                                color: Color(0xFF3B82F6),
+                                color: Color(0xFF4F8DF7),
                               ),
                             ),
                         ],
@@ -432,13 +418,13 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                                 children: [
                                   const Text(
                                     '• ',
-                                    style: TextStyle(color: Color(0xFF64748B)),
+                                    style: TextStyle(color: Color(0xFF94A3B8)),
                                   ),
                                   Text(
                                     item['name'] ?? item,
                                     style: const TextStyle(
                                       fontSize: 13,
-                                      color: Color(0xFF64748B),
+                                      color: Color(0xFF1E293B),
                                     ),
                                   ),
                                 ],
@@ -463,13 +449,13 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                             children: [
                               const Text(
                                 '• ',
-                                style: TextStyle(color: Color(0xFF64748B)),
+                                style: TextStyle(color: Color(0xFF94A3B8)),
                               ),
                               Text(
                                 item.name,
                                 style: const TextStyle(
                                   fontSize: 13,
-                                  color: Color(0xFF64748B),
+                                  color: Color(0xFF1E293B),
                                 ),
                               ),
                             ],
@@ -538,13 +524,14 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                                   'See All',
                                   style: TextStyle(
                                     fontSize: 13,
-                                    color: Color(0xFF3B82F6),
+                                    color: Color(0xFF4F8DF7),
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
                                 Icon(
                                   Icons.chevron_right_rounded,
-                                  color: Color(0xFF3B82F6),
+                                  // Icons.more_vert_outlined,
+                                  color: Color(0xFF4F8DF7),
                                   size: 18,
                                 ),
                               ],
@@ -556,7 +543,7 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                       const SizedBox(height: 12),
 
                       SizedBox(
-                        height: 200,
+                        height: 130,
                         child: widget.reviews.isEmpty
                             ? const Center(
                                 child: Text(
@@ -570,7 +557,7 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                             : ListView.separated(
                                 scrollDirection: Axis.horizontal,
                                 itemCount: widget.reviews.length,
-                                separatorBuilder: (_, __) =>
+                                separatorBuilder: (_, _) =>
                                     const SizedBox(width: 12),
                                 itemBuilder: (context, index) {
                                   final review = Review.fromJson(
@@ -614,11 +601,11 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                   child: ElevatedButton(
                     onPressed: _openAddOnPopUp,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF3B82F6),
+                      backgroundColor: const Color(0xFF4F8DF7),
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(24),
                       ),
                       elevation: 0,
                     ),
@@ -639,9 +626,10 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                         child: OutlinedButton(
                           onPressed: () => Navigator.pop(context),
                           style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: Color(0xFFE2E8F0)),
+                            side: const BorderSide(color: Color(0xFFE5E7EB)),
+                            backgroundColor: Colors.white,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
+                              borderRadius: BorderRadius.circular(24),
                             ),
                           ),
                           child: const Text(
@@ -649,7 +637,7 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
-                              color: Color(0xFF64748B),
+                              color: Color(0xFF94A3B8),
                             ),
                           ),
                         ),
@@ -662,10 +650,10 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                         child: ElevatedButton(
                           onPressed: _openAddOnPopUp,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF3B82F6),
+                            backgroundColor: const Color(0xFF4F8DF7),
                             foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
+                              borderRadius: BorderRadius.circular(24),
                             ),
                             elevation: 0,
                           ),
@@ -697,19 +685,13 @@ class _CarouselButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 36,
-        height: 36,
+        width: 44,
+        height: 44,
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.85),
-          borderRadius: BorderRadius.circular(10),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
-              blurRadius: 8,
-            ),
-          ],
+          color: Colors.black.withValues(alpha: 0.28),
+          borderRadius: BorderRadius.circular(14),
         ),
-        child: Icon(icon, color: const Color(0xFF1E293B), size: 22),
+        child: Icon(icon, color: Colors.white, size: 24),
       ),
     );
   }
@@ -731,21 +713,27 @@ class _InfoChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
         decoration: BoxDecoration(
-          color: const Color(0xFFF8FAFC),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.06),
+              blurRadius: 14,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Column(
           children: [
-            Icon(icon, color: const Color(0xFF3B82F6), size: 20),
+            Icon(icon, color: const Color(0xFF4F8DF7), size: 20),
             const SizedBox(height: 4),
             Text(
               label,
               style: const TextStyle(
                 fontSize: 9,
                 color: Color(0xFF94A3B8),
-                fontWeight: FontWeight.w500,
-                letterSpacing: 0.5,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.4,
               ),
             ),
             const SizedBox(height: 2),
@@ -776,11 +764,11 @@ class _FacilityRow extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 10),
       child: Row(
         children: [
-          Icon(icon, color: const Color(0xFF3B82F6), size: 20),
+          Icon(icon, color: const Color(0xFF4F8DF7), size: 20),
           const SizedBox(width: 10),
           Text(
             name,
-            style: const TextStyle(fontSize: 13, color: Color(0xFF1E293B)),
+            style: const TextStyle(fontSize: 13, color: Color(0xFF111827)),
           ),
         ],
       ),

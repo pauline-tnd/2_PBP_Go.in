@@ -5,6 +5,7 @@ import 'package:frontend/models/review.dart';
 import 'package:frontend/models/room.dart';
 import 'package:frontend/models/bookingDetail.dart' as details;
 import 'package:frontend/models/facilityIcons.dart';
+import 'package:frontend/models/addOn.dart';
 
 import 'package:frontend/widgets/room_card.dart';
 import 'package:frontend/widgets/hotel_image.dart';
@@ -24,8 +25,9 @@ import 'package:frontend/pages/payment_confirmation_page.dart';
 
 class DetailHotelPage extends StatefulWidget {
   final Hotel hotel;
+  final List<AddOnItem> addOns;
 
-  const DetailHotelPage({super.key, required this.hotel});
+  const DetailHotelPage({super.key, required this.hotel, required this.addOns});
 
   @override
   State<DetailHotelPage> createState() => _DetailHotelPageState();
@@ -277,6 +279,7 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
       backgroundColor: Colors.transparent,
       builder: (sheetContext) => BookingConfirmationPopUp(
         bookingDetails: _tempBookedList,
+        allAddOns: widget.addOns,
         hotelName: widget.hotel.name,
         hotelLocation: widget.hotel.location,
         previewImageUrl: widget.hotel.imagePath ?? '',

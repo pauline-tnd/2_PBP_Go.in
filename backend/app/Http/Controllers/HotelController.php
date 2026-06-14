@@ -96,6 +96,10 @@ class HotelController extends Controller
             // room list
             'rooms.roomImages',
             'rooms.roomFacilities',
+
+            // add ons
+            'addOns',
+            'addOns.icon',
         ])
             ->withAvg('reviews as hotel_rating', 'rating')   // hotel's average rating
             ->withCount('reviews as total_reviews')           // review total
