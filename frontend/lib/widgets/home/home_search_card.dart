@@ -4,6 +4,8 @@ import 'package:frontend/pages/search_results_page.dart';
 import 'package:frontend/widgets/home/home_search_field.dart';
 import 'package:intl/intl.dart';
 import 'package:frontend/pages/main_shell.dart';
+import 'package:provider/provider.dart';
+import 'package:frontend/providers/location_provider.dart';
 
 class HomeSearchCard extends StatefulWidget {
   final VoidCallback? onSearch;
@@ -112,13 +114,11 @@ class _HomeSearchCardState extends State<HomeSearchCard> {
   }
 
   void _openSearchResults([String? query]) {
-    final searchQuery = query?.trim() ?? _hotelQuery.trim();
+    final location = context.read<LocationProvider>().address;
+    final searchQuery = query?.trim().isNotEmpty == true ? query!.trim() : (_hotelQuery.isNotEmpty ? _hotelQuery : location);
     final mainShell = context.findAncestorStateOfType<MainShellState>();
     mainShell?.showOverlayPage(
-      SearchResultsPage(
-        initialQuery: searchQuery.isEmpty ? null : searchQuery,
-        dateRange: _getDateRangeText(),
-      ),
+      SearchResultsPage(initialQuery: searchQuery, location: location, dateRange: _getDateRangeText()),
     );
   }
 

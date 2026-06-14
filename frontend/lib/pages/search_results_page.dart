@@ -104,15 +104,15 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
 
   List<Hotel> get _filteredAndSortedHotels {
     final query = widget.initialQuery?.trim().toLowerCase();
-
     List<Hotel> result = _allHotels.where((hotel) {
-      if (query != null &&
-          query.isNotEmpty &&
-          !hotel.name.toLowerCase().contains(query) &&
-          !hotel.location.toLowerCase().contains(query)) {
-        return false;
+      if (query != null && query.isNotEmpty) {
+        final locationText ='${hotel.name} ${hotel.location}'.toLowerCase();
+        final words = query.split(RegExp(r'[\s,]+')).where((e) => e.length > 2);
+        final hasMatch = words.any((word) => locationText.contains(word));
+        if (!hasMatch) {
+          return false;
+        }
       }
-
       if (hotel.pricePerNight < _filterState.priceRange.start ||
           hotel.pricePerNight > _filterState.priceRange.end) {
         return false;

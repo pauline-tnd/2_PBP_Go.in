@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:frontend/models/hotel.dart';
 import 'package:frontend/providers/hotel_search_provider.dart';
 import 'package:frontend/utils/image_path.dart';
+import 'package:frontend/providers/location_provider.dart';
 
 class HomeSearchField extends StatefulWidget {
   final void Function(Hotel hotel) onHotelSelected;
@@ -315,6 +316,14 @@ class _HomeSearchFieldState extends State<HomeSearchField> {
 
   @override
   Widget build(BuildContext context) {
+    final locationProvider = context.watch<LocationProvider>();
+    if (locationProvider.address.isNotEmpty &&
+        _ctrl.text != locationProvider.address) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _ctrl.text = locationProvider.address;
+        widget.onChanged?.call(locationProvider.address);
+      });
+    }
     return TapRegion(
       groupId: _tapRegionGroupId,
       onTapOutside: (_) => _focus.unfocus(),
