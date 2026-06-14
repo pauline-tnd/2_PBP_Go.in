@@ -572,16 +572,13 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
               padding: const EdgeInsets.all(24),
               children: [
                 Center(
-                  child: Container(
-                    width: 10.w,
-                    height: 5.h,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFE2E8F0),
-                      borderRadius: BorderRadius.circular(2),
-                    ),
+                  child: Icon(
+                    Icons.horizontal_rule,
+                    color: Colors.grey,
+                    size: 28,
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 15),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
