@@ -396,7 +396,10 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
           .where((img) => img.isNotEmpty);
     }).toList();
 
-    final List<String> carouselImages = [...hotelImages, ...allRoomImages];
+    final List<String> carouselImages = [
+      ...hotelImages,
+      ...allRoomImages.take(3),
+    ];
     final List<String> displayImages = carouselImages.isNotEmpty
         ? carouselImages
         : [

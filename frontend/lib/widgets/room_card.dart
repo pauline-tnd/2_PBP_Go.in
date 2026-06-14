@@ -216,7 +216,7 @@ class _RoomCardState extends State<RoomCard> {
 
                     Expanded(
                       child: Text(
-                        '1 ${room.type} bed',
+                        '${room.type} bed',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(

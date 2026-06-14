@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/models/addOn.dart';
 import 'package:frontend/models/facilityIcons.dart';
+import 'package:frontend/services/app_config.dart';
 
 class Room {
   final int id;
@@ -64,7 +65,16 @@ class Room {
           )
           .toList(),
       roomImages: (json['room_images'] as List<dynamic>? ?? [])
-          .map((e) => e['image']?.toString() ?? '')
+          .map((e) {
+            final img = e['image']?.toString() ?? '';
+            if (img.isEmpty) return '';
+            if (img.startsWith('http://') || img.startsWith('https://'))
+              return img;
+            final base =
+                'https://ztcesgevfhqouubrrmdz.supabase.co/storage/v1/object/public/images/roomDefault';
+            final path = img.startsWith('/') ? img : '/$img';
+            return '$base$path';
+          })
           .where((s) => s.isNotEmpty)
           .toList(),
       roomFacilities: rawFacilities

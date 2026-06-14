@@ -48,6 +48,17 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
   final PageController _pageController = PageController();
   late List<booking_detail.BookingDetail> _localTempList;
 
+  static const List<String> _defaultRoomImages = [
+    'assets/images/RoomDefault/hotel_room_1.png',
+    'assets/images/RoomDefault/hotel_room_2.png',
+    'assets/images/RoomDefault/hotel_room_3.png',
+    'assets/images/RoomDefault/hotel_room_4.png',
+    'assets/images/RoomDefault/hotel_room_5.png',
+    'assets/images/RoomDefault/hotel_room_6.png',
+    'assets/images/RoomDefault/hotel_room_7.png',
+    'assets/images/RoomDefault/hotel_room_8.png',
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -152,8 +163,6 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
       'id_ID',
     ).format(room.price.toInt());
 
-    debugPrint('Review JSON: ${widget.reviews}');
-
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       body: CustomScrollView(
@@ -193,15 +202,16 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                     children: [
                       PageView.builder(
                         controller: _pageController,
-                        itemCount: widget.imageUrls.isEmpty
-                            ? 1
-                            : widget.imageUrls.length,
+                        itemCount: widget.imageUrls.isNotEmpty
+                            ? widget.imageUrls.length
+                            : _defaultRoomImages.length,
                         onPageChanged: (index) =>
                             setState(() => _currentImageIndex = index),
                         itemBuilder: (context, index) {
-                          final url = widget.imageUrls.isEmpty
-                              ? null
-                              : widget.imageUrls[index];
+                          final effectiveImages = widget.imageUrls.isNotEmpty
+                              ? widget.imageUrls
+                              : _defaultRoomImages;
+                          final url = effectiveImages[index];
                           return RoomImage(
                             imagePath: url,
                             placeholderColor: const Color(0xFF94A3B8),
@@ -211,7 +221,10 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                           );
                         },
                       ),
-                      if (widget.imageUrls.length > 1) ...[
+                      if ((widget.imageUrls.isNotEmpty
+                              ? widget.imageUrls.length
+                              : _defaultRoomImages.length) >
+                          1)
                         Positioned(
                           left: 12,
                           top: 0,
@@ -230,53 +243,55 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                             ),
                           ),
                         ),
-                        Positioned(
-                          right: 12,
-                          top: 0,
-                          bottom: 0,
-                          child: Center(
-                            child: _CarouselButton(
-                              icon: Icons.chevron_right_rounded,
-                              onTap: () {
-                                if (_currentImageIndex <
-                                    widget.imageUrls.length - 1) {
-                                  _pageController.nextPage(
-                                    duration: const Duration(milliseconds: 300),
-                                    curve: Curves.easeInOut,
-                                  );
-                                }
-                              },
-                            ),
+                      Positioned(
+                        right: 12,
+                        top: 0,
+                        bottom: 0,
+                        child: Center(
+                          child: _CarouselButton(
+                            icon: Icons.chevron_right_rounded,
+                            onTap: () {
+                              if (_currentImageIndex <
+                                  (widget.imageUrls.isNotEmpty
+                                          ? widget.imageUrls.length
+                                          : _defaultRoomImages.length) -
+                                      1) {
+                                _pageController.nextPage(
+                                  duration: const Duration(milliseconds: 300),
+                                  curve: Curves.easeInOut,
+                                );
+                              }
+                            },
                           ),
                         ),
-                        Positioned(
-                          bottom: 12,
-                          left: 0,
-                          right: 0,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: List.generate(
-                              widget.imageUrls.length,
-                              (i) => AnimatedContainer(
-                                duration: const Duration(milliseconds: 250),
-                                margin: const EdgeInsets.symmetric(
-                                  horizontal: 3,
-                                ),
-                                width: i == _currentImageIndex ? 18 : 6,
-                                height: 6,
-                                decoration: BoxDecoration(
-                                  color: i == _currentImageIndex
-                                      ? const Color(0xFFCBD5E1)
-                                      : const Color(
-                                          0xFF94A3B8,
-                                        ).withValues(alpha: 0.55),
-                                  borderRadius: BorderRadius.circular(3),
-                                ),
+                      ),
+                      Positioned(
+                        bottom: 12,
+                        left: 0,
+                        right: 0,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: List.generate(
+                            widget.imageUrls.isNotEmpty
+                                ? widget.imageUrls.length
+                                : _defaultRoomImages.length,
+                            (i) => AnimatedContainer(
+                              duration: const Duration(milliseconds: 250),
+                              margin: const EdgeInsets.symmetric(horizontal: 3),
+                              width: i == _currentImageIndex ? 18 : 6,
+                              height: 6,
+                              decoration: BoxDecoration(
+                                color: i == _currentImageIndex
+                                    ? const Color(0xFFCBD5E1)
+                                    : const Color(
+                                        0xFF94A3B8,
+                                      ).withValues(alpha: 0.55),
+                                borderRadius: BorderRadius.circular(3),
                               ),
                             ),
                           ),
                         ),
-                      ],
+                      ),
                     ],
                   ),
                 ),
