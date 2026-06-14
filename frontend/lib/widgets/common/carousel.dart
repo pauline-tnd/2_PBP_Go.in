@@ -1,5 +1,51 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:frontend/widgets/room_image.dart';
+
+class _FallbackImage extends StatelessWidget {
+  final String imagePath;
+  final double width;
+  final double height;
+  final BorderRadius borderRadius;
+
+  const _FallbackImage({
+    super.key,
+    required this.imagePath,
+    required this.width,
+    required this.height,
+    required this.borderRadius,
+  });
+
+  static const _fallbacks = [
+    'assets/images/RoomDefault/hotel_room_1.png',
+    'assets/images/RoomDefault/hotel_room_2.png',
+    'assets/images/RoomDefault/hotel_room_3.png',
+  ];
+
+  bool get _isAsset => imagePath.startsWith('assets/');
+
+  Widget _fallback(double w, double h) =>
+      Image.asset(_fallbacks[0], width: w, height: h, fit: BoxFit.cover);
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isAsset) {
+      return Image.asset(
+        imagePath,
+        width: width,
+        height: height,
+        fit: BoxFit.cover,
+      );
+    }
+    return Image.network(
+      imagePath,
+      width: width,
+      height: height,
+      fit: BoxFit.cover,
+      errorBuilder: (_, __, ___) => _fallback(width, height),
+    );
+  }
+}
 
 class Carousel extends StatefulWidget {
   final List<String> imageUrls;
@@ -11,40 +57,35 @@ class Carousel extends StatefulWidget {
   State<Carousel> createState() => _CarouselState();
 }
 
-class _CarouselState extends State<Carousel>
-    with SingleTickerProviderStateMixin {
+class _CarouselState extends State<Carousel> {
   int _current = 0;
-  late AnimationController _animController;
-  late Animation<double> _anim;
-  int? _animatingFrom;
+  Timer? _autoPlayTimer;
 
   List<String> get _images => widget.imageUrls;
 
   @override
   void initState() {
     super.initState();
-    _animController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 420),
-    );
-    _anim = CurvedAnimation(
-      parent: _animController,
-      curve: Curves.easeOutCubic,
-    );
+    _startAutoPlay();
+  }
+
+  void _startAutoPlay() {
+    _autoPlayTimer = Timer.periodic(const Duration(seconds: 3), (_) {
+      if (_images.isNotEmpty) {
+        _goTo((_current + 1) % _images.length, direction: 1);
+      }
+    });
   }
 
   @override
   void dispose() {
-    _animController.dispose();
+    _autoPlayTimer?.cancel();
     super.dispose();
   }
 
-  void _goTo(int index) {
+  void _goTo(int index, {int direction = 1}) {
     if (index == _current || index < 0 || index >= _images.length) return;
-
-    setState(() {
-      _current = index;
-    });
+    setState(() => _current = index);
   }
 
   int? get _leftIndex {
@@ -62,97 +103,75 @@ class _CarouselState extends State<Carousel>
     if (_images.isEmpty) return const SizedBox.shrink();
 
     final screenW = MediaQuery.of(context).size.width;
-    final centerH = 150.0;
-    final centerW = 220.0;
-    final sideH = 105.0;
-    final sideW = 150.0;
+    const centerH = 150.0;
+    const centerW = 220.0;
+    const sideH = 105.0;
+    const sideW = 150.0;
+    final leftX = (screenW - centerW) / 2 - sideW + 60;
+    final rightX = (screenW - centerW) / 2 + centerW - 60;
+    final centerX = (screenW - centerW) / 2;
+    const duration = Duration(milliseconds: 350);
 
-    return GestureDetector(
-      onHorizontalDragEnd: (details) {
-        if (details.primaryVelocity == null) return;
-        if (details.primaryVelocity! < -200) {
-          _goTo((_current + 1) % _images.length);
-        } else if (details.primaryVelocity! > 200) {
-          _goTo((_current - 1 + _images.length) % _images.length);
-        }
-      },
-      child: SizedBox(
-        height: centerH + 20,
-        child: Stack(
-          alignment: Alignment.center,
-          clipBehavior: Clip.hardEdge,
-          children: [
-            if (_leftIndex != null)
-              Positioned(
-                left: (screenW - centerW) / 2 - sideW + 60,
-                top: (centerH - sideH) / 2,
-                child: GestureDetector(
-                  onTap: () => _goTo(_leftIndex!),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(20),
-                    child: SizedBox(
-                      width: sideW,
-                      height: sideH,
-                      child: RoomImage(
-                        imagePath: _images[_leftIndex!],
-                        placeholderColor: const Color(0xFF1E3A5F),
-                        width: sideW,
-                        height: sideH,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
+    final List<Widget> boxes = [];
+    final renderOrder = [
+      _leftIndex,
+      _rightIndex,
+      _current,
+    ].whereType<int>().toList();
 
-            if (_rightIndex != null && _rightIndex != _leftIndex)
-              Positioned(
-                right: (screenW - centerW) / 2 - sideW + 60,
-                top: (centerH - sideH) / 2,
-                child: GestureDetector(
-                  onTap: () => _goTo(_rightIndex!),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(20),
-                    child: SizedBox(
-                      width: sideW,
-                      height: sideH,
-                      child: RoomImage(
-                        imagePath: _images[_rightIndex!],
-                        placeholderColor: const Color(0xFF1E3A5F),
-                        width: sideW,
-                        height: sideH,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
+    for (final i in renderOrder) {
+      final isCenter = i == _current;
+      final isLeft = i == _leftIndex;
+      final isRight = i == _rightIndex;
 
-            AnimatedPositioned(
-              duration: const Duration(milliseconds: 320),
-              curve: Curves.easeOutCubic,
-              top: 0,
-              left: (screenW - centerW) / 2,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 320),
-                curve: Curves.easeOutCubic,
-                width: centerW,
-                height: centerH,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(22),
-                  child: RoomImage(
-                    imagePath: _images[_current],
-                    placeholderColor: const Color(0xFF1E3A5F),
-                    width: centerW,
-                    height: centerH,
-                    borderRadius: BorderRadius.circular(22),
-                  ),
-                ),
+      final double targetX = isCenter
+          ? centerX
+          : isLeft
+          ? leftX
+          : rightX;
+      final double targetTop = isCenter ? 0 : (centerH - sideH) / 2;
+      final double targetW = isCenter ? centerW : sideW;
+      final double targetH = isCenter ? centerH : sideH;
+      final double radius = isCenter ? 22 : 20;
+
+      final int capturedIndex = i;
+      final bool capturedIsLeft = isLeft;
+      final bool capturedIsRight = isRight;
+      final int? capturedRightIndex = _rightIndex;
+
+      boxes.add(
+        AnimatedPositioned(
+          key: ValueKey(capturedIndex),
+          duration: duration,
+          curve: Curves.easeInOut,
+          left: targetX,
+          top: targetTop,
+          width: targetW,
+          height: targetH,
+          child: GestureDetector(
+            onTap: () {
+              if (capturedIsLeft) _goTo(capturedIndex, direction: -1);
+              if (capturedIsRight) _goTo(capturedIndex, direction: 1);
+              if (!capturedIsLeft && !capturedIsRight)
+                _goTo(capturedRightIndex ?? 0, direction: 1);
+            },
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(radius),
+              child: _FallbackImage(
+                imagePath: _images[capturedIndex],
+                width: targetW,
+                height: targetH,
+                borderRadius: BorderRadius.circular(radius),
               ),
             ),
-          ],
+          ),
         ),
-      ),
+      );
+    }
+
+    return SizedBox(
+      height: centerH + 20,
+      child: Stack(clipBehavior: Clip.hardEdge, children: boxes),
     );
   }
 }

@@ -62,6 +62,7 @@ flutter:
     - assets/images/profile-photo.jpg
     - assets/images/profile-photo.png
     - assets/images/promo/
+    - assets/images/RoomDefault/
     
   fonts:
     - family: PlusJakartaSans

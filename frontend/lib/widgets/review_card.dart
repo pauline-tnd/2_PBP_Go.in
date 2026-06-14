@@ -25,8 +25,7 @@ class ReviewCard extends StatelessWidget {
                 CircleAvatar(
                   backgroundImage: review.user?.profileImage != null
                       ? NetworkImage(review.user!.profileImage!)
-                      : const AssetImage('assets/profile-photo.png')
-                            as ImageProvider,
+                      : const AssetImage('assets/images/profile-photo.png'),
                   radius: 20,
                 ),
                 const SizedBox(width: 10),

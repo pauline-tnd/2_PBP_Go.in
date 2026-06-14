@@ -20,7 +20,6 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import 'package:frontend/pages/settings/review_detail_page.dart';
-import 'package:frontend/pages/review_page.dart';
 import 'package:frontend/pages/payment_confirmation_page.dart';
 
 class DetailHotelPage extends StatefulWidget {
@@ -398,6 +397,13 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
     }).toList();
 
     final List<String> carouselImages = [...hotelImages, ...allRoomImages];
+    final List<String> displayImages = carouselImages.isNotEmpty
+        ? carouselImages
+        : [
+            ...hotelImages,
+            'assets/images/RoomDefault/hotel_room_1.png',
+            'assets/images/RoomDefault/hotel_room_2.png',
+          ];
 
     final facilities =
         (_hotelDetail?['hotel_facilities'] as List<dynamic>? ?? []);
@@ -428,7 +434,7 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SizedBox(
-          height: 300,
+          height: 400,
           child: Stack(
             clipBehavior: Clip.none,
             children: [
@@ -451,7 +457,7 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
               Positioned(
                 left: 16,
                 right: 16,
-                bottom: -90,
+                bottom: 10,
                 child: Container(
                   padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
                   decoration: BoxDecoration(
@@ -668,22 +674,26 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
           ),
         ),
 
-        const SizedBox(height: 144),
+        const SizedBox(height: 44),
 
-        if (carouselImages.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Carousel(imageUrls: carouselImages, height: 220),
-          ),
+        // if (carouselImages.isNotEmpty)
+        //   Padding(
+        //     padding: const EdgeInsets.symmetric(horizontal: 16),
+        //     child: Carousel(imageUrls: carouselImages, height: 220),
+        //   ),
 
-        if (carouselImages.isEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Container(
-              height: 2,
-              color: const Color.fromARGB(255, 213, 218, 224),
-            ),
-          ),
+        // if (carouselImages.isEmpty)
+        //   Padding(
+        //     padding: const EdgeInsets.symmetric(horizontal: 16),
+        //     child: Container(
+        //       height: 2,
+        //       color: const Color.fromARGB(255, 213, 218, 224),
+        //     ),
+        //   ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Carousel(imageUrls: displayImages, height: 220),
+        ),
 
         const SizedBox(height: 24),
 
