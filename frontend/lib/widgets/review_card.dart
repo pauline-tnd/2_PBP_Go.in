@@ -1,21 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:frontend/models/review.dart';
 import 'package:frontend/widgets/star_rating.dart';
 
 class ReviewCard extends StatelessWidget {
   final Review review;
   final VoidCallback? onImageTap;
+  final bool isExpanded;
 
-  const ReviewCard({super.key, required this.review, this.onImageTap});
+  const ReviewCard({
+    super.key,
+    required this.review,
+    this.onImageTap,
+    this.isExpanded = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Card(
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadiusGeometry.circular(12),
+        borderRadius: BorderRadiusGeometry.circular(20),
       ),
+      color: Colors.white,
       child: Padding(
-        padding: const EdgeInsets.all(10),
+        padding: const EdgeInsets.all(15),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -24,7 +32,7 @@ class ReviewCard extends StatelessWidget {
                 CircleAvatar(
                   backgroundImage: review.user?.profileImage != null
                       ? NetworkImage(review.user!.profileImage!)
-                      : const AssetImage('assets/profile-photo.png')
+                      : const AssetImage('assets/images/profile-photo.png')
                             as ImageProvider,
                   radius: 20,
                 ),
@@ -36,23 +44,48 @@ class ReviewCard extends StatelessWidget {
                       Text(
                         review.user?.username ?? 'Unknown',
                         style: const TextStyle(fontWeight: FontWeight.w600),
+                        overflow: TextOverflow.ellipsis,
                       ),
                       Text(
-                        review.createdAt ?? 'Date not found',
+                        review.createdAt != null
+                            ? review.createdAt!.length >= 19
+                                  ? review.createdAt!.substring(0, 10) +
+                                        '  ' +
+                                        review.createdAt!.substring(11, 19)
+                                  : review.createdAt!
+                            : 'Date not found',
                         style: const TextStyle(
                           fontSize: 12,
                           color: Colors.grey,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
                 ),
-                StarRating(rating: review.rating),
+                // rating pindah ke bawah kalau expanded
+                if (!isExpanded) StarRating(rating: review.rating),
               ],
             ),
+
+            // rating di baris sendiri kalau expanded
+            if (isExpanded) ...[
+              const SizedBox(height: 6),
+              StarRating(rating: review.rating),
+            ],
+
             const SizedBox(height: 10),
-            // Description review
-            Text(review.description),
+
+            // teks full kalau expanded, ellipsis kalau tidak
+            Text(
+              review.description,
+              maxLines: isExpanded ? null : 3,
+              overflow: isExpanded
+                  ? TextOverflow.visible
+                  : TextOverflow.ellipsis,
+            ),
+
             if (review.image != null) ...[
               const SizedBox(height: 10),
               GestureDetector(
@@ -61,8 +94,9 @@ class ReviewCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                   child: Image.network(
                     review.image!,
-                    width: 90,
-                    height: 70,
+                    // ukuran gambar beda antara expanded dan tidak
+                    width: isExpanded ? double.infinity : 90,
+                    height: isExpanded ? 180 : 70,
                     fit: BoxFit.cover,
                   ),
                 ),
