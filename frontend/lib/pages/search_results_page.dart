@@ -47,12 +47,14 @@ class SearchResultsPage extends StatefulWidget {
   final String? initialQuery;
   final String? location;
   final String? dateRange;
+  final bool isRadiusSearch;
 
   const SearchResultsPage({
     super.key, 
     this.initialQuery,
     this.location,
     this.dateRange,
+    this.isRadiusSearch = false,
   });
 
   @override
@@ -103,14 +105,19 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
   }
 
   List<Hotel> get _filteredAndSortedHotels {
-    final query = widget.initialQuery?.trim().toLowerCase();
+    final query = widget.initialQuery?.trim().toLowerCase() ?? '';
     List<Hotel> result = _allHotels.where((hotel) {
-      if (query != null && query.isNotEmpty) {
+      if (query.isNotEmpty) {
         final locationText ='${hotel.name} ${hotel.location}'.toLowerCase();
         final words = query.split(RegExp(r'[\s,]+')).where((e) => e.length > 2);
         final hasMatch = words.any((word) => locationText.contains(word));
         if (!hasMatch) {
           return false;
+        }
+      }
+      if (widget.isRadiusSearch) {
+        if (hotel.distance > 25.0) {
+          return false; 
         }
       }
       if (hotel.pricePerNight < _filterState.priceRange.start ||
@@ -128,6 +135,29 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
           }
         }
       }
+      // if (query != null && query.isNotEmpty) {
+      //   final locationText ='${hotel.name} ${hotel.location}'.toLowerCase();
+      //   final words = query.split(RegExp(r'[\s,]+')).where((e) => e.length > 2);
+      //   final hasMatch = words.any((word) => locationText.contains(word));
+      //   if (!hasMatch) {
+      //     return false;
+      //   }
+      // }
+      // if (hotel.pricePerNight < _filterState.priceRange.start ||
+      //     hotel.pricePerNight > _filterState.priceRange.end) {
+      //   return false;
+      // }
+      // if (_filterState.selectedStars.isNotEmpty &&
+      //     !_filterState.selectedStars.contains(hotel.starRating)) {
+      //   return false;
+      // }
+      // if (_filterState.selectedAmenities.isNotEmpty) {
+      //   for (final amenity in _filterState.selectedAmenities) {
+      //     if (!hotel.amenities.contains(amenity)) {
+      //       return false;
+      //     }
+      //   }
+      // }
       // if (_filterState.selectedRoomTypes.isNotEmpty) {
       //   bool hasMatch = false;
       //   for (final roomType in _filterState.selectedRoomTypes) {

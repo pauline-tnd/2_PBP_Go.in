@@ -15,7 +15,9 @@ class LocationPickerPage extends StatefulWidget {
 }
 
 class _LocationPickerPageState extends State<LocationPickerPage> {
-  static const String _maptilerKey = 'E9ZFe6B1DmH71sbyAHar';
+  static const String _maptilerKey = 'lxFU4qoFcJosN0r4dMW8';
+  // iaUdcRehTxyCpQCX4aND
+  // E9ZFe6B1DmH71sbyAHar
 
   final MapController _mapController = MapController();
   final TextEditingController _searchCtrl = TextEditingController();
