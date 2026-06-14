@@ -34,9 +34,7 @@ class BookingDetailPage extends StatelessWidget {
                     const SizedBox(height: 28),
                     Center(
                       child: QrImageView(
-                        data: booking.qrCode.isNotEmpty
-                            ? booking.qrCode
-                            : booking.bookingNumber,
+                        data: booking.bookingNumber,
                         version: QrVersions.auto,
                         size: 172,
                         padding: EdgeInsets.zero,

@@ -41,7 +41,7 @@ class AppConfig {
 
     // switch (defaultTargetPlatform) {
     //   case TargetPlatform.android:
-    // return 'http://10.0.2.2:8000/api';
+    // return 'http://10.0.2.2:8000/api'; (ganti 10.0.2.2 dengan IP address yang sesuai ip laptop/hp trs jalanin php artisan serve --host=0.0.0.0 --port=8000)
     //   case TargetPlatform.iOS:
     //   case TargetPlatform.macOS:
     //   case TargetPlatform.windows:
