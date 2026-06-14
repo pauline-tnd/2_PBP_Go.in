@@ -41,7 +41,7 @@ class AppConfig {
 
     // switch (defaultTargetPlatform) {
     //   case TargetPlatform.android:
-    //     return 'http://10.0.2.2:8000/api';
+    // return 'http://10.0.2.2:8000/api';
     //   case TargetPlatform.iOS:
     //   case TargetPlatform.macOS:
     //   case TargetPlatform.windows:
