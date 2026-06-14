@@ -10,8 +10,11 @@ class BookingDetailAddOn extends Model
     use HasFactory;
 
     protected $table = 'booking_detail_add_ons';
+
     protected $primaryKey = 'id';
+
     public $incrementing = true;
+
     protected $keyType = 'int';
 
     protected $fillable = [

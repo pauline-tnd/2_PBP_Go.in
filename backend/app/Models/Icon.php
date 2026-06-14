@@ -13,7 +13,7 @@ class Icon extends Model
 
     protected $fillable = [
         'icon',
-        'name'
+        'name',
     ];
 
     protected $casts = [

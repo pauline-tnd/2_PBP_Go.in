@@ -143,7 +143,11 @@ class _HomePageState extends State<HomePage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Search card
-            const HomeSearchCard(),
+            HomeSearchCard(
+              onSearch: () {
+                Navigator.pushNamed(context, '/search-results');
+              },
+            ),
 
             // Promo banner
             HomePromoBanner(

@@ -9,7 +9,7 @@ class ActivityHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GradientScrollHeader(
-      expandedHeight: 180, // Adjust as needed to match previous bottom padding
+      expandedHeight: 180,
       navbarColor: const Color(0xFF3B82F6),
       leading: Center(
         child: Text(

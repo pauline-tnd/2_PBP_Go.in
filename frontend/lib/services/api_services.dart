@@ -34,13 +34,18 @@ class ApiService {
   }
 
   static Future<Map<String, String>> _authHeaders() async {
-    final token = await _getToken();
-    // final token = 'tokentempeldisini';
-    return {
+    final String token = "sif4frDV9i3iGvGCMenEsQluMWUgsDpoCvvuHiYqd5869818";
+    // final token = await _getToken();
+    final headers = <String, String>{
       'Content-Type': 'application/json',
       'Accept': 'application/json',
-      'Authorization': 'Bearer $token',
     };
+
+    if (token.isNotEmpty) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+
+    return headers;
   }
 
   static Future<Map<String, dynamic>> register({
@@ -66,7 +71,7 @@ class ApiService {
     if (response.statusCode == 201) {
       return jsonDecode(response.body);
     } else {
-      throw Exception('Register failed: ${response.body}');
+      throw Exception('Register gagal: ${response.body}');
     }
   }
 
@@ -88,7 +93,7 @@ class ApiService {
       await _saveToken(data['token']);
       return data;
     } else {
-      throw Exception('Login failed: ${response.body}');
+      throw Exception('Login gagal: ${response.body}');
     }
   }
 
@@ -104,7 +109,7 @@ class ApiService {
       await prefs.remove('token');
       return jsonDecode(response.body);
     } else {
-      throw Exception('Logout failed: ${response.body}');
+      throw Exception('Logout gagal: ${response.body}');
     }
   }
 
@@ -123,7 +128,6 @@ class ApiService {
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
-      print(response.body);
       throw Exception('Failed to load user: ${response.body}');
     }
   }
@@ -167,24 +171,22 @@ class ApiService {
         'new_password_confirmation': newPasswordConfirmation,
       }),
     );
-    print("STATUS: ${response.statusCode}");
-    print("BODY: ${response.body}");
+
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
-      throw Exception(response.body);
+      throw Exception('Failed to update password: ${response.body}');
     }
   }
 
   static Future<Map<String, dynamic>> updateProfileImage(File imageFile) async {
-    final headers = await _authHeaders();
+    final token = await _getToken();
     final request = http.MultipartRequest(
       'PUT',
       Uri.parse('$baseUrl/user/profile'),
     );
-
-    request.headers.addAll(headers);
-
+    request.headers['Authorization'] = 'Bearer $token';
+    request.headers['Accept'] = 'application/json';
     request.files.add(
       await http.MultipartFile.fromPath('profile_image', imageFile.path),
     );
@@ -288,30 +290,31 @@ class ApiService {
     String? cursor,
   }) async {
     final headers = await _authHeaders();
-    final queryParameters = <String, dynamic>{};
+    final queryParts = <String>[];
 
-    if (search != null && search.trim().isNotEmpty) {
-      queryParameters['search'] = search.trim();
+    if (search != null) queryParts.add('search=$search');
+    if (minPrice != null) queryParts.add('min_price=$minPrice');
+    if (maxPrice != null) queryParts.add('max_price=$maxPrice');
+    if (sortBy != null) queryParts.add('sort_by=$sortBy');
+    if (userLat != null) queryParts.add('user_lat=$userLat');
+    if (userLng != null) queryParts.add('user_lng=$userLng');
+    if (cursor != null) queryParts.add('cursor=$cursor');
+    if (star != null) {
+      for (var s in star) {
+        queryParts.add('star[]=$s');
+      }
     }
-    if (minPrice != null) queryParameters['min_price'] = minPrice.toString();
-    if (maxPrice != null) queryParameters['max_price'] = maxPrice.toString();
-    if (sortBy != null) queryParameters['sort_by'] = sortBy;
-    if (userLat != null) queryParameters['user_lat'] = userLat.toString();
-    if (userLng != null) queryParameters['user_lng'] = userLng.toString();
-    if (cursor != null) queryParameters['cursor'] = cursor;
-    if (star != null && star.isNotEmpty) {
-      queryParameters['star[]'] = star.map((s) => s.toString()).toList();
-    }
-    if (amenities != null && amenities.isNotEmpty) {
-      queryParameters['amenities[]'] = amenities
-          .map((a) => a.toString())
-          .toList();
+    if (amenities != null) {
+      for (var a in amenities) {
+        queryParts.add('amenities[]=$a');
+      }
     }
 
-    final uri = Uri.parse(
-      '$baseUrl/hotels',
-    ).replace(queryParameters: queryParameters);
-    final response = await http.get(uri, headers: headers);
+    final queryString = queryParts.isNotEmpty ? '?${queryParts.join('&')}' : '';
+    final response = await http.get(
+      Uri.parse('$baseUrl/hotels$queryString'),
+      headers: headers,
+    );
 
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
@@ -488,7 +491,7 @@ class ApiService {
   }
 
   static Future<Map<String, dynamic>> storeReview({
-    // required int userId,
+    required int userId,
     required int roomId,
     required int bookingDetailId,
     required int rating,
@@ -496,15 +499,15 @@ class ApiService {
     required String createdAt,
     File? image,
   }) async {
-    final headers = await _authHeaders();
+    final token = await _getToken();
     final request = http.MultipartRequest(
       'POST',
       Uri.parse('$baseUrl/reviews'),
     );
+    request.headers['Authorization'] = 'Bearer $token';
+    request.headers['Accept'] = 'application/json';
 
-    request.headers.addAll(headers);
-
-    // request.fields['user_id'] = userId.toString();
+    request.fields['user_id'] = userId.toString();
     request.fields['room_id'] = roomId.toString();
     request.fields['booking_detail_id'] = bookingDetailId.toString();
     request.fields['rating'] = rating.toString();
@@ -512,13 +515,7 @@ class ApiService {
     request.fields['created_at'] = createdAt;
 
     if (image != null) {
-      request.files.add(
-        await http.MultipartFile.fromPath(
-          'image',
-          image.path,
-          filename: image.path.split('/').last,
-        ),
-      );
+      request.files.add(await http.MultipartFile.fromPath('image', image.path));
     }
 
     final streamedResponse = await request.send();
@@ -540,13 +537,14 @@ class ApiService {
     String? description,
     File? image,
   }) async {
-    final headers = await _authHeaders();
+    final token = await _getToken();
     final request = http.MultipartRequest(
       'POST',
       Uri.parse('$baseUrl/reviews/$reviewId'),
     );
     request.fields['_method'] = 'PUT';
-    request.headers.addAll(headers);
+    request.headers['Authorization'] = 'Bearer $token';
+    request.headers['Accept'] = 'application/json';
 
     if (userId != null) request.fields['user_id'] = userId.toString();
     if (roomId != null) request.fields['room_id'] = roomId.toString();
@@ -557,13 +555,7 @@ class ApiService {
     if (description != null) request.fields['description'] = description;
 
     if (image != null) {
-      request.files.add(
-        await http.MultipartFile.fromPath(
-          'image',
-          image.path,
-          filename: image.path.split('/').last,
-        ),
-      );
+      request.files.add(await http.MultipartFile.fromPath('image', image.path));
     }
 
     final streamedResponse = await request.send();
@@ -622,10 +614,15 @@ class ApiService {
   static Future<Map<String, dynamic>> storeBooking({
     required String checkIn,
     required String checkOut,
+    required double totalPrice,
     String? status,
   }) async {
     final headers = await _authHeaders();
-    final body = <String, dynamic>{'check_in': checkIn, 'check_out': checkOut};
+    final body = <String, dynamic>{
+      'check_in': checkIn,
+      'check_out': checkOut,
+      'total_price': totalPrice,
+    };
     if (status != null) body['status'] = status;
 
     final response = await http.post(
@@ -705,6 +702,7 @@ class ApiService {
     required int bookingId,
     required int roomId,
     required int totalRoom,
+    required double subTotal,
     String? notes,
   }) async {
     final headers = await _authHeaders();
@@ -712,6 +710,7 @@ class ApiService {
       'booking_id': bookingId,
       'room_id': roomId,
       'total_room': totalRoom,
+      'sub_total': subTotal,
     };
     if (notes != null) body['notes'] = notes;
 
@@ -733,6 +732,7 @@ class ApiService {
     int? bookingId,
     int? roomId,
     int? totalRoom,
+    double? subTotal,
     String? notes,
   }) async {
     final headers = await _authHeaders();
@@ -740,6 +740,7 @@ class ApiService {
     if (bookingId != null) body['booking_id'] = bookingId;
     if (roomId != null) body['room_id'] = roomId;
     if (totalRoom != null) body['total_room'] = totalRoom;
+    if (subTotal != null) body['sub_total'] = subTotal;
     if (notes != null) body['notes'] = notes;
 
     final response = await http.put(

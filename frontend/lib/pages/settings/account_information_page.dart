@@ -1,66 +1,8 @@
 import 'package:flutter/material.dart';
 import 'edit_profile_page.dart';
-import 'package:frontend/services/api_services.dart';
 
-class AccountInformationPage extends StatefulWidget {
+class AccountInformationPage extends StatelessWidget {
   const AccountInformationPage({super.key});
-
-  @override
-  State<AccountInformationPage> createState() => _AccountInformationPageState();
-}
-
-class _AccountInformationPageState extends State<AccountInformationPage> {
-  String username = '';
-  String email = '';
-  int userId = 0;
-  String createdAt = '';
-
-  @override
-  void initState() {
-    super.initState();
-    fetchUser();
-  }
-
-  Future<void> fetchUser() async {
-    try {
-      final response = await ApiService.getUser();
-      final user = response['data'];
-
-      if (!mounted) return;
-
-      final createdDate = DateTime.parse(user['created_at']);
-
-      setState(() {
-        username = user['username'] ?? '';
-        email = user['email'] ?? '';
-        userId = user['id'] ?? 0;
-        createdAt =
-            "${_monthName(createdDate.month)}, ${createdDate.day.toString().padLeft(2, '0')}, ${createdDate.year}";
-      });
-    } catch (e) {
-      debugPrint("Error fetch user: $e");
-    }
-  }
-
-  String _monthName(int month) {
-    const months = [
-      '',
-      'January',
-      'February',
-      'March',
-      'April',
-      'May',
-      'June',
-      'July',
-      'August',
-      'September',
-      'October',
-      'November',
-      'December'
-    ];
-
-    return months[month];
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -70,7 +12,7 @@ class _AccountInformationPageState extends State<AccountInformationPage> {
         backgroundColor: const Color(0xFFF5F7F8),
         elevation: 0,
         scrolledUnderElevation: 0,
-        toolbarHeight: 60,
+        toolbarHeight: 90,
         centerTitle: true,
         leading: Padding(
           padding: const EdgeInsets.only(left: 12),
@@ -170,8 +112,8 @@ class _AccountInformationPageState extends State<AccountInformationPage> {
                     ],
                   ),
                   const SizedBox(height: 26),
-                  Text(
-                    username,
+                  const Text(
+                    'Shinnosuke Nohara',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 20,
@@ -181,8 +123,8 @@ class _AccountInformationPageState extends State<AccountInformationPage> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    email,
+                  const Text(
+                    'shin@gmail.com',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w400,
@@ -232,7 +174,7 @@ class _AccountInformationPageState extends State<AccountInformationPage> {
                     iconBg: const Color(0x6194A3B8),
                     iconColor: const Color(0xFF64748B),
                     title: 'User ID',
-                    value: userId.toString(),
+                    value: 'SN-08082018-J',
                     isTop: true,
                   ),
                   _divider(),
@@ -266,7 +208,7 @@ class _AccountInformationPageState extends State<AccountInformationPage> {
                     iconBg: const Color(0x6194A3B8),
                     iconColor: const Color(0xFF64748B),
                     title: 'Date Joined',
-                    value: createdAt,
+                    value: 'October, 08, 2018',
                   ),
                   _divider(),
                   _buildInfoTile(

@@ -11,17 +11,19 @@ class BookingDetailAddOnController extends Controller
     public function index()
     {
         $addons = BookingDetailAddOn::with(['bookingDetail.booking.user', 'addOn'])->get();
+
         return response()->json($addons);
     }
 
     public function show($id)
     {
         $addon = BookingDetailAddOn::with(['bookingDetail.booking.user', 'addOn'])->find($id);
-        if (!$addon) {
+        if (! $addon) {
             return response()->json([
-                'message' => 'Data Booking Detail Add-On tidak ditemukan'
+                'message' => 'Data Booking Detail Add-On tidak ditemukan',
             ], 404);
         }
+
         return response()->json($addon);
     }
 
@@ -38,7 +40,7 @@ class BookingDetailAddOnController extends Controller
         BookingController::calculateTotal($addon->bookingDetail->booking_id);
         return response()->json([
             'message' => 'Add-on berhasil ditambahkan ke booking detail',
-            'addon' => $addon
+            'addon' => $addon,
         ], 201);
     }
 
@@ -57,7 +59,7 @@ class BookingDetailAddOnController extends Controller
 
         return response()->json([
             'message' => 'Add-on booking detail berhasil diperbarui',
-            'addon' => $addon
+            'addon' => $addon,
         ]);
     }
 
@@ -65,9 +67,9 @@ class BookingDetailAddOnController extends Controller
     {
         $addon = BookingDetailAddOn::find($id);
 
-        if (!$addon) {
+        if (! $addon) {
             return response()->json([
-                'message' => 'Data Booking Detail Add-On tidak ditemukan'
+                'message' => 'Data Booking Detail Add-On tidak ditemukan',
             ], 404);
         }
 
@@ -76,7 +78,7 @@ class BookingDetailAddOnController extends Controller
         BookingController::calculateTotal($bookingId);
 
         return response()->json([
-            'message' => 'Add-on booking detail berhasil dihapus'
+            'message' => 'Add-on booking detail berhasil dihapus',
         ]);
     }
 
@@ -87,12 +89,13 @@ class BookingDetailAddOnController extends Controller
             ->get();
         if ($addons->isEmpty()) {
             return response()->json([
-                'message' => 'Add-on untuk Booking Detail ini tidak ditemukan'
+                'message' => 'Add-on untuk Booking Detail ini tidak ditemukan',
             ], 404);
         }
+
         return response()->json([
             'message' => 'Data add-on ditemukan',
-            'data' => $addons
+            'data' => $addons,
         ]);
     }
 }

@@ -1,128 +1,23 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:dotted_border/dotted_border.dart';
+import 'package:frontend/models/hotelReviewDetail.dart';
 import 'package:frontend/extensions/snackbar.dart';
 import 'package:frontend/services/api_services.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
-
-class Facility {
-  final String name;
-  final String icon;
-
-  Facility({required this.name, required this.icon});
-
-  static const Map<String, IconData> iconMap = {
-    'wifi': Icons.wifi,
-    'pool': Icons.pool,
-    'restaurant': Icons.restaurant,
-    'parking': Icons.local_parking,
-    'gym': Icons.fitness_center,
-    'ac': Icons.ac_unit,
-  };
-
-  factory Facility.fromJson(Map<String, dynamic> json) {
-    return Facility(
-      name: json['name'] ?? '',
-      icon: json['icon']?['icon']?.toString().trim() ?? '',
-    );
-  }
-}
-
-class HotelReviewDetail {
-  final String hotelName;
-  final String roomType;
-  final String imageName;
-  final DateTime checkOutDate;
-  final List<Facility> facilities;
-  final int? roomId;
-  final int? bookingDetailId;
-  // final int? userId;
-  final int? reviewRating;
-  final String? reviewDescription;
-  final String? reviewImage;
-
-  HotelReviewDetail({
-    required this.hotelName,
-    required this.roomType,
-    required this.imageName,
-    required this.checkOutDate,
-    required this.facilities,
-    required this.roomId,
-    required this.bookingDetailId,
-    // required this.userId,
-    this.reviewRating,
-    this.reviewDescription,
-    this.reviewImage,
-  });
-
-  factory HotelReviewDetail.fromJson(Map<String, dynamic> json) {
-    var facilityList = json['hotel']['hotel_facilities'] as List? ?? [];
-    List<Facility> parsedFacilities = facilityList
-        .map((f) => Facility.fromJson(f))
-        .toList();
-    var imageList = json['hotel']['hotel_images'] as List? ?? [];
-    String img = '';
-    if (imageList.isNotEmpty && imageList[0]['image'] != null) {
-      img = imageList[0]['image'].toString();
-    }
-    final review = json['review'];
-    return HotelReviewDetail(
-      hotelName: json['hotel']['name'] ?? 'Unknown Hotel',
-      roomType: json['room_type'] ?? 'Standard Room',
-      imageName: img,
-      checkOutDate: DateTime.parse(json['check_out']),
-      facilities: parsedFacilities,
-      roomId: json['room_id'] is int
-          ? json['room_id']
-          : int.tryParse(json['room_id']?.toString() ?? ''),
-      bookingDetailId: json['booking_detail_id'] is int
-          ? json['booking_detail_id']
-          : int.tryParse(json['booking_detail_id']?.toString() ?? ''),
-      // userId: json['user_id'] is int
-      //     ? json['user_id']
-      //     : int.tryParse(json['user_id']?.toString() ?? ''),
-      reviewRating: review?['rating'],
-      reviewDescription: review?['description'],
-      reviewImage: review?['image_url'],
-    );
-  }
-
-  String get relativeTime {
-    final today = DateTime.now();
-    final cleanToday = DateTime(today.year, today.month, today.day);
-    final cleanCheckOut = DateTime(
-      checkOutDate.year,
-      checkOutDate.month,
-      checkOutDate.day,
-    );
-    final difference = cleanToday.difference(cleanCheckOut).inDays;
-    if (difference <= 0) {
-      return "STAYED TODAY";
-    } else if (difference == 1) {
-      return "STAYED 1 DAY AGO";
-    } else {
-      return "STAYED $difference DAYS AGO";
-    }
-  }
-}
+import 'package:http/http.dart' as http;
+import 'package:frontend/models/facility.dart';
+import 'package:frontend/models/hotelReviewDetail.dart';
 
 class ReviewPage extends StatefulWidget {
   final String bookingId;
-  final bool isReadOnly;
-  const ReviewPage({
-    super.key,
-    required this.bookingId,
-    this.isReadOnly = false,
-  });
+  const ReviewPage({super.key, required this.bookingId});
   @override
   State<ReviewPage> createState() => _ReviewPageState();
 }
 
 class _ReviewPageState extends State<ReviewPage> {
-  bool _isDisposed = false;
-  final ImagePicker _picker = ImagePicker();
-  File? selectedImage;
-  String? reviewImageUrl;
   int selectedRating = 0;
   final TextEditingController reviewController = TextEditingController();
   bool isAnonymous = false;
@@ -130,6 +25,8 @@ class _ReviewPageState extends State<ReviewPage> {
   final Set<String> selectedHighlights = {};
   late Future<HotelReviewDetail> _hotelDetailFuture;
   HotelReviewDetail? hotelDetail;
+  File? selectedImage;
+
   @override
   void initState() {
     super.initState();
@@ -194,30 +91,30 @@ class _ReviewPageState extends State<ReviewPage> {
   }
 
   Future<HotelReviewDetail> _fetchHotelDetail() async {
+    final String apiUrl =
+        "http://localhost:8000/api/bookings/${widget.bookingId}/review-details";
     try {
-      final response = await ApiService.fetchReviewDetails(
-        int.parse(widget.bookingId),
+      final response = await http.get(
+        Uri.parse(apiUrl),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer YOUR_TOKEN',
+        },
       );
-      if (_isDisposed || !mounted) {
-        throw Exception("Disposed");
-      }
-      final detail = HotelReviewDetail.fromJson(response['data']);
-      if (!_isDisposed && mounted) {
-        if (_isDisposed || !mounted) return detail;
-        setState(() {
-          hotelDetail = detail;
 
-          if (widget.isReadOnly) {
-            selectedRating = detail.reviewRating ?? 0;
-            reviewController.text = detail.reviewDescription ?? '';
-            reviewImageUrl = detail.reviewImage;
-          }
+      if (response.statusCode == 200) {
+        final bookingData = jsonDecode(response.body)['data'];
+        final parsedData = HotelReviewDetail.fromJson(bookingData);
+        setState(() {
+          hotelDetail = parsedData;
         });
+
+        return parsedData;
       }
-      return detail;
+      throw Exception("Failed ${response.statusCode}");
     } catch (e) {
-      if (_isDisposed) rethrow;
-      rethrow;
+      throw Exception("Connection failed: $e");
     }
   }
 
@@ -316,9 +213,9 @@ class _ReviewPageState extends State<ReviewPage> {
       return;
     }
     if (hotelDetail == null) return;
-    if (
-    // hotelDetail?.userId == null ||
-    hotelDetail?.roomId == null || hotelDetail?.bookingDetailId == null) {
+    if (hotelDetail?.userId == null ||
+        hotelDetail?.roomId == null ||
+        hotelDetail?.bookingDetailId == null) {
       context.showAppSnackBar('Review data incomplete', isWarning: true);
       return;
     }
@@ -327,7 +224,7 @@ class _ReviewPageState extends State<ReviewPage> {
     setState(() => isSubmitting = true);
     try {
       await ApiService.storeReview(
-        // userId: hotelDetail!.userId!,
+        userId: hotelDetail!.userId!,
         roomId: hotelDetail!.roomId!,
         bookingDetailId: hotelDetail!.bookingDetailId!,
         rating: selectedRating,
@@ -349,9 +246,7 @@ class _ReviewPageState extends State<ReviewPage> {
 
       context.showAppSnackBar('Error: $e', isError: true);
     } finally {
-      if (mounted) {
-        setState(() => isSubmitting = false);
-      }
+      if (mounted) setState(() => isSubmitting = false);
     }
   }
 
@@ -363,7 +258,7 @@ class _ReviewPageState extends State<ReviewPage> {
         backgroundColor: const Color(0xFFF5F7F8),
         elevation: 0,
         scrolledUnderElevation: 0,
-        toolbarHeight: 60,
+        toolbarHeight: 90,
         centerTitle: true,
         leading: Padding(
           padding: const EdgeInsets.only(left: 12),
@@ -376,8 +271,8 @@ class _ReviewPageState extends State<ReviewPage> {
             onPressed: () => Navigator.pop(context),
           ),
         ),
-        title: Text(
-          widget.isReadOnly ? 'Your Review' : 'Write a Review',
+        title: const Text(
+          'Write a Review',
           style: TextStyle(
             fontFamily: 'Plus Jakarta Sans',
             fontSize: 18,
@@ -405,9 +300,6 @@ class _ReviewPageState extends State<ReviewPage> {
                 child: Text("${snapshot.error}", textAlign: TextAlign.center),
               ),
             );
-          }
-          if (!mounted || snapshot.data == null) {
-            return const SizedBox();
           }
           final hotel = snapshot.data!;
           return Column(
@@ -509,13 +401,9 @@ class _ReviewPageState extends State<ReviewPage> {
                               children: List.generate(5, (index) {
                                 int starValue = index + 1;
                                 return GestureDetector(
-                                  onTap: widget.isReadOnly
-                                      ? null
-                                      : () {
-                                          setState(
-                                            () => selectedRating = starValue,
-                                          );
-                                        },
+                                  onTap: () {
+                                    setState(() => selectedRating = starValue);
+                                  },
                                   child: Padding(
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 4,
@@ -526,7 +414,7 @@ class _ReviewPageState extends State<ReviewPage> {
                                           : Icons.star_border_rounded,
                                       size: 38,
                                       color: starValue <= selectedRating
-                                          ? const Color(0xFF3B82F6)
+                                          ? const Color(0xFFFFB800)
                                           : const Color(
                                               0xFF94A3B8,
                                             ).withAlpha(192),
@@ -552,7 +440,7 @@ class _ReviewPageState extends State<ReviewPage> {
                       ),
                       const SizedBox(height: 32),
                       const Text(
-                        "Your Experience *",
+                        "Share your experience *",
                         style: TextStyle(
                           fontFamily: 'Plus Jakarta Sans',
                           fontWeight: FontWeight.w500,
@@ -590,12 +478,11 @@ class _ReviewPageState extends State<ReviewPage> {
                                 counterText: "",
                               ),
                               onChanged: (text) => setState(() {}),
-                              enabled: !widget.isReadOnly,
                             ),
                             Align(
                               alignment: Alignment.bottomRight,
                               child: Text(
-                                "${500 - reviewController.text.length} characters left",
+                                "Maximum 500 characters",
                                 style: TextStyle(
                                   fontFamily: 'Plus Jakarta Sans',
                                   fontWeight: FontWeight.w400,
@@ -609,7 +496,7 @@ class _ReviewPageState extends State<ReviewPage> {
                       ),
                       const SizedBox(height: 24),
                       const Text(
-                        "Photos (Optional)",
+                        "Add photos (Optional)",
                         style: TextStyle(
                           fontFamily: 'Plus Jakarta Sans',
                           fontWeight: FontWeight.w500,
@@ -618,76 +505,33 @@ class _ReviewPageState extends State<ReviewPage> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      GestureDetector(
-                        onTapDown: (selectedImage == null && !widget.isReadOnly)
-                            ? _showImagePickerOptions
-                            : null,
-                        child: Stack(
+                      Container(
+                        width: 96,
+                        height: 96,
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: const Color(0xFFCBD5E1),
+                            width: 2,
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: const Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            DottedBorder(
-                              color: const Color(0xFFCBD5E1),
-                              strokeWidth: 2,
-                              borderType: BorderType.RRect,
-                              radius: const Radius.circular(16),
-                              dashPattern: const [8, 8],
-                              child: Container(
-                                width: 96,
-                                height: 96,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                child:
-                                    (selectedImage != null ||
-                                        reviewImageUrl != null)
-                                    ? ClipRRect(
-                                        borderRadius: BorderRadius.circular(16),
-                                        child: widget.isReadOnly
-                                            ? GestureDetector(
-                                                onTap: () {
-                                                  if (reviewImageUrl != null &&
-                                                      reviewImageUrl!
-                                                          .isNotEmpty) {
-                                                    _showImagePreview(
-                                                      reviewImageUrl!,
-                                                    );
-                                                  }
-                                                },
-                                                child: Image.network(
-                                                  reviewImageUrl ?? '',
-                                                  fit: BoxFit.cover,
-                                                  width: double.infinity,
-                                                  height: double.infinity,
-                                                ),
-                                              )
-                                            : Image.file(
-                                                selectedImage!,
-                                                fit: BoxFit.cover,
-                                                width: double.infinity,
-                                                height: double.infinity,
-                                              ),
-                                      )
-                                    : const Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          Icon(
-                                            Icons.camera_alt_outlined,
-                                            color: Color(0xFF94A3B8),
-                                            size: 28,
-                                          ),
-                                          SizedBox(height: 6),
-                                          Text(
-                                            "CAMERA/\nGALLERY",
-                                            textAlign: TextAlign.center,
-                                            style: TextStyle(
-                                              fontFamily: 'Rubik',
-                                              fontWeight: FontWeight.w600,
-                                              fontSize: 10,
-                                              color: Color(0xFF94A3B8),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
+                            Icon(
+                              Icons.camera_alt_outlined,
+                              color: Color(0xFF94A3B8),
+                              size: 28,
+                            ),
+                            SizedBox(height: 6),
+                            Text(
+                              "CAMERA/\nGALLERY",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontFamily: 'Rubik',
+                                fontWeight: FontWeight.w600,
+                                fontSize: 10,
+                                color: Color(0xFF94A3B8),
                               ),
                             ),
 
@@ -720,6 +564,58 @@ class _ReviewPageState extends State<ReviewPage> {
                               ),
                           ],
                         ),
+                      ),
+                      const SizedBox(height: 24),
+                      const Text(
+                        "What did you love most?",
+                        style: TextStyle(
+                          fontFamily: 'Plus Jakarta Sans',
+                          fontWeight: FontWeight.w500,
+                          fontSize: 14,
+                          color: Color(0xFF000000),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Wrap(
+                        spacing: 10,
+                        runSpacing: 10,
+                        children: hotel.facilities.map((facility) {
+                          final isSelected = selectedHighlights.contains(
+                            facility,
+                          );
+                          return FilterChip(
+                            label: Text(facility),
+                            selected: isSelected,
+                            onSelected: (value) {
+                              setState(() {
+                                if (value) {
+                                  selectedHighlights.add(facility);
+                                } else {
+                                  selectedHighlights.remove(facility);
+                                }
+                              });
+                            },
+                            labelStyle: TextStyle(
+                              fontFamily: 'Plus Jakarta Sans',
+                              fontWeight: FontWeight.w500,
+                              fontSize: 14,
+                              color: isSelected
+                                  ? Colors.white
+                                  : const Color(0xFF3B82F6).withAlpha(224),
+                            ),
+                            backgroundColor: Colors.white,
+                            selectedColor: const Color(0xFF3B82F6),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              side: BorderSide(
+                                color: isSelected
+                                    ? const Color(0xFF3B82F6)
+                                    : const Color(0xFF3B82F6).withAlpha(97),
+                              ),
+                            ),
+                            showCheckmark: false,
+                          );
+                        }).toList(),
                       ),
                       const SizedBox(height: 40),
                     ],
@@ -853,27 +749,59 @@ class _ReviewPageState extends State<ReviewPage> {
                               elevation: 3,
                               shadowColor: Colors.black.withAlpha(64),
                             ),
-                            child: isSubmitting
-                                ? const SizedBox(
-                                    width: 24,
-                                    height: 24,
-                                    child: CircularProgressIndicator(
-                                      color: Colors.white,
-                                      strokeWidth: 2.5,
-                                    ),
-                                  )
-                                : Text(
-                                    widget.isReadOnly
-                                        ? "Your Review"
-                                        : "Submit Review",
-                                    style: const TextStyle(
-                                      fontFamily: 'Plus Jakarta Sans',
-                                      fontWeight: FontWeight.w500,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                          ),
+                            const SizedBox(width: 8),
+                            const Expanded(
+                              child: Text(
+                                "Keep my review anonymous. My profile picture and name will be censored from other travelers",
+                                style: TextStyle(
+                                  fontFamily: 'Plus Jakarta Sans',
+                                  fontWeight: FontWeight.w400,
+                                  fontSize: 12,
+                                  color: Color(0xFF94A3B8),
+                                  height: 1.25,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
+                      ),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 48,
+                        child: ElevatedButton(
+                          onPressed: isSubmitting ? null : submitReview,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF3B82F6),
+                            foregroundColor: Colors.white,
+                            disabledBackgroundColor: const Color(
+                              0xFF3B82F6,
+                            ).withAlpha(153),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(25),
+                            ),
+                            elevation: 3,
+                            shadowColor: Colors.black.withAlpha(64),
+                          ),
+                          child: isSubmitting
+                              ? const SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2.5,
+                                  ),
+                                )
+                              : const Text(
+                                  "Submit Review",
+                                  style: TextStyle(
+                                    fontFamily: 'Plus Jakarta Sans',
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                        ),
+                      ),
                     ],
                   ),
                 ),

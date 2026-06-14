@@ -17,37 +17,34 @@ class _EditProfilePageState extends State<EditProfilePage> {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
+  final TextEditingController cityController = TextEditingController();
   File? selectedImage;
   String? profileImageUrl;
   final ImagePicker picker = ImagePicker();
   bool isLoading = true;
   bool isSaving = false;
 
-  @override
-  void initState() {
-    super.initState();
-    loadUser();
+  DateTime? selectedDate = DateTime(2000, 1, 1);
+  String gender = "Male";
+  String formatDate(DateTime date) {
+    return "${date.day}/${date.month}/${date.year}";
   }
 
-  Future<void> loadUser() async {
-    try {
-      final response = await ApiService.getUser();
-      final user = response['data'];
-      nameController.text = user['username'] ?? '';
-      emailController.text = user['email'] ?? '';
-      phoneController.text = user['phone'] ?? '';
+  Future<void> pickDate() async {
+    DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: selectedDate!,
+      firstDate: DateTime(1950),
+      lastDate: DateTime.now(),
+    );
+
+    if (picked != null) {
       setState(() {
-        profileImageUrl = user['profile_image_url'];
+        selectedDate = picked;
         isLoading = false;
       });
-    } catch (e) {
-      setState(() {
-        isLoading = false;
-      });
-      context.showAppSnackBar(
-        e.toString(),
-        isError: true,
-      );
+      context.showAppSnackBar("Please select a date", isError: true);
+      // jujur, saya bingung ini context atau gmn
     }
   }
 
@@ -63,20 +60,13 @@ class _EditProfilePageState extends State<EditProfilePage> {
         phone: phoneController.text,
       );
       if (selectedImage != null) {
-        await ApiService.updateProfileImage(
-          selectedImage!,
-        );
+        await ApiService.updateProfileImage(selectedImage!);
       }
       if (!mounted) return;
-      context.showAppSnackBar(
-        "Profile Updated Successfully!",
-      );
+      context.showAppSnackBar("Profile Updated Successfully!");
       Navigator.pop(context, true);
     } catch (e) {
-      context.showAppSnackBar(
-        e.toString(),
-        isError: true,
-      );
+      context.showAppSnackBar(e.toString(), isError: true);
     } finally {
       if (mounted) {
         setState(() {
@@ -134,9 +124,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     return Center(
       child: ConstrainedBox(
         constraints: BoxConstraints(
-          maxWidth: Device.screenType == ScreenType.desktop
-              ? 500
-              : 365,
+          maxWidth: Device.screenType == ScreenType.desktop ? 500 : 365,
         ),
         child: child,
       ),
@@ -153,17 +141,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    if (isLoading) {
-      return const Scaffold(
-        backgroundColor: Color(0xFFF5F7F8),
-        body: Center(
-          child: CircularProgressIndicator(
-            color: Color(0xFF3B82F6),
-          ),
-        ),
-      );
-    }
-
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7F8),
       appBar: AppBar(
@@ -193,18 +170,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
         ),
         bottom: const PreferredSize(
           preferredSize: Size.fromHeight(1),
-          child: Divider(
-            height: 1,
-            thickness: 1,
-            color: Color(0xFFE2E8F0),
-          ),
+          child: Divider(height: 1, thickness: 1, color: Color(0xFFE2E8F0)),
         ),
       ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.symmetric(
-          horizontal: 4.w,
-          vertical: 2.h,
-        ),
+        padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
         child: Column(
           children: [
             Stack(
@@ -218,8 +188,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   child: CircleAvatar(
                     radius: Adaptive.w(10).clamp(40.0, 60.0),
                     backgroundImage: selectedImage != null
-                      ? FileImage(selectedImage!) as ImageProvider
-                      : (profileImageUrl != null && profileImageUrl!.isNotEmpty)
+                        ? FileImage(selectedImage!) as ImageProvider
+                        : (profileImageUrl != null &&
+                              profileImageUrl!.isNotEmpty)
                         ? NetworkImage(profileImageUrl!) as ImageProvider
                         : const AssetImage("assets/images/profile-photo.png"),
                   ),
@@ -241,28 +212,20 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         size: 17.sp,
                       ),
                     ),
-                  )
-                )
+                  ),
+                ),
               ],
             ),
             SizedBox(height: 3.h),
-            contentWrapper(
-              sectionTitle("PERSONAL DATA"),
-            ),
+            contentWrapper(sectionTitle("PERSONAL DATA")),
             const SizedBox(height: 12),
             contentWrapper(
               buildCard(
-                Column(
-                  children: [
-                    buildTextField("Full Name", nameController),
-                  ],
-                ),
+                Column(children: [buildTextField("Full Name", nameController)]),
               ),
             ),
             SizedBox(height: 2.h),
-            contentWrapper(
-              sectionTitle("CONTACT DETAILS"),
-            ),
+            contentWrapper(sectionTitle("CONTACT DETAILS")),
             const SizedBox(height: 12),
             buildCard(
               Column(
@@ -308,9 +271,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                 ),
                               ),
                             ),
-                          )
+                          ),
                         ],
-                      )
+                      ),
                     ],
                   ),
                 ],
@@ -330,10 +293,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                             strokeWidth: 2,
                           ),
                         )
-                      : const Icon(
-                          Icons.save_as_outlined,
-                          color: Colors.white,
-                        ),
+                      : const Icon(Icons.save_as_outlined, color: Colors.white),
                   label: Text(
                     isSaving ? "Saving..." : "Save Changes",
                     style: const TextStyle(color: Colors.white),
@@ -360,9 +320,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     return Center(
       child: ConstrainedBox(
         constraints: BoxConstraints(
-          maxWidth: Device.screenType == ScreenType.desktop
-              ? 500
-              : 365,
+          maxWidth: Device.screenType == ScreenType.desktop ? 500 : 365,
         ),
         child: Container(
           padding: EdgeInsets.all(2.h),
@@ -374,7 +332,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 color: Colors.black.withAlpha(15),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
-              )
+              ),
             ],
           ),
           child: child,
@@ -413,7 +371,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
               ),
             ],
           ),
-        )
+        ),
       ],
     );
   }

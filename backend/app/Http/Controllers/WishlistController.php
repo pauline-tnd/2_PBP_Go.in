@@ -18,7 +18,7 @@ class WishlistController extends Controller
 
         return response()->json([
             'message' => 'Wishlist successfully loaded',
-            'data' => $wishlist
+            'data' => $wishlist,
         ], 200);
     }
 
@@ -34,7 +34,7 @@ class WishlistController extends Controller
 
         return response()->json([
             'message' => $wishlist->wasRecentlyCreated ? 'Wishlist created' : 'Wishlist already exists',
-            'data' => $wishlist
+            'data' => $wishlist,
         ], $wishlist->wasRecentlyCreated ? 201 : 200);
     }
 
@@ -44,13 +44,14 @@ class WishlistController extends Controller
 
         if ($user != $wishlist->user_id) {
             return response()->json([
-                'message' => 'Unauthenticated'
+                'message' => 'Unauthenticated',
             ], 401);
         }
 
         $wishlist->delete();
+
         return response()->json([
-            'message' => 'Wishlist deleted'
+            'message' => 'Wishlist deleted',
         ], 200);
     }
 }

@@ -20,7 +20,7 @@ class PreferencesPage extends StatelessWidget {
         backgroundColor: const Color(0xFFF5F7F8),
         elevation: 0,
         scrolledUnderElevation: 0,
-        toolbarHeight: 60,
+        toolbarHeight: 90,
         centerTitle: true,
         leading: Padding(
           padding: const EdgeInsets.only(left: 12),
