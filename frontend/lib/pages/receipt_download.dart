@@ -1,5 +1,3 @@
-//DO NOT PUSH
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:frontend/extensions/snackbar.dart';
@@ -141,7 +139,9 @@ pw.Widget _buildHeader(pw.MemoryImage logo) {
 }
 
 pw.Widget _buildBookingSection(Booking booking) {
-  final qrData = booking.bookingNumber;
+  final qrData = booking.qrCode.isNotEmpty
+      ? booking.qrCode
+      : booking.bookingNumber;
 
   return pw.Row(
     crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -193,7 +193,7 @@ pw.Widget _buildMetaSection(
       pw.SizedBox(height: 8),
       _labelValueRow('Booking Number', booking.bookingNumber),
       pw.SizedBox(height: 5),
-      // _labelValueRow('Booked at', _fmtDateTime(booking.updatedAt)),
+      _labelValueRow('Booked at', _fmtDateTime(booking.updatedAt)),
       pw.SizedBox(height: 5),
       pw.Row(
         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
@@ -395,7 +395,7 @@ class _ReceiptItem {
 }
 
 List<_ReceiptItem> _buildItems(Booking booking) {
-  if (true) {
+  if (booking.details.isEmpty) {
     return [
       _ReceiptItem(
         qty: 1,
@@ -407,32 +407,32 @@ List<_ReceiptItem> _buildItems(Booking booking) {
   }
 
   final rows = <_ReceiptItem>[];
-  // for (final detail in booking.details) {
-  //   final unitPrice = detail.totalRoom > 0
-  //       ? detail.subTotal / detail.totalRoom
-  //       : detail.subTotal;
-  //   rows.add(
-  //     _ReceiptItem(
-  //       qty: detail.totalRoom,
-  //       description: detail.roomType ?? booking.roomType ?? 'Room',
-  //       unitPrice: unitPrice,
-  //       total: detail.subTotal,
-  //     ),
-  //   );
-  //   for (final addOn in detail.addOns) {
-  //     final addOnUnit = addOn.quantity > 0
-  //         ? addOn.subTotal / addOn.quantity
-  //         : addOn.subTotal;
-  //     rows.add(
-  //       _ReceiptItem(
-  //         qty: addOn.quantity,
-  //         description: addOn.name,
-  //         unitPrice: addOnUnit,
-  //         total: addOn.subTotal,
-  //       ),
-  //     );
-  //   }
-  // }
+  for (final detail in booking.details) {
+    final unitPrice = detail.totalRoom > 0
+        ? detail.subTotal / detail.totalRoom
+        : detail.subTotal;
+    rows.add(
+      _ReceiptItem(
+        qty: detail.totalRoom,
+        description: detail.roomType ?? booking.roomType ?? 'Room',
+        unitPrice: unitPrice,
+        total: detail.subTotal,
+      ),
+    );
+    for (final addOn in detail.addOns) {
+      final addOnUnit = addOn.quantity > 0
+          ? addOn.subTotal / addOn.quantity
+          : addOn.subTotal;
+      rows.add(
+        _ReceiptItem(
+          qty: addOn.quantity,
+          description: addOn.name,
+          unitPrice: addOnUnit,
+          total: addOn.subTotal,
+        ),
+      );
+    }
+  }
   return rows;
 }
 

@@ -3,9 +3,9 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
@@ -65,7 +65,7 @@ class UserController extends Controller
 
         return response()->json([
             'message' => 'Profile updated successfully',
-            'data' => $user->fresh(),
+            'data'    => $user->fresh(),
         ], 200);
     }
 
@@ -86,7 +86,7 @@ class UserController extends Controller
             ]
         );
 
-        if (! Hash::check($request->current_password, $user->password)) {
+        if (!Hash::check($request->current_password, $user->password)) {
             return response()->json([
                 'message' => 'Current Password does not match',
             ], 422);

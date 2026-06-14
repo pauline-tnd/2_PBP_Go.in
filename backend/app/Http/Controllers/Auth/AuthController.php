@@ -65,21 +65,20 @@ class AuthController extends Controller
         ], 410);
     }
 
-    public function logout()
-    {
+    public function logout() {
 
         $user = Auth::user();
 
-        if (! $user) {
+        if(!$user){
             return response()->json([
                 'message' => 'Not authorized',
             ], 401);
         }
 
         $user->currentAccessToken()->delete();
-
+        
         return response()->json([
-            'message' => 'Logged out successfully',
+            'message'=> 'Logged out successfully',
         ], 200);
     }
 }

@@ -57,7 +57,7 @@ class HeaderAction extends StatelessWidget {
   }
 }
 
-/// Widget lokasi seperti yang sudah ada di header.
+/// Location widget used in the header.
 class HeaderLocation extends StatelessWidget {
   const HeaderLocation({super.key, required this.location, this.onTap});
 
@@ -198,19 +198,18 @@ class _GradientScrollHeaderState extends State<GradientScrollHeader> {
         extendBodyBehindAppBar: true,
         body: Stack(
           children: [
-            // ── SCROLLABLE CONTENT ──────────────────────────────
+            // Scrollable content
             SingleChildScrollView(
               controller: _scrollController,
               child: Stack(
                 children: [
-                  // 1. Latar belakang gradasi (di paling belakang)
+                  // 1. Gradient background
                   Positioned(
                     top: 0,
                     left: 0,
                     right: 0,
                     child: _GradientHeaderBackground(
                       height: widget.expandedHeight,
-                      width: double.infinity,
                       gradientColors: widget.gradientColors,
                       gradientStops: widget.gradientStops,
                       topPadding: topPadding,
@@ -220,7 +219,7 @@ class _GradientScrollHeaderState extends State<GradientScrollHeader> {
                     ),
                   ),
 
-                  // 2. Body konten halaman (di atas gradasi)
+                  // 2. Page body above the gradient
                   Padding(
                     padding: EdgeInsets.only(
                       top: widget.bodyTopPadding ?? widget.expandedHeight,
@@ -231,7 +230,7 @@ class _GradientScrollHeaderState extends State<GradientScrollHeader> {
               ),
             ),
 
-            // ── FIXED NAVBAR (di atas segalanya) ────────────────
+            // Fixed navbar
             Positioned(
               top: 0,
               left: 0,
@@ -259,7 +258,7 @@ class _GradientScrollHeaderState extends State<GradientScrollHeader> {
                       ),
                     ),
                   ),
-                  // Konten navbar (lokasi, icon, dsb.)
+                  // Navbar content
                   Container(
                     height: navbarHeight,
                     padding: EdgeInsets.only(
@@ -271,7 +270,12 @@ class _GradientScrollHeaderState extends State<GradientScrollHeader> {
                       children: [
                         // Leading
                         if (widget.leading != null)
-                          Expanded(child: widget.leading!),
+                          Expanded(
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: widget.leading!,
+                            ),
+                          ),
 
                         // Actions
                         ...widget.actions,
@@ -291,7 +295,6 @@ class _GradientScrollHeaderState extends State<GradientScrollHeader> {
 class _GradientHeaderBackground extends StatelessWidget {
   const _GradientHeaderBackground({
     required this.height,
-    required this.width,
     required this.gradientColors,
     required this.gradientStops,
     required this.topPadding,
@@ -301,7 +304,6 @@ class _GradientHeaderBackground extends StatelessWidget {
   });
 
   final double height;
-  final double width;
   final List<Color> gradientColors;
   final List<double> gradientStops;
   final double topPadding;

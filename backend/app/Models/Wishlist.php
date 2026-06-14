@@ -7,10 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 class Wishlist extends Model
 {
     public $timestamps = false;
-
+    
     protected $fillable = [
         'user_id',
-        'hotel_id',
+        'hotel_id'
     ];
 
     public function user()

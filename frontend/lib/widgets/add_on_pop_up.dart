@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:frontend/models/addOn.dart';
+import 'package:frontend/widgets/booking_confirmation_pop_up.dart';
 import 'package:frontend/models/bookingDetail.dart';
-import 'package:frontend/models/room.dart';
 
 class AddOnPopUp extends StatefulWidget {
   final String roomType;

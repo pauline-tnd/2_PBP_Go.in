@@ -1,5 +1,3 @@
-import 'package:flutter/widgets.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:frontend/models/review_user.dart';
 
 class Review {
@@ -31,7 +29,7 @@ class Review {
       userId: json['user_id'] ?? 0,
       roomId: json['room_id'] ?? 0,
       bookingDetailId: json['booking_detail_id'] ?? 0,
-      rating: (json['rating'] as num?)?.toInt() ?? 0,
+      rating: json['rating'] ?? 0,
       description: json['description'] ?? '',
       image: json['image'],
       createdAt: json['created_at'],

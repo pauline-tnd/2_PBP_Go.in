@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AddOn;
+use Illuminate\Http\Request;
 
 class AddOnController extends Controller
 {
@@ -11,7 +12,7 @@ class AddOnController extends Controller
         $addOns = AddOn::with(['hotel', 'icon'])->get();
 
         return response()->json([ // success
-            'data' => $addOns,
+            'data' => $addOns
         ], 200);
     }
 }

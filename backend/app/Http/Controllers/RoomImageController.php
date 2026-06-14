@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\RoomImage;
+use Illuminate\Http\Request;
 
 class RoomImageController extends Controller
 {
@@ -11,14 +12,14 @@ class RoomImageController extends Controller
         $roomImage = RoomImage::with('room')
             ->find($id);
 
-        if (! $roomImage) { // invalid id
+        if (!$roomImage) { // invalid id
             return response()->json([
                 'message' => 'Image not found',
             ], 404);
         }
 
         return response()->json([ // success
-            'data' => $roomImage,
+            'data' => $roomImage
         ], 200);
     }
 }

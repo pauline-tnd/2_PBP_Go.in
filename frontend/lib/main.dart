@@ -1,33 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
-import 'pages/main_shell.dart';
 import 'pages/search_results_page.dart';
+import 'providers/location_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'pages/landing-page.dart';
+import 'package:provider/provider.dart';
+import 'package:frontend/providers/hotel_search_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  try {
-    await dotenv.load(fileName: ".env");
-  } catch (_) {
-    dotenv.testLoad(fileInput: '');
-  }
+  await dotenv.load(fileName: ".env");
 
-  final supabaseUrl = dotenv.env['SUPABASE_URL']?.trim();
-  final supabaseAnonKey = dotenv.env['SUPABASE_ANON_KEY']?.trim();
-  if (supabaseUrl != null &&
-      supabaseUrl.isNotEmpty &&
-      supabaseAnonKey != null &&
-      supabaseAnonKey.isNotEmpty) {
-    try {
-      await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
-    } catch (_) {
-      // The Laravel API flow can still run without Supabase.
-    }
-  }
+  await Supabase.initialize(
+    url: dotenv.env['SUPABASE_URL']!,
+    anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
+  );
 
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
@@ -44,23 +34,29 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ResponsiveSizer(
-      builder: (context, orientation, screenType) {
-        return MaterialApp(
-          title: 'Go.in',
-          debugShowCheckedModeBanner: false,
-          theme: ThemeData(
-            primaryColor: const Color(0xFF3B82F6),
-            scaffoldBackgroundColor: const Color(0xFFF5F7F8),
-            fontFamily: 'PlusJakartaSans',
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: const Color(0xFF3B82F6),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => LocationProvider()),
+        ChangeNotifierProvider(create: (_) => HotelSearchProvider()),
+      ],
+      child: ResponsiveSizer(
+        builder: (context, orientation, screenType) {
+          return MaterialApp(
+            title: 'Go.in',
+            debugShowCheckedModeBanner: false,
+            theme: ThemeData(
+              primaryColor: const Color(0xFF3B82F6),
+              scaffoldBackgroundColor: const Color(0xFFF5F7F8),
+              fontFamily: 'PlusJakartaSans',
+              colorScheme: ColorScheme.fromSeed(
+                seedColor: const Color(0xFF3B82F6),
+              ),
             ),
-          ),
-          home: const LandingPage(),
-          routes: {'/search-results': (context) => const SearchResultsPage()},
-        );
-      },
+            home: const LandingPage(),
+            routes: {'/search-results': (context) => const SearchResultsPage()},
+          );
+        },
+      ),
     );
   }
 }

@@ -3,7 +3,7 @@ class NominatimResult {
   final double lat;
   final double lon;
 
-  const NominatimResult({
+  NominatimResult({
     required this.displayName,
     required this.lat,
     required this.lon,
@@ -11,9 +11,9 @@ class NominatimResult {
 
   factory NominatimResult.fromJson(Map<String, dynamic> json) {
     return NominatimResult(
-      displayName: json['display_name']?.toString() ?? 'Selected location',
-      lat: double.tryParse(json['lat']?.toString() ?? '') ?? 0,
-      lon: double.tryParse(json['lon']?.toString() ?? '') ?? 0,
+      displayName: json['display_name'] ?? '',
+      lat: double.parse(json['lat']),
+      lon: double.parse(json['lon']),
     );
   }
 }

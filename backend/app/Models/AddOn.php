@@ -15,7 +15,7 @@ class AddOn extends Model
         'hotel_id',
         'icon_id',
         'name',
-        'price',
+        'price'
     ];
 
     protected $casts = [

@@ -1,15 +1,18 @@
 <?php
 
-use App\Http\Controllers\Auth\AuthController;
-use App\Http\Controllers\BookingController;
-use App\Http\Controllers\BookingDetailAddOnController;
-use App\Http\Controllers\BookingDetailController;
-use App\Http\Controllers\HotelController;
-use App\Http\Controllers\ReviewController;
-use App\Http\Controllers\RoomController;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\WishlistController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\{
+    Auth\AuthController,
+    HotelController,
+    RoomController,
+    BookingController,
+    BookingDetailController,
+    BookingDetailAddOnController,
+    ReviewController,
+    WishlistController,
+    UserController,
+    AddOnController
+};
 
 // Public Route
 Route::post('/register', [AuthController::class, 'register']);
@@ -40,22 +43,26 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('hotels', HotelController::class)
         ->only(['index', 'show']);
 
+    Route::apiResource('add-ons', AddOnController::class)->only(['index']);
+    
     // Read Room (nested)
     Route::apiResource('rooms', RoomController::class)
         ->only(['index', 'show']);
-    // GET /rooms/{room}
-
+        // GET /rooms/{room}
+    
     // Wishlist
     Route::apiResource('wishlists', WishlistController::class)
         ->only(['index', 'store', 'destroy']);
-
+    
     // Bookings
-    Route::get('bookings/{id}/review-details', [BookingController::class, 'reviewDetails']);
     Route::apiResource('bookings', BookingController::class);
     // Route::get('users/{user}/bookings', [BookingController::class, 'userBookings']);
+    Route::get('/bookings/{id}/review-details', [BookingController::class, 'reviewDetails']);
+
 
     // Booking Details
     Route::apiResource('booking-details', BookingDetailController::class);
+
 
     // Booking Detail Addons
     Route::apiResource('booking-detail-addons', BookingDetailAddOnController::class);
@@ -69,6 +76,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('hotels/{hotel}/reviews', [ReviewController::class, 'hotelReviews']);
     Route::get('rooms/{room}/reviews', [ReviewController::class, 'roomReviews']);
     Route::get('users/{user}/reviews', [ReviewController::class, 'userReviews']);
+
 
     // apiResource :
     // GET    /resource
@@ -85,7 +93,7 @@ Route::middleware('auth:sanctum')->group(function () {
     //     Route::put('/update/{id}', [BookingController::class, 'update']);
     //     Route::delete('/destroy/{id}', [BookingController::class, 'destroy']);
     // });
-
+    
     // // Route::apiResource('booking-details', BookingDetailController::class);
     // Route::prefix('booking-details')->group(function () {
     //     Route::get('/', [BookingDetailController::class, 'index']);
@@ -94,7 +102,7 @@ Route::middleware('auth:sanctum')->group(function () {
     //     Route::put('/update/{id}', [BookingDetailController::class, 'update']);
     //     Route::delete('/destroy/{id}', [BookingDetailController::class, 'destroy']);
     // });
-
+    
     // Route::prefix('booking-detail-addons')->group(function () {
     //     Route::get('/', [BookingDetailAddOnController::class, 'index']);
     //     Route::get('/{id}', [BookingDetailAddOnController::class, 'show']);
@@ -103,7 +111,7 @@ Route::middleware('auth:sanctum')->group(function () {
     //     Route::put('/update/{id}', [BookingDetailAddOnController::class, 'update']);
     //     Route::delete('/destroy/{id}', [BookingDetailAddOnController::class, 'destroy']);
     // });
-
+    
     // Route::prefix('reviews')->group(function () {
     //     Route::get('/', [ReviewController::class, 'index']);
     //     Route::get('/{id}', [ReviewController::class, 'show']);

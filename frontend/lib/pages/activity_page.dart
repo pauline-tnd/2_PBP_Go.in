@@ -1,16 +1,14 @@
-//DO NOT PUSH
-
 import 'package:flutter/material.dart';
 import 'package:frontend/models/booking.dart';
 import 'package:frontend/services/api_services.dart';
 import 'package:frontend/widgets/activity/activity_header.dart';
 import 'package:frontend/widgets/activity/activity_card.dart';
 import 'package:frontend/widgets/activity/activity_filter_dropdown.dart';
+import 'package:frontend/pages/booking_detail_page.dart';
 import 'package:frontend/pages/review_page.dart';
 import 'package:frontend/utils/app_responsive.dart';
 
-import 'package:frontend/pages/0_TEMPORARY/temp_booking_detail_page.dart';
-
+// ── Helpers (no locale-data initialization required) ─────────────
 String _formatDate(String isoDate) {
   final d = DateTime.tryParse(isoDate);
   if (d == null) return isoDate;
@@ -94,6 +92,8 @@ class _ActivityPageState extends State<ActivityPage> {
       price: priceStr,
       status: status,
       imageUrl: b.roomImageUrl ?? '',
+      reviewRating: b.reviewRating,
+      hasReview: b.hasReview,
     );
   }
 
@@ -123,10 +123,6 @@ class _ActivityPageState extends State<ActivityPage> {
       tablet: 860,
       desktop: 1080,
     );
-
-    Map<String, Booking> _createBookingsMap(List<Booking> bookings) {
-      return {for (var booking in bookings) booking.id.toString(): booking};
-    }
 
     return Scaffold(
       backgroundColor: const Color(0xFFF0F4F8),
@@ -198,10 +194,12 @@ class _ActivityPageState extends State<ActivityPage> {
             }
 
             // ── Success ──────────────────────────────────────────
-            final allBookings = snapshot.data ?? [];
-            final allItems = allBookings.map(_toBookingItem).toList();
+            final bookings = snapshot.data ?? [];
+            final bookingsById = {
+              for (final booking in bookings) booking.id.toString(): booking,
+            };
+            final allItems = bookings.map(_toBookingItem).toList();
             final filteredItems = _filterItems(allItems);
-            final bookingsById = _createBookingsMap(allBookings);
 
             return SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
@@ -236,18 +234,19 @@ class _ActivityPageState extends State<ActivityPage> {
                               ),
                               const SizedBox(height: 16),
 
+                              // Booking cards
                               ...filteredItems.map((item) {
                                 final booking = bookingsById[item.id];
 
                                 return ActivityCard(
                                   item: item,
                                   onBookingDetail: () {
+                                    if (booking == null) return;
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) => BookingDetailPage(
-                                          booking: booking ?? allBookings.first,
-                                        ),
+                                        builder: (context) =>
+                                            BookingDetailPage(booking: booking),
                                       ),
                                     );
                                   },
@@ -255,8 +254,10 @@ class _ActivityPageState extends State<ActivityPage> {
                                     await Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) =>
-                                            ReviewPage(bookingId: item.id),
+                                        builder: (context) => ReviewPage(
+                                          bookingId: item.id,
+                                          isReadOnly: item.hasReview,
+                                        ),
                                       ),
                                     );
                                     _refresh();

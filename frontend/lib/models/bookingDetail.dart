@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/models/addOn.dart';
-import 'package:frontend/models/room.dart';
 
 class BookingDetail {
   final int id;
@@ -49,10 +48,15 @@ class BookingDetail {
   Map<String, dynamic> toJson() {
     return {
       "id": id,
+
       "room": room.toJson(),
+
       "quantity": quantity,
+
       "notes": notes,
+
       "room_image": roomImage,
+
       "add_ons": selectedAddOns
           .map((e) => {"id": e.id, "name": e.name, "price": e.price})
           .toList(),
@@ -60,22 +64,26 @@ class BookingDetail {
   }
 }
 
-// class Room {
-//   final int id;
-//   final String type;
-//   final double price;
+class Room {
+  final int id;
 
-//   Room({required this.id, required this.type, required this.price});
+  final String type;
 
-//   factory Room.fromJson(Map<String, dynamic> json) {
-//     return Room(
-//       id: json['id'] ?? 0,
-//       type: json['type'] ?? json['name'] ?? 'Room',
-//       price: double.tryParse(json['price'].toString()) ?? 0,
-//     );
-//   }
+  final double price;
 
-//   Map<String, dynamic> toJson() {
-//     return {"id": id, "type": type, "price": price};
-//   }
-// }
+  Room({required this.id, required this.type, required this.price});
+
+  factory Room.fromJson(Map<String, dynamic> json) {
+    return Room(
+      id: json['id'] ?? 0,
+
+      type: json['type'] ?? json['name'] ?? 'Room',
+
+      price: double.tryParse(json['price'].toString()) ?? 0,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {"id": id, "type": type, "price": price};
+  }
+}

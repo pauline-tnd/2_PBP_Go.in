@@ -10,11 +10,8 @@ class BookingDetail extends Model
     use HasFactory;
 
     protected $table = 'booking_details';
-
     protected $primaryKey = 'id';
-
     public $incrementing = true;
-
     protected $keyType = 'int';
 
     protected $fillable = [
@@ -48,5 +45,9 @@ class BookingDetail extends Model
     public function addOns()
     {
         return $this->hasMany(BookingDetailAddOn::class, 'booking_detail_id');
+    }
+    public function review()
+    {
+        return $this->hasOne(Review::class, 'booking_detail_id');
     }
 }
