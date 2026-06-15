@@ -820,11 +820,12 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
                           .map((e) => e['image']?.toString() ?? '')
                           .where((image) => image.isNotEmpty)
                           .toList();
-                  final combinedImages = [
-                    ...roomImages,
-                    if (hotelImages.isNotEmpty && roomImages.isEmpty)
-                      hotelImages.first,
-                  ];
+
+                  final List<String> combinedImages = roomImages.isNotEmpty
+                      ? roomImages.cast<String>()
+                      : hotelImages.isNotEmpty
+                          ? <String>[hotelImages.first]
+                          : <String>[];
 
                   return RoomCard(
                     room: room,

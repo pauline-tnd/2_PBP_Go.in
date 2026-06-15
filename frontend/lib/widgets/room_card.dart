@@ -44,25 +44,19 @@ class RoomCard extends StatefulWidget {
 
 class _RoomCardState extends State<RoomCard> {
   Future<void> _openDetailRoomPage() async {
-    final imageUrls = widget.room.roomImages.isNotEmpty
-        ? widget.room.roomImages
-        : widget.imageUrls.isNotEmpty
+    final images = widget.imageUrls.isNotEmpty
         ? widget.imageUrls
         : [if (widget.imageUrl != null) widget.imageUrl!];
     final addOns = widget.addOns ?? widget.room.addOns;
-
     final fetchedReviews = await ApiService.fetchRoomReviews(widget.room.id);
-    final reviewScore = fetchedReviews.isEmpty
-        ? 0.0
-        : fetchedReviews.map((r) => r.rating).reduce((a, b) => a + b) /
-              fetchedReviews.length;
+    final reviewScore = fetchedReviews.isEmpty ? 0.0 : fetchedReviews.map((r) => r.rating).reduce((a, b) => a + b) / fetchedReviews.length;
 
     final result = await Navigator.push<List<details.BookingDetail>>(
       context,
       MaterialPageRoute(
         builder: (context) => DetailRoomPage(
           room: widget.room,
-          imageUrls: imageUrls,
+          imageUrls: images,
           facilities: widget.facilities,
           roomAmenities: widget.room.roomFacilities,
           addOns: addOns,
@@ -70,7 +64,6 @@ class _RoomCardState extends State<RoomCard> {
           hotelName: widget.hotelName,
           hotelLocation: widget.hotelLocation,
           reviewScore: widget.reviewScore,
-
           tempBookedList: widget.tempBookedList,
         ),
       ),
@@ -84,12 +77,7 @@ class _RoomCardState extends State<RoomCard> {
   @override
   Widget build(BuildContext context) {
     final room = widget.room;
-
-    final images = room.roomImages.isNotEmpty
-        ? room.roomImages
-        : widget.imageUrls.isNotEmpty
-        ? widget.imageUrls
-        : [if (widget.imageUrl != null) widget.imageUrl!];
+    final images = widget.imageUrls.isNotEmpty ? widget.imageUrls : [if (widget.imageUrl != null) widget.imageUrl!];
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),

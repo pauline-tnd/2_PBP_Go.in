@@ -30,7 +30,6 @@ class AdaptiveImage extends StatelessWidget {
       final resolvedUrl = normalizedPath.startsWith('//')
           ? 'https:$normalizedPath'
           : normalizedPath;
-
       return Image.network(
         resolvedUrl,
         width: width,
