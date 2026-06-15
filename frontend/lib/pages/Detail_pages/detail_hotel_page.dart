@@ -47,6 +47,7 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
   bool _isWishlistLoading = false;
   bool _isExpanded = false;
   int? _wishlistId;
+  int? _bookingId;
   Map<String, dynamic>? _hotelDetail;
   List<Room> _rooms = [];
   List<details.BookingDetail> _tempBookedList = [];
@@ -854,11 +855,13 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
                     tempBookedList: _tempBookedList,
                     checkIn: widget.checkIn,
                     checkOut: widget.checkOut,
-                    onNavigatedBack: (updatedList) {
-                      if (mounted) {
-                        setState(
-                          () => _tempBookedList = List.from(updatedList),
-                        );
+                    existingBookingId: _bookingId,
+                    onNavigatedBack: (result) {
+                      if (mounted && result != null) {
+                        setState(() {
+                          _tempBookedList = List.from(result['list'] as List);
+                          _bookingId = result['bookingId'] as int?; // ADD
+                        });
                       }
                     },
                   );

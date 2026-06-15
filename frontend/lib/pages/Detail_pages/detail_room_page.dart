@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:frontend/services/api_services.dart';
 
 import 'package:frontend/models/bookingDetail.dart' as booking_detail;
 import 'package:frontend/models/room.dart';
@@ -26,6 +27,7 @@ class DetailRoomPage extends StatefulWidget {
   final List<booking_detail.BookingDetail> tempBookedList;
   final DateTime? checkIn;
   final DateTime? checkOut;
+  final int? existingBookingId;
 
   const DetailRoomPage({
     super.key,
@@ -41,6 +43,7 @@ class DetailRoomPage extends StatefulWidget {
     this.tempBookedList = const [],
     this.checkIn,
     this.checkOut,
+    this.existingBookingId,
   });
 
   @override
@@ -68,6 +71,7 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
   void initState() {
     super.initState();
     _localTempList = List.from(widget.tempBookedList);
+    _bookingId = widget.existingBookingId;
   }
 
   List<Map<String, dynamic>> _getMainAmenities() {
@@ -114,6 +118,45 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
         checkIn: widget.checkIn,
         checkOut: widget.checkOut,
         existingBookingId: _bookingId,
+
+        onContinue: editIndex != null
+            ? (selected, notes) async {
+                final detail = _localTempList[editIndex!];
+
+                if (detail.id != 0) {
+                  await ApiService.updateBookingDetail(detail.id, notes: notes);
+
+                  try {
+                    final res = await ApiService.fetchAddOnsByBookingDetail(
+                      detail.id,
+                    );
+                    final existing = res['data'] as List;
+                    for (final ao in existing) {
+                      await ApiService.deleteBookingDetailAddOn(
+                        ao['id'] as int,
+                      );
+                    }
+                  } catch (_) {}
+
+                  for (final addOn in selected) {
+                    await ApiService.storeBookingDetailAddOn(
+                      bookingDetailId: detail.id,
+                      addOnId: addOn.id,
+                      qty: 1,
+                      subTotal: addOn.price,
+                    );
+                  }
+                }
+
+                if (mounted) {
+                  setState(() {
+                    detail.selectedAddOns = selected;
+                    detail.notes = notes;
+                  });
+                }
+              }
+            : null,
+
         onConfirmationCustomAnother: (updatedList, bookingId) {
           if (!mounted) return;
           setState(() {
@@ -136,10 +179,13 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
               checkIn: widget.checkIn,
               checkOut: widget.checkOut,
               onCustomAnother: () {
-                // close BookingConfirmationPopUp, go back to hotel to pick new room
                 Navigator.pop(popupContext);
                 Future.delayed(const Duration(milliseconds: 150), () {
-                  if (mounted) Navigator.pop(pageContext, _localTempList);
+                  if (mounted)
+                    Navigator.pop(pageContext, {
+                      'list': _localTempList,
+                      'bookingId': _bookingId,
+                    });
                 });
               },
               onBookNow: (bookingList) {
@@ -189,7 +235,10 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
             pinned: true,
             expandedHeight: 0,
             leading: IconButton(
-              onPressed: () => Navigator.pop(context, _localTempList),
+              onPressed: () => Navigator.pop(context, {
+                'list': _localTempList,
+                'bookingId': _bookingId,
+              }),
               icon: const Icon(
                 Icons.chevron_left_rounded,
                 color: Color(0xFF0F172A),

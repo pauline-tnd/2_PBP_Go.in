@@ -20,9 +20,10 @@ class RoomCard extends StatefulWidget {
   final String hotelLocation;
   final double reviewScore;
   final List<details.BookingDetail> tempBookedList;
-  final void Function(List<details.BookingDetail>)? onNavigatedBack;
+  final void Function(Map<String, dynamic>?)? onNavigatedBack;
   final DateTime? checkIn;
   final DateTime? checkOut;
+  final int? existingBookingId;
 
   const RoomCard({
     super.key,
@@ -40,6 +41,7 @@ class RoomCard extends StatefulWidget {
     this.onNavigatedBack,
     this.checkIn,
     this.checkOut,
+    this.existingBookingId,
   });
 
   @override
@@ -58,7 +60,7 @@ class _RoomCardState extends State<RoomCard> {
         : fetchedReviews.map((r) => r.rating).reduce((a, b) => a + b) /
               fetchedReviews.length;
 
-    final result = await Navigator.push<List<details.BookingDetail>>(
+    final result = await Navigator.push<Map<String, dynamic>>(
       context,
       MaterialPageRoute(
         builder: (context) => DetailRoomPage(
@@ -74,6 +76,7 @@ class _RoomCardState extends State<RoomCard> {
           tempBookedList: widget.tempBookedList,
           checkIn: widget.checkIn,
           checkOut: widget.checkOut,
+          existingBookingId: widget.existingBookingId,
         ),
       ),
     );

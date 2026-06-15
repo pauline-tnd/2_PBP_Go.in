@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:frontend/models/addOn.dart';
-import 'package:frontend/widgets/booking_confirmation_pop_up.dart';
+// import 'package:frontend/widgets/booking_confirmation_pop_up.dart';
 import 'package:frontend/models/bookingDetail.dart';
 import 'package:frontend/services/api_services.dart';
 
@@ -11,7 +11,8 @@ class AddOnPopUp extends StatefulWidget {
   final Room room;
   final String roomImage;
   final String initialNotes;
-  final void Function(List<AddOnItem> selected, String notes)? onContinue;
+  final Future<void> Function(List<AddOnItem> selected, String notes)?
+  onContinue;
   final List<BookingDetail>? existingBookings;
   final int? editIndex;
   final void Function(List<BookingDetail>, int bookingId)?
@@ -19,7 +20,7 @@ class AddOnPopUp extends StatefulWidget {
   final DateTime? checkIn;
   final DateTime? checkOut;
   final String status;
-  final int? existingBookingId; // reuse booking if already created
+  final int? existingBookingId;
 
   const AddOnPopUp({
     super.key,
@@ -73,12 +74,12 @@ class _AddOnPopUpState extends State<AddOnPopUp> {
     final notes = _notesController.text;
 
     if (widget.onContinue != null) {
-      widget.onContinue!(selected, notes);
+      await widget.onContinue!(selected, notes);
+      if (!mounted) return;
       Navigator.pop(context);
       return;
     }
 
-    // Store mode: call APIs
     try {
       final checkIn = widget.checkIn;
       final checkOut = widget.checkOut;

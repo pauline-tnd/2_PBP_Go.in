@@ -138,8 +138,7 @@ class _BookingConfirmationPopUpState extends State<BookingConfirmationPopUp> {
                       ),
                       _IconAction(
                         icon: Icons.delete_outline,
-                        onPressed: () =>
-                            _showDeleteConfirmation(context, index),
+                        onPressed: () => _showDeleteConfirmation(index),
                       ),
                       const SizedBox(width: 4),
                       Container(
@@ -260,35 +259,46 @@ class _BookingConfirmationPopUpState extends State<BookingConfirmationPopUp> {
         initialNotes: detail.notes,
         existingBookings: widget.bookingDetails,
         editIndex: index,
-        checkIn: widget.checkIn,
-        checkOut: widget.checkOut,
-        onConfirmationCustomAnother: (updatedList, bookingId) {
-          setState(() {
-            widget.bookingDetails
-              ..clear()
-              ..addAll(updatedList);
-          });
-          widget.onBookingListChanged?.call(List.from(widget.bookingDetails));
-        },
-        onContinue: (selected, notes) {
-          setState(() {
-            detail.selectedAddOns.clear();
-            detail.selectedAddOns.addAll(selected);
-            detail.notes = notes;
-          });
-          widget.onBookingListChanged?.call(List.from(widget.bookingDetails));
-          Future.delayed(Duration.zero, () {
-            setState(() {});
-          });
+        onContinue: (selected, notes) async {
+          if (detail.id != 0) {
+            await ApiService.updateBookingDetail(detail.id, notes: notes);
+
+            try {
+              final res = await ApiService.fetchAddOnsByBookingDetail(
+                detail.id,
+              );
+              final existing = res['data'] as List;
+              for (final ao in existing) {
+                await ApiService.deleteBookingDetailAddOn(ao['id'] as int);
+              }
+            } catch (_) {}
+
+            for (final addOn in selected) {
+              await ApiService.storeBookingDetailAddOn(
+                bookingDetailId: detail.id,
+                addOnId: addOn.id,
+                qty: 1,
+                subTotal: addOn.price,
+              );
+            }
+          }
+
+          if (mounted) {
+            setState(() {
+              detail.selectedAddOns = selected;
+              detail.notes = notes;
+            });
+            widget.onBookingListChanged?.call(List.from(widget.bookingDetails));
+          }
         },
       ),
     );
   }
 
-  void _showDeleteConfirmation(BuildContext context, int index) {
+  void _showDeleteConfirmation(int index) {
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (dialogCtx) => AlertDialog(
         content: const Text(
           'Remove from booking?',
           style: TextStyle(
@@ -299,7 +309,7 @@ class _BookingConfirmationPopUpState extends State<BookingConfirmationPopUp> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogCtx),
             child: const Text(
               'No',
               style: TextStyle(
@@ -310,21 +320,32 @@ class _BookingConfirmationPopUpState extends State<BookingConfirmationPopUp> {
             ),
           ),
           TextButton(
-            onPressed: () {
-              Navigator.pop(context);
+            onPressed: () async {
+              final detail = widget.bookingDetails[index];
+              Navigator.pop(dialogCtx);
+
+              if (detail.id != 0) {
+                try {
+                  await ApiService.deleteBookingDetail(detail.id);
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Failed to delete: $e')),
+                    );
+                  }
+                  return;
+                }
+              }
+
+              if (!mounted) return;
               setState(() {
                 widget.bookingDetails.removeAt(index);
               });
-
               widget.onDeleteItem?.call(index);
-
               widget.onBookingListChanged?.call(
                 List.from(widget.bookingDetails),
               );
-
-              if (widget.bookingDetails.isEmpty) {
-                Navigator.pop(context);
-              }
+              if (widget.bookingDetails.isEmpty) Navigator.pop(context);
             },
             child: const Text(
               'Yes',

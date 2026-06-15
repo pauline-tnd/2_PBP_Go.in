@@ -628,7 +628,7 @@ class ApiService {
     final body = <String, dynamic>{
       'check_in': checkIn,
       'check_out': checkOut,
-      'status': status ?? 'pending',
+      'status': status ?? 'paid',
     };
     if (status != null) body['status'] = status;
 
