@@ -24,6 +24,8 @@ class DetailRoomPage extends StatefulWidget {
   final String hotelLocation;
   final double reviewScore;
   final List<booking_detail.BookingDetail> tempBookedList;
+  final DateTime? checkIn;
+  final DateTime? checkOut;
 
   const DetailRoomPage({
     super.key,
@@ -37,6 +39,8 @@ class DetailRoomPage extends StatefulWidget {
     this.hotelLocation = '',
     required this.reviewScore,
     this.tempBookedList = const [],
+    this.checkIn,
+    this.checkOut,
   });
 
   @override
@@ -47,6 +51,7 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
   int _currentImageIndex = 0;
   final PageController _pageController = PageController();
   late List<booking_detail.BookingDetail> _localTempList;
+  int? _bookingId;
 
   static const List<String> _defaultRoomImages = [
     'assets/images/RoomDefault/hotel_room_1.png',
@@ -89,8 +94,10 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
   }
 
   void _openAddOnPopUp({int? editIndex}) {
+    final pageContext = context;
+
     showModalBottomSheet(
-      context: context,
+      context: pageContext,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => AddOnPopUp(
@@ -104,33 +111,40 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
         roomImage: widget.imageUrls.isNotEmpty ? widget.imageUrls.first : '',
         existingBookings: _localTempList,
         editIndex: editIndex,
-        onConfirmationCustomAnother: (updatedList) {
+        checkIn: widget.checkIn,
+        checkOut: widget.checkOut,
+        existingBookingId: _bookingId,
+        onConfirmationCustomAnother: (updatedList, bookingId) {
+          if (!mounted) return;
           setState(() {
             _localTempList = List.from(updatedList);
+            _bookingId = bookingId;
           });
 
           showModalBottomSheet(
-            context: context,
+            context: pageContext,
             isScrollControlled: true,
             backgroundColor: Colors.transparent,
             builder: (popupContext) => BookingConfirmationPopUp(
-              bookingDetails: updatedList,
+              bookingDetails: List.from(updatedList),
               allAddOns: widget.addOns,
               hotelName: widget.hotelName,
               hotelLocation: widget.hotelLocation,
               previewImageUrl: widget.imageUrls.isNotEmpty
                   ? widget.imageUrls.first
                   : '',
+              checkIn: widget.checkIn,
+              checkOut: widget.checkOut,
               onCustomAnother: () {
+                // close BookingConfirmationPopUp, go back to hotel to pick new room
                 Navigator.pop(popupContext);
-
-                Future.delayed(Duration(milliseconds: 150), () {
-                  _openAddOnPopUp();
+                Future.delayed(const Duration(milliseconds: 150), () {
+                  if (mounted) Navigator.pop(pageContext, _localTempList);
                 });
               },
               onBookNow: (bookingList) {
                 Navigator.pop(popupContext);
-                Navigator.of(context).push(
+                Navigator.of(pageContext).push(
                   MaterialPageRoute(
                     builder: (_) => PaymentConfirmationPage(
                       hotelName: widget.hotelName,
@@ -144,6 +158,7 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                 );
               },
               onBookingListChanged: (bookingList) {
+                if (!mounted) return;
                 setState(() {
                   _localTempList = List.from(bookingList);
                 });

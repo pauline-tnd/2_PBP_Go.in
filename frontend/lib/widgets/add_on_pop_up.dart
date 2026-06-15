@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:frontend/models/addOn.dart';
 import 'package:frontend/widgets/booking_confirmation_pop_up.dart';
 import 'package:frontend/models/bookingDetail.dart';
+import 'package:frontend/services/api_services.dart';
 
 class AddOnPopUp extends StatefulWidget {
   final String roomType;
@@ -13,7 +14,12 @@ class AddOnPopUp extends StatefulWidget {
   final void Function(List<AddOnItem> selected, String notes)? onContinue;
   final List<BookingDetail>? existingBookings;
   final int? editIndex;
-  final void Function(List<BookingDetail>)? onConfirmationCustomAnother;
+  final void Function(List<BookingDetail>, int bookingId)?
+  onConfirmationCustomAnother;
+  final DateTime? checkIn;
+  final DateTime? checkOut;
+  final String status;
+  final int? existingBookingId; // reuse booking if already created
 
   const AddOnPopUp({
     super.key,
@@ -26,6 +32,10 @@ class AddOnPopUp extends StatefulWidget {
     this.existingBookings,
     this.editIndex,
     this.onConfirmationCustomAnother,
+    this.checkIn,
+    this.checkOut,
+    this.status = 'paid',
+    this.existingBookingId,
   });
 
   @override
@@ -58,38 +68,82 @@ class _AddOnPopUpState extends State<AddOnPopUp> {
     super.dispose();
   }
 
-  void _handleContinue() {
+  Future<void> _handleContinue() async {
     final selected = _selectedIndexes.map((i) => widget.addOns[i]).toList();
+    final notes = _notesController.text;
 
     if (widget.onContinue != null) {
-      widget.onContinue!(selected, _notesController.text);
+      widget.onContinue!(selected, notes);
       Navigator.pop(context);
       return;
     }
 
-    final newDetail = BookingDetail(
-      id: 0,
-      room: widget.room,
-      quantity: 1,
-      roomImage: widget.roomImage,
-      notes: _notesController.text,
-      selectedAddOns: selected,
-    );
-    final int? editIndex;
-    final List<BookingDetail> allDetails = List.from(
-      widget.existingBookings ?? <BookingDetail>[],
-    );
+    // Store mode: call APIs
+    try {
+      final checkIn = widget.checkIn;
+      final checkOut = widget.checkOut;
 
-    if (widget.editIndex != null && widget.editIndex! < allDetails.length) {
-      allDetails[widget.editIndex!] = newDetail;
-    } else {
+      if (checkIn == null || checkOut == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Check-in/out date missing')),
+        );
+        return;
+      }
+
+      int bookingId;
+      if (widget.existingBookingId != null) {
+        bookingId = widget.existingBookingId!;
+      } else {
+        final bookingRes = await ApiService.storeBooking(
+          checkIn: checkIn.toIso8601String().split('T').first,
+          checkOut: checkOut.toIso8601String().split('T').first,
+          status: widget.status,
+        );
+        bookingId = bookingRes['booking']['id'] as int;
+      }
+
+      final detailRes = await ApiService.storeBookingDetail(
+        bookingId: bookingId,
+        roomId: widget.room.id,
+        totalRoom: 1,
+        notes: notes.isEmpty ? null : notes,
+      );
+      final bookingDetailId = detailRes['detail']['id'] as int;
+
+      for (final addOn in selected) {
+        await ApiService.storeBookingDetailAddOn(
+          bookingDetailId: bookingDetailId,
+          addOnId: addOn.id,
+          qty: 1,
+          subTotal: addOn.price,
+        );
+      }
+
+      final newDetail = BookingDetail(
+        id: bookingDetailId,
+        room: widget.room,
+        quantity: 1,
+        roomImage: widget.roomImage,
+        notes: notes,
+        selectedAddOns: selected,
+      );
+
+      final List<BookingDetail> allDetails = List.from(
+        widget.existingBookings ?? <BookingDetail>[],
+      );
       allDetails.add(newDetail);
-    }
-    Navigator.pop(context);
 
-    Future.delayed(Duration(milliseconds: 100), () {
-      widget.onConfirmationCustomAnother?.call(allDetails);
-    });
+      if (!mounted) return;
+      Navigator.pop(context);
+      Future.delayed(const Duration(milliseconds: 100), () {
+        widget.onConfirmationCustomAnother?.call(allDetails, bookingId);
+      });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed: $e')));
+    }
   }
 
   @override
@@ -243,7 +297,7 @@ class _AddOnPopUpState extends State<AddOnPopUp> {
                       color: Color(0xFF1E293B),
                     ),
                     decoration: InputDecoration(
-                      hintText: 'Upper level, etc.',
+                      hintText: 'Please add more tea box...',
                       hintStyle: const TextStyle(
                         fontSize: 13,
                         color: Color(0xFFCBD5E1),

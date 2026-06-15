@@ -21,6 +21,8 @@ class RoomCard extends StatefulWidget {
   final double reviewScore;
   final List<details.BookingDetail> tempBookedList;
   final void Function(List<details.BookingDetail>)? onNavigatedBack;
+  final DateTime? checkIn;
+  final DateTime? checkOut;
 
   const RoomCard({
     super.key,
@@ -36,6 +38,8 @@ class RoomCard extends StatefulWidget {
     this.reviewScore = 0,
     this.tempBookedList = const [],
     this.onNavigatedBack,
+    this.checkIn,
+    this.checkOut,
   });
 
   @override
@@ -65,6 +69,8 @@ class _RoomCardState extends State<RoomCard> {
           hotelLocation: widget.hotelLocation,
           reviewScore: widget.reviewScore,
           tempBookedList: widget.tempBookedList,
+          checkIn: widget.checkIn,
+          checkOut: widget.checkOut,
         ),
       ),
     );

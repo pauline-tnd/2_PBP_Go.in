@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:frontend/services/api_services.dart';
 import 'package:frontend/models/bookingDetail.dart';
 import 'package:frontend/models/addOn.dart';
 import 'package:frontend/widgets/add_on_pop_up.dart';
@@ -150,7 +151,7 @@ class _BookingConfirmationPopUpState extends State<BookingConfirmationPopUp> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             InkWell(
-                              onTap: () {
+                              onTap: () async {
                                 if (detail.quantity > 1) {
                                   setState(() {
                                     detail.quantity--;
@@ -158,6 +159,12 @@ class _BookingConfirmationPopUpState extends State<BookingConfirmationPopUp> {
                                   widget.onBookingListChanged?.call(
                                     List.from(widget.bookingDetails),
                                   );
+                                  if (detail.id != 0) {
+                                    await ApiService.updateBookingDetail(
+                                      detail.id,
+                                      totalRoom: detail.quantity,
+                                    );
+                                  }
                                 }
                               },
                               child: const Padding(
@@ -177,14 +184,19 @@ class _BookingConfirmationPopUpState extends State<BookingConfirmationPopUp> {
                               ),
                             ),
                             InkWell(
-                              onTap: () {
+                              onTap: () async {
                                 setState(() {
                                   detail.quantity++;
                                 });
-
                                 widget.onBookingListChanged?.call(
                                   List.from(widget.bookingDetails),
                                 );
+                                if (detail.id != 0) {
+                                  await ApiService.updateBookingDetail(
+                                    detail.id,
+                                    totalRoom: detail.quantity,
+                                  );
+                                }
                               },
                               child: const Padding(
                                 padding: EdgeInsets.all(4),
@@ -248,7 +260,9 @@ class _BookingConfirmationPopUpState extends State<BookingConfirmationPopUp> {
         initialNotes: detail.notes,
         existingBookings: widget.bookingDetails,
         editIndex: index,
-        onConfirmationCustomAnother: (updatedList) {
+        checkIn: widget.checkIn,
+        checkOut: widget.checkOut,
+        onConfirmationCustomAnother: (updatedList, bookingId) {
           setState(() {
             widget.bookingDetails
               ..clear()

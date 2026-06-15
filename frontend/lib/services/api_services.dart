@@ -625,7 +625,11 @@ class ApiService {
     String? status,
   }) async {
     final headers = await _authHeaders();
-    final body = <String, dynamic>{'check_in': checkIn, 'check_out': checkOut};
+    final body = <String, dynamic>{
+      'check_in': checkIn,
+      'check_out': checkOut,
+      'status': status ?? 'pending',
+    };
     if (status != null) body['status'] = status;
 
     final response = await http.post(

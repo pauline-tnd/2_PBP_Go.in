@@ -28,12 +28,51 @@ class HotelCard extends StatefulWidget {
 class _HotelCardState extends State<HotelCard> {
   late bool _isWishlisted;
 
-  void _openDetailHotelPage() {
+  // versi langsung ke detail page
+  // void _openDetailHotelPage() {
+  //   Navigator.push(
+  //     context,
+  //     MaterialPageRoute(
+  //       builder: (context) =>
+  //           DetailHotelPage(hotel: widget.hotel, addOns: const []),
+  //     ),
+  //   );
+  // }
+
+  // pakai date-picker
+
+  Future<void> _openDetailHotelPage() async {
+    final DateTimeRange? picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+      initialDateRange: DateTimeRange(
+        start: DateTime.now(),
+        end: DateTime.now().add(const Duration(days: 1)),
+      ),
+      builder: (context, child) => Theme(
+        data: Theme.of(context).copyWith(
+          colorScheme: const ColorScheme.light(
+            primary: Color(0xFF3B82F6),
+            onPrimary: Colors.white,
+            surface: Colors.white,
+          ),
+        ),
+        child: child!,
+      ),
+    );
+
+    if (picked == null || !context.mounted) return;
+
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) =>
-            DetailHotelPage(hotel: widget.hotel, addOns: const []),
+        builder: (context) => DetailHotelPage(
+          hotel: widget.hotel,
+          addOns: const [],
+          checkIn: picked.start,
+          checkOut: picked.end,
+        ),
       ),
     );
   }

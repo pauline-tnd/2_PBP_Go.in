@@ -25,8 +25,16 @@ import 'package:frontend/pages/payment_confirmation_page.dart';
 class DetailHotelPage extends StatefulWidget {
   final Hotel hotel;
   final List<AddOnItem> addOns;
+  final DateTime? checkIn;
+  final DateTime? checkOut;
 
-  const DetailHotelPage({super.key, required this.hotel, required this.addOns});
+  const DetailHotelPage({
+    super.key,
+    required this.hotel,
+    required this.addOns,
+    this.checkIn,
+    this.checkOut,
+  });
 
   @override
   State<DetailHotelPage> createState() => _DetailHotelPageState();
@@ -844,6 +852,8 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
                     hotelLocation: hotel.location,
                     reviewScore: double.tryParse(rating) ?? hotel.userRating,
                     tempBookedList: _tempBookedList,
+                    checkIn: widget.checkIn,
+                    checkOut: widget.checkOut,
                     onNavigatedBack: (updatedList) {
                       if (mounted) {
                         setState(
