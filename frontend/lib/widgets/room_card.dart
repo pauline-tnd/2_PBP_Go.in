@@ -53,7 +53,10 @@ class _RoomCardState extends State<RoomCard> {
         : [if (widget.imageUrl != null) widget.imageUrl!];
     final addOns = widget.addOns ?? widget.room.addOns;
     final fetchedReviews = await ApiService.fetchRoomReviews(widget.room.id);
-    final reviewScore = fetchedReviews.isEmpty ? 0.0 : fetchedReviews.map((r) => r.rating).reduce((a, b) => a + b) / fetchedReviews.length;
+    final reviewScore = fetchedReviews.isEmpty
+        ? 0.0
+        : fetchedReviews.map((r) => r.rating).reduce((a, b) => a + b) /
+              fetchedReviews.length;
 
     final result = await Navigator.push<List<details.BookingDetail>>(
       context,
@@ -83,7 +86,9 @@ class _RoomCardState extends State<RoomCard> {
   @override
   Widget build(BuildContext context) {
     final room = widget.room;
-    final images = widget.imageUrls.isNotEmpty ? widget.imageUrls : [if (widget.imageUrl != null) widget.imageUrl!];
+    final images = widget.imageUrls.isNotEmpty
+        ? widget.imageUrls
+        : [if (widget.imageUrl != null) widget.imageUrl!];
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),

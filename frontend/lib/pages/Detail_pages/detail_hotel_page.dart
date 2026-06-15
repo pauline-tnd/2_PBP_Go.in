@@ -832,8 +832,8 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
                   final List<String> combinedImages = roomImages.isNotEmpty
                       ? roomImages.cast<String>()
                       : hotelImages.isNotEmpty
-                          ? <String>[hotelImages.first]
-                          : <String>[];
+                      ? <String>[hotelImages.first]
+                      : <String>[];
 
                   return RoomCard(
                     room: room,
