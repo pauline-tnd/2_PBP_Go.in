@@ -216,6 +216,143 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
     );
   }
 
+  void _showAddOnsSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Add On',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF4F8DF7),
+                ),
+              ),
+              const SizedBox(height: 16),
+              ...widget.addOns.map(
+                (item) => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 3),
+                  child: Row(
+                    children: [
+                      const Text(
+                        '• ',
+                        style: TextStyle(color: Color(0xFF94A3B8)),
+                      ),
+                      Text(
+                        item.name,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFF1E293B),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showMainAmenitiesSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Main Amenities',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF4F8DF7),
+                ),
+              ),
+              const SizedBox(height: 16),
+              ..._getMainAmenities().map((f) {
+                final facility = FacilityIcons.fromJson(f);
+                final icon =
+                    FacilityIcons.iconMap[facility.icon] ??
+                    Icons.check_circle_outline_rounded;
+                return _FacilityRow(icon: icon, name: facility.name);
+              }),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showRoomAmenitiesSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Room Amenities',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF4F8DF7),
+                ),
+              ),
+              const SizedBox(height: 16),
+              ..._getRoomAmenities().map(
+                (item) => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 3),
+                  child: Row(
+                    children: [
+                      const Text(
+                        '• ',
+                        style: TextStyle(color: Color(0xFF94A3B8)),
+                      ),
+                      Text(
+                        item['name'] ?? item,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFF1E293B),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final room = widget.room;
@@ -448,16 +585,29 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
 
                       const SizedBox(height: 24),
 
-                      const Text(
-                        'Main Amenities',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF1E293B),
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Main Amenities',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF1E293B),
+                            ),
+                          ),
+                          if (_getMainAmenities().length > 4)
+                            GestureDetector(
+                              onTap: _showMainAmenitiesSheet,
+                              child: const Icon(
+                                Icons.more_vert_outlined,
+                                color: Color(0xFF4F8DF7),
+                              ),
+                            ),
+                        ],
                       ),
                       const SizedBox(height: 12),
-                      ..._getMainAmenities().map((f) {
+                      ..._getMainAmenities().take(4).map((f) {
                         final facility = FacilityIcons.fromJson(f);
                         final icon =
                             FacilityIcons.iconMap[facility.icon] ??
@@ -479,7 +629,7 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                           ),
                           if (_getRoomAmenities().length > 4)
                             GestureDetector(
-                              onTap: () {},
+                              onTap: _showRoomAmenitiesSheet,
                               child: const Icon(
                                 Icons.more_vert_outlined,
                                 color: Color(0xFF4F8DF7),
@@ -512,35 +662,50 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                           ),
                       const SizedBox(height: 24),
 
-                      const Text(
-                        'Add On',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF1E293B),
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Add On',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF1E293B),
+                            ),
+                          ),
+                          if (widget.addOns.length > 4)
+                            GestureDetector(
+                              onTap: _showAddOnsSheet,
+                              child: const Icon(
+                                Icons.more_vert_outlined,
+                                color: Color(0xFF4F8DF7),
+                              ),
+                            ),
+                        ],
                       ),
                       const SizedBox(height: 8),
-                      ...widget.addOns.map(
-                        (item) => Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 3),
-                          child: Row(
-                            children: [
-                              const Text(
-                                '• ',
-                                style: TextStyle(color: Color(0xFF94A3B8)),
+                      ...widget.addOns
+                          .take(4)
+                          .map(
+                            (item) => Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 3),
+                              child: Row(
+                                children: [
+                                  const Text(
+                                    '• ',
+                                    style: TextStyle(color: Color(0xFF94A3B8)),
+                                  ),
+                                  Text(
+                                    item.name,
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      color: Color(0xFF1E293B),
+                                    ),
+                                  ),
+                                ],
                               ),
-                              Text(
-                                item.name,
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  color: Color(0xFF1E293B),
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
-                        ),
-                      ),
 
                       const SizedBox(height: 24),
 
