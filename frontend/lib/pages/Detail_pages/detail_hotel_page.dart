@@ -51,6 +51,7 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
   Map<String, dynamic>? _hotelDetail;
   List<Room> _rooms = [];
   List<details.BookingDetail> _tempBookedList = [];
+  List<Review> _hotelReviews = [];
   bool _loading = true;
   String? _error;
   final MapController _mapController = MapController();
@@ -124,6 +125,7 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
 
       final lat = double.tryParse(hotelDetail['latitude']?.toString() ?? '');
       final lng = double.tryParse(hotelDetail['longitude']?.toString() ?? '');
+      final rawReviews = await ApiService.fetchHotelReviews(widget.hotel.id);
 
       if (!mounted) return;
       setState(() {
@@ -153,6 +155,7 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
           );
         }
 
+        _hotelReviews = rawReviews;
         _loading = false;
       });
     } catch (e) {
@@ -564,29 +567,7 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
                             behavior: HitTestBehavior.opaque,
                             onTap: () {
                               try {
-                                final reviews =
-                                    (_hotelDetail?['reviews']
-                                                as List<dynamic>? ??
-                                            [])
-                                        .whereType<Map<String, dynamic>>()
-                                        .map((r) {
-                                          final review =
-                                              Map<String, dynamic>.from(r);
-
-                                          review['description'] =
-                                              review['description']
-                                                  ?.toString() ??
-                                              '';
-
-                                          review['created_at'] =
-                                              review['created_at']?.toString();
-
-                                          review['image'] = review['image']
-                                              ?.toString();
-
-                                          return Review.fromJson(review);
-                                        })
-                                        .toList();
+                                final reviews = _hotelReviews;
 
                                 Navigator.push(
                                   context,
