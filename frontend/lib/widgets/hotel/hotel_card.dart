@@ -4,6 +4,8 @@ import '../../models/hotel.dart';
 import 'hotel_image.dart';
 import 'package:intl/intl.dart';
 import 'package:frontend/pages/Detail_pages/detail_hotel_page.dart';
+import 'package:provider/provider.dart';
+import 'package:frontend/providers/booking_date_provider.dart';
 
 class HotelCard extends StatefulWidget {
   final Hotel hotel;
@@ -28,7 +30,6 @@ class HotelCard extends StatefulWidget {
 }
 
 class _HotelCardState extends State<HotelCard> {
-
   // versi langsung ke detail page
   // void _openDetailHotelPage() {
   //   Navigator.push(
@@ -40,39 +41,16 @@ class _HotelCardState extends State<HotelCard> {
   //   );
   // }
 
-  // pakai date-picker
-
-  Future<void> _openDetailHotelPage() async {
-    final DateTimeRange? picked = await showDateRangePicker(
-      context: context,
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-      initialDateRange: DateTimeRange(
-        start: DateTime.now(),
-        end: DateTime.now().add(const Duration(days: 1)),
-      ),
-      builder: (context, child) => Theme(
-        data: Theme.of(context).copyWith(
-          colorScheme: const ColorScheme.light(
-            primary: Color(0xFF3B82F6),
-            onPrimary: Colors.white,
-            surface: Colors.white,
-          ),
-        ),
-        child: child!,
-      ),
-    );
-
-    if (picked == null || !context.mounted) return;
-
+  void _openDetailHotelPage() {
+    final dates = context.read<BookingDateProvider>();
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => DetailHotelPage(
           hotel: widget.hotel,
           addOns: const [],
-          checkIn: picked.start,
-          checkOut: picked.end,
+          checkIn: dates.checkIn,
+          checkOut: dates.checkOut,
         ),
       ),
     );

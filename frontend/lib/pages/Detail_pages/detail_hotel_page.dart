@@ -51,6 +51,7 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
   Map<String, dynamic>? _hotelDetail;
   List<Room> _rooms = [];
   List<details.BookingDetail> _tempBookedList = [];
+  List<Review> _hotelReviews = [];
   bool _loading = true;
   String? _error;
   final MapController _mapController = MapController();
@@ -58,6 +59,7 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
   final GlobalKey _mapKey = GlobalKey();
   LatLng _center = const LatLng(51.5071, -0.1417);
   String _pickedAddress = '';
+  List<AddOnItem> _addOns = [];
 
   @override
   void initState() {
@@ -124,12 +126,27 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
 
       final lat = double.tryParse(hotelDetail['latitude']?.toString() ?? '');
       final lng = double.tryParse(hotelDetail['longitude']?.toString() ?? '');
+      final rawReviews = await ApiService.fetchHotelReviews(widget.hotel.id);
 
       if (!mounted) return;
       setState(() {
         _hotelDetail = hotelDetail;
         _isWishlisted = data['is_wishlist'] ?? false;
         _rooms = [];
+        _addOns = (hotelDetail['add_ons'] as List<dynamic>? ?? [])
+            .map(
+              (e) => AddOnItem(
+                id: int.tryParse(e['id']?.toString() ?? '') ?? 0,
+                name: e['name'] ?? '',
+                price: double.tryParse(e['price'].toString()) ?? 0.0,
+                icon:
+                    FacilityIcons.iconMap[e['icon']?['icon']
+                        ?.toString()
+                        .trim()] ??
+                    Icons.room_service_outlined,
+              ),
+            )
+            .toList();
 
         for (final r in roomsRaw) {
           try {
@@ -153,6 +170,7 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
           );
         }
 
+        _hotelReviews = rawReviews;
         _loading = false;
       });
     } catch (e) {
@@ -564,35 +582,15 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
                             behavior: HitTestBehavior.opaque,
                             onTap: () {
                               try {
-                                final reviews =
-                                    (_hotelDetail?['reviews']
-                                                as List<dynamic>? ??
-                                            [])
-                                        .whereType<Map<String, dynamic>>()
-                                        .map((r) {
-                                          final review =
-                                              Map<String, dynamic>.from(r);
-
-                                          review['description'] =
-                                              review['description']
-                                                  ?.toString() ??
-                                              '';
-
-                                          review['created_at'] =
-                                              review['created_at']?.toString();
-
-                                          review['image'] = review['image']
-                                              ?.toString();
-
-                                          return Review.fromJson(review);
-                                        })
-                                        .toList();
+                                final reviews = _hotelReviews;
 
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) =>
-                                        ReviewDetailPage(reviews: reviews),
+                                    builder: (context) => ReviewDetailPage(
+                                      reviews: reviews,
+                                      title: "Hotel Reviews",
+                                    ),
                                   ),
                                 );
                               } catch (e) {
@@ -838,6 +836,7 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
 
                   return RoomCard(
                     room: room,
+                    addOns: _addOns,
                     imageUrl: combinedImages.isNotEmpty
                         ? combinedImages.first
                         : null,

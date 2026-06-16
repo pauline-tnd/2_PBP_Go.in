@@ -23,6 +23,14 @@ class _HomeSearchCardState extends State<HomeSearchCard> {
   ];
   String _hotelQuery = '';
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<BookingDateProvider>().setDates(_dates[0], _dates[1]);
+    });
+  }
+
   String _formatDate(DateTime? date) {
     return date == null ? '' : DateFormat('EEE, d MMM yyyy').format(date);
   }
@@ -89,6 +97,10 @@ class _HomeSearchCardState extends State<HomeSearchCard> {
                 value: _dates,
                 onValueChanged: (dates) {
                   setState(() => _dates = dates);
+                  context.read<BookingDateProvider>().setDates(
+                    dates.isNotEmpty ? dates[0] : null,
+                    dates.length > 1 ? dates[1] : null,
+                  );
                 },
               ),
               const SizedBox(height: 12),
@@ -118,7 +130,9 @@ class _HomeSearchCardState extends State<HomeSearchCard> {
     final mainShell = context.findAncestorStateOfType<MainShellState>();
     final locationProvider = context.read<LocationProvider>();
 
-    final locationAddress = locationProvider.hasLocation ? locationProvider.address : null;
+    final locationAddress = locationProvider.hasLocation
+        ? locationProvider.address
+        : null;
     final userLat = locationProvider.lat;
     final userLng = locationProvider.lng;
 
