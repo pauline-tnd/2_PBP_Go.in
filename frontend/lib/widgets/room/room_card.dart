@@ -5,7 +5,7 @@ import 'package:frontend/models/addOn.dart';
 import 'package:frontend/models/facilityIcons.dart';
 import 'package:frontend/models/bookingDetail.dart' as details;
 import 'package:frontend/models/room.dart';
-import 'package:frontend/widgets/room_image.dart';
+import 'package:frontend/widgets/room/room_image.dart';
 import 'package:frontend/services/api_services.dart';
 
 class RoomCard extends StatefulWidget {

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/models/review.dart';
 import 'package:frontend/widgets/review/review_filter.dart';
-import 'package:frontend/widgets/review_card.dart';
+import 'package:frontend/widgets/review/review_card.dart';
 
 class ReviewDetailPage extends StatefulWidget {
   final List<Review> reviews;

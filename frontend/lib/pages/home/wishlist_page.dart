@@ -3,7 +3,7 @@ import 'package:frontend/extensions/snackbar.dart';
 import 'package:frontend/models/hotel.dart';
 import 'package:frontend/models/wishlist.dart';
 import 'package:frontend/services/api_services.dart';
-import 'package:frontend/widgets/hotel_card.dart';
+import 'package:frontend/widgets/hotel/hotel_card.dart';
 
 class WishlistPage extends StatefulWidget {
   final VoidCallback? onBack;

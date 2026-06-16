@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 import 'package:frontend/models/hotel.dart';
-import 'package:frontend/widgets/hotel_card.dart';
+import 'package:frontend/widgets/hotel/hotel_card.dart';
 import 'package:frontend/widgets/sorting_bar.dart';
-import 'package:frontend/widgets/skeleton_loader.dart';
+import 'package:frontend/widgets/layout/skeleton_loader.dart';
 import 'package:frontend/services/api_services.dart';
 import 'package:frontend/pages/main_shell.dart';
 
@@ -49,7 +49,7 @@ class SearchResultsPage extends StatefulWidget {
   final String? dateRange;
 
   const SearchResultsPage({
-    super.key, 
+    super.key,
     this.initialQuery,
     this.location,
     this.dateRange,
@@ -78,16 +78,14 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
     try {
       final response = await ApiService.fetchHotels();
       final data = response['data'];
-      final List<dynamic> hotelItems =
-          data is List
-              ? data
-              : (data is Map<String, dynamic> && data['data'] is List)
-                  ? data['data']
-                  : [];
-      final List<Hotel> fetchedHotels =
-          hotelItems
-              .map((item) => Hotel.fromMap(item as Map<String, dynamic>))
-              .toList();
+      final List<dynamic> hotelItems = data is List
+          ? data
+          : (data is Map<String, dynamic> && data['data'] is List)
+          ? data['data']
+          : [];
+      final List<Hotel> fetchedHotels = hotelItems
+          .map((item) => Hotel.fromMap(item as Map<String, dynamic>))
+          .toList();
       if (!mounted) return;
       setState(() {
         _allHotels = fetchedHotels;
@@ -264,7 +262,7 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
               ),
             ],
           ),
-            const SizedBox(height: 120),
+          const SizedBox(height: 120),
         ],
       ),
     );
@@ -345,8 +343,8 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
         children: [
           GestureDetector(
             onTap: () {
-              final mainShell =
-                  context.findAncestorStateOfType<MainShellState>();
+              final mainShell = context
+                  .findAncestorStateOfType<MainShellState>();
               mainShell?.hideOverlayPage();
             },
             child: const SizedBox(

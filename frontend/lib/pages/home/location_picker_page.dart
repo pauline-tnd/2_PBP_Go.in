@@ -6,6 +6,23 @@ import 'package:frontend/models/nominatim.dart';
 import 'package:frontend/providers/location_provider.dart';
 import 'package:frontend/services/api_services.dart';
 import 'package:provider/provider.dart';
+import 'package:permission_handler/permission_handler.dart';
+
+Future<bool> _requestLocationPermission() async {
+  var status = await Permission.location.status;
+
+  if (status.isGranted) return true;
+
+  status = await Permission.location.request();
+
+  if (status.isGranted) return true;
+
+  if (status.isPermanentlyDenied) {
+    await openAppSettings();
+  }
+
+  return false;
+}
 
 class LocationPickerPage extends StatefulWidget {
   const LocationPickerPage({super.key});
@@ -313,7 +330,34 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
 
   Future<void> _useGPS() async {
     final provider = context.read<LocationProvider>();
-    final success = await provider.fetchCurrentLocation();
+
+    final success = await provider.fetchCurrentLocation(
+      onGpsDisabled: () async {
+        // Dialog context
+        return showDialog<bool>(
+          context: context,
+          builder: (_) => AlertDialog(
+            title: const Text('GPS Disabled'),
+            content: const Text('Please enable Location Services to use GPS.'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Settings'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blueAccent,
+                  foregroundColor: Colors.white,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
     if (success && mounted) {
       final latlng = LatLng(provider.lat!, provider.lng!);
       _mapController.move(latlng, 16);

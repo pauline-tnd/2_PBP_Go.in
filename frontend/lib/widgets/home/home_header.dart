@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/pages/main_shell.dart';
-import 'package:frontend/widgets/header.dart';
-import 'package:frontend/pages/location_picker_page.dart';
+import 'package:frontend/widgets/layout/header.dart';
+import 'package:frontend/pages/home/location_picker_page.dart';
 import 'package:frontend/providers/location_provider.dart';
 import 'package:provider/provider.dart';
 

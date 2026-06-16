@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/models/hotel.dart';
-import 'package:frontend/widgets/hotel_card.dart';
+import 'package:frontend/widgets/hotel/hotel_card.dart';
 
 class HomeRecommendedSection extends StatefulWidget {
   final List<Hotel> hotels;

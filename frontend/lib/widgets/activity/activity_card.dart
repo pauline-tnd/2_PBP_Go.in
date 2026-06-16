@@ -265,7 +265,7 @@ class _ReviewButtonState extends State<_ReviewButton> {
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           Text(
-            widget.hasReview ? 'Reviewed' : 'Review',
+            'Review',
             style: const TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,

@@ -21,7 +21,9 @@ class LocationProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> fetchCurrentLocation() async {
+  Future<bool> fetchCurrentLocation({
+    Future<bool?> Function()? onGpsDisabled,
+  }) async {
     _isLoading = true;
     notifyListeners();
 
@@ -29,6 +31,11 @@ class LocationProvider extends ChangeNotifier {
       // Check whether GPS is enabled.
       final serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
+        // Show dialog
+        final shouldOpen = await onGpsDisabled?.call();
+        if (shouldOpen == true) {
+          await Geolocator.openLocationSettings();
+        }
         _isLoading = false;
         notifyListeners();
         return false;
@@ -44,6 +51,7 @@ class LocationProvider extends ChangeNotifier {
           return false;
         }
       }
+
       if (permission == LocationPermission.deniedForever) {
         _isLoading = false;
         notifyListeners();

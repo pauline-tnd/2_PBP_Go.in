@@ -7,10 +7,10 @@ import 'package:frontend/extensions/snackbar.dart';
 import 'package:http/http.dart' as http;
 
 import 'register.dart';
-import 'main_shell.dart';
-import '../services/app_config.dart';
-import '../services/api_services.dart';
-import '../utils/app_responsive.dart';
+import '../main_shell.dart';
+import '../../services/app_config.dart';
+import '../../services/api_services.dart';
+import '../../utils/app_responsive.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});

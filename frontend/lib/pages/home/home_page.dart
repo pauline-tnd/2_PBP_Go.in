@@ -8,7 +8,7 @@ import 'package:frontend/widgets/home/home_search_card.dart';
 import 'package:frontend/widgets/home/home_promo_banner.dart';
 import 'package:frontend/widgets/home/home_recommended_section.dart';
 import 'package:frontend/widgets/home/home_you_might_like.dart';
-import 'package:frontend/widgets/skeleton_loader.dart';
+import 'package:frontend/widgets/layout/skeleton_loader.dart';
 import 'package:frontend/extensions/snackbar.dart';
 
 class HomePage extends StatefulWidget {

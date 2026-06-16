@@ -6,10 +6,10 @@ import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 
 import 'login.dart';
-import 'main_shell.dart';
-import '../services/app_config.dart';
-import '../services/api_services.dart';
-import '../utils/app_responsive.dart';
+import '../main_shell.dart';
+import '../../services/app_config.dart';
+import '../../services/api_services.dart';
+import '../../utils/app_responsive.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -105,16 +105,18 @@ class _RegisterPageState extends State<RegisterPage> {
     });
 
     try {
-      final registerResponse = await http.post(
-        Uri.parse('$_authBaseUrl/register'),
-        headers: {'Accept': 'application/json'},
-        body: {
-          'username': _buildUsername(email),
-          'email': email,
-          'phone': phone,
-          'password': password,
-        },
-      ).timeout(const Duration(seconds: 10));
+      final registerResponse = await http
+          .post(
+            Uri.parse('$_authBaseUrl/register'),
+            headers: {'Accept': 'application/json'},
+            body: {
+              'username': _buildUsername(email),
+              'email': email,
+              'phone': phone,
+              'password': password,
+            },
+          )
+          .timeout(const Duration(seconds: 10));
 
       final Map<String, dynamic>? registerData =
           registerResponse.body.isNotEmpty
@@ -124,11 +126,13 @@ class _RegisterPageState extends State<RegisterPage> {
       if (!mounted) return;
 
       if (registerResponse.statusCode == 201) {
-        final loginResponse = await http.post(
-          Uri.parse('$_authBaseUrl/login'),
-          headers: {'Accept': 'application/json'},
-          body: {'email': email, 'password': password},
-        ).timeout(const Duration(seconds: 10));
+        final loginResponse = await http
+            .post(
+              Uri.parse('$_authBaseUrl/login'),
+              headers: {'Accept': 'application/json'},
+              body: {'email': email, 'password': password},
+            )
+            .timeout(const Duration(seconds: 10));
 
         final Map<String, dynamic>? loginData = loginResponse.body.isNotEmpty
             ? jsonDecode(loginResponse.body) as Map<String, dynamic>
@@ -166,9 +170,7 @@ class _RegisterPageState extends State<RegisterPage> {
           _phoneError = _extractFirstError(errors, 'phone') ?? _phoneError;
           _passwordError =
               _extractFirstError(errors, 'password') ?? _passwordError;
-          _generalError =
-              _extractAnyError(errors) ??
-              backendMessage;
+          _generalError = _extractAnyError(errors) ?? backendMessage;
         });
       } else {
         setState(() {
@@ -265,17 +267,35 @@ class _RegisterPageState extends State<RegisterPage> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isTablet = AppResponsive.isTablet(context);
     final isDesktop = AppResponsive.isDesktop(context);
-    final panelTopSpacing = screenHeight * (isDesktop ? 0.18 : isTablet ? 0.22 : 0.25);
+    final panelTopSpacing =
+        screenHeight *
+        (isDesktop
+            ? 0.18
+            : isTablet
+            ? 0.22
+            : 0.25);
     final panelMaxWidth = AppResponsive.contentMaxWidth(
       context,
       mobile: 420,
       tablet: 520,
       desktop: 560,
     );
-    final panelPadding = isDesktop ? 36.0 : isTablet ? 32.0 : 28.0;
-    final logoShellSize = isDesktop ? 138.0 : isTablet ? 130.0 : 122.0;
+    final panelPadding = isDesktop
+        ? 36.0
+        : isTablet
+        ? 32.0
+        : 28.0;
+    final logoShellSize = isDesktop
+        ? 138.0
+        : isTablet
+        ? 130.0
+        : 122.0;
     final logoShellPadding = isDesktop ? 18.0 : 16.0;
-    final titleFontSize = isDesktop ? 24.0 : isTablet ? 23.0 : 22.0;
+    final titleFontSize = isDesktop
+        ? 24.0
+        : isTablet
+        ? 23.0
+        : 22.0;
     final actionFontSize = isDesktop ? 19.0 : 18.0;
 
     return Scaffold(
@@ -502,7 +522,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                           fontSize: actionFontSize,
                                           fontWeight: FontWeight.w600,
                                         ),
-                                    ),
+                                      ),
                               ),
                             ),
                             const SizedBox(height: 20),

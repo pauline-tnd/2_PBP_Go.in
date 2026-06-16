@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:frontend/widgets/room_image.dart';
+import 'package:frontend/widgets/room/room_image.dart';
 
 class _FallbackImage extends StatelessWidget {
   final String imagePath;

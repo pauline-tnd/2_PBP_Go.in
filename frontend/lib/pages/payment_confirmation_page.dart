@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:frontend/models/booking.dart';
 import 'package:frontend/models/bookingDetail.dart';
-import 'package:frontend/pages/booking_detail_page.dart';
+import 'package:frontend/pages/activity/booking_detail_page.dart';
 import 'package:frontend/services/api_services.dart';
 import 'package:frontend/widgets/adaptive_image.dart';
 import 'package:local_auth/local_auth.dart';
@@ -95,7 +95,9 @@ class _PaymentConfirmationPageState extends State<PaymentConfirmationPage> {
         );
 
         final detailMap = detailResponse['detail'] as Map<String, dynamic>?;
-        final bookingDetailId = int.tryParse(detailMap?['id']?.toString() ?? '');
+        final bookingDetailId = int.tryParse(
+          detailMap?['id']?.toString() ?? '',
+        );
 
         if (bookingDetailId == null) {
           throw Exception('Booking detail ID was not returned by the server.');
@@ -123,9 +125,7 @@ class _PaymentConfirmationPageState extends State<PaymentConfirmationPage> {
       if (!mounted) return;
 
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (_) => BookingDetailPage(booking: booking),
-        ),
+        MaterialPageRoute(builder: (_) => BookingDetailPage(booking: booking)),
       );
     } catch (error) {
       if (!mounted) return;
@@ -164,13 +164,17 @@ class _PaymentConfirmationPageState extends State<PaymentConfirmationPage> {
     }
   }
 
-  Future<void> _handleBiometricAuthentication(BuildContext dialogContext) async {
+  Future<void> _handleBiometricAuthentication(
+    BuildContext dialogContext,
+  ) async {
     try {
       final isSupported = await _localAuth.isDeviceSupported();
       final canCheckBiometrics = await _localAuth.canCheckBiometrics;
 
       if (!isSupported || !canCheckBiometrics) {
-        throw Exception('Fingerprint authentication is not available on this device.');
+        throw Exception(
+          'Fingerprint authentication is not available on this device.',
+        );
       }
 
       final availableBiometrics = await _localAuth.getAvailableBiometrics();
@@ -312,11 +316,7 @@ class _PaymentConfirmationPageState extends State<PaymentConfirmationPage> {
                             padding: EdgeInsets.symmetric(vertical: 10),
                             child: Divider(height: 1, color: _line),
                           ),
-                          _priceRow(
-                            'TOTAL PAYMENT',
-                            _total,
-                            isBold: true,
-                          ),
+                          _priceRow('TOTAL PAYMENT', _total, isBold: true),
                         ],
                       ),
                     ),
@@ -560,7 +560,9 @@ class _PaymentAppBar extends StatelessWidget {
       height: 56,
       decoration: const BoxDecoration(
         color: _PaymentConfirmationPageState._bg,
-        border: Border(bottom: BorderSide(color: _PaymentConfirmationPageState._line)),
+        border: Border(
+          bottom: BorderSide(color: _PaymentConfirmationPageState._line),
+        ),
       ),
       child: Row(
         children: [
@@ -588,11 +590,7 @@ class _PaymentAppBar extends StatelessWidget {
 }
 
 class _SectionCard extends StatelessWidget {
-  const _SectionCard({
-    required this.title,
-    required this.child,
-    this.icon,
-  });
+  const _SectionCard({required this.title, required this.child, this.icon});
 
   final String title;
   final Widget child;
@@ -613,7 +611,11 @@ class _SectionCard extends StatelessWidget {
           if (icon != null) ...[
             Row(
               children: [
-                Icon(icon, color: _PaymentConfirmationPageState._primary, size: 18),
+                Icon(
+                  icon,
+                  color: _PaymentConfirmationPageState._primary,
+                  size: 18,
+                ),
                 const SizedBox(width: 8),
                 Text(
                   title,
@@ -702,7 +704,9 @@ class _OverviewCard extends StatelessWidget {
                     const SizedBox(width: 4),
                     Expanded(
                       child: Text(
-                        hotelLocation.isEmpty ? 'Location unavailable' : hotelLocation,
+                        hotelLocation.isEmpty
+                            ? 'Location unavailable'
+                            : hotelLocation,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(

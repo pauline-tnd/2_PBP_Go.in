@@ -4,8 +4,8 @@ import 'package:frontend/services/api_services.dart';
 import 'package:frontend/widgets/activity/activity_header.dart';
 import 'package:frontend/widgets/activity/activity_card.dart';
 import 'package:frontend/widgets/activity/activity_filter_dropdown.dart';
-import 'package:frontend/pages/booking_detail_page.dart';
-import 'package:frontend/pages/review_page.dart';
+import 'package:frontend/pages/activity/booking_detail_page.dart';
+import 'package:frontend/pages/activity/review_page.dart';
 import 'package:frontend/utils/app_responsive.dart';
 
 // ── Helpers (no locale-data initialization required) ─────────────

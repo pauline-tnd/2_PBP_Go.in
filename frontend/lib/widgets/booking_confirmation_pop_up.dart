@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:frontend/services/api_services.dart';
 import 'package:frontend/models/bookingDetail.dart';
 import 'package:frontend/models/addOn.dart';
-import 'package:frontend/widgets/add_on_pop_up.dart';
+import 'package:frontend/widgets/room/add_on_pop_up.dart';
 import 'package:frontend/widgets/adaptive_image.dart';
 
 class BookingConfirmationPopUp extends StatefulWidget {

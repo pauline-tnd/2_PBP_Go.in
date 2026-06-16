@@ -77,8 +77,16 @@ class _LandingPageState extends State<LandingPage>
     final isDesktop = AppResponsive.isDesktop(context);
     final isTablet = AppResponsive.isTablet(context);
     final middleLayerWidth = screenWidth * (isDesktop ? 0.2 : 0.25);
-    final fullLogoWidth = isDesktop ? 360.0 : isTablet ? 320.0 : 280.0;
-    final iconWidth = isDesktop ? 132.0 : isTablet ? 118.0 : 106.0;
+    final fullLogoWidth = isDesktop
+        ? 360.0
+        : isTablet
+        ? 320.0
+        : 280.0;
+    final iconWidth = isDesktop
+        ? 132.0
+        : isTablet
+        ? 118.0
+        : 106.0;
     final rightMaskInset = isDesktop ? screenWidth * 0.22 : 200.0;
 
     return Scaffold(

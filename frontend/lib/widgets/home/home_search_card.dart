@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
-import 'package:frontend/pages/search_results_page.dart';
+import 'package:frontend/pages/home/search_results_page.dart';
 import 'package:frontend/widgets/home/home_search_field.dart';
 import 'package:intl/intl.dart';
 import 'package:frontend/pages/main_shell.dart';

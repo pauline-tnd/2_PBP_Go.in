@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/hotel.dart';
-import '../hotel_card.dart';
+import '../hotel/hotel_card.dart';
 
 class HomeYouMightLike extends StatelessWidget {
   final List<Hotel> hotels;

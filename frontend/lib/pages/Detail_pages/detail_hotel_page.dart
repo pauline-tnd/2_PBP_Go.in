@@ -7,8 +7,8 @@ import 'package:frontend/models/bookingDetail.dart' as details;
 import 'package:frontend/models/facilityIcons.dart';
 import 'package:frontend/models/addOn.dart';
 
-import 'package:frontend/widgets/room_card.dart';
-import 'package:frontend/widgets/hotel_image.dart';
+import 'package:frontend/widgets/room/room_card.dart';
+import 'package:frontend/widgets/hotel/hotel_image.dart';
 import 'package:frontend/widgets/common/carousel.dart';
 import 'package:frontend/widgets/booking_confirmation_pop_up.dart';
 

@@ -1,6 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import '../models/hotel.dart';
+import '../../models/hotel.dart';
 import 'hotel_image.dart';
 import 'package:intl/intl.dart';
 import 'package:frontend/pages/Detail_pages/detail_hotel_page.dart';

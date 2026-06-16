@@ -9,10 +9,10 @@ import 'package:frontend/models/review.dart';
 import 'package:frontend/models/facilityIcons.dart';
 import 'package:frontend/pages/settings/review_detail_page.dart';
 import 'package:frontend/pages/payment_confirmation_page.dart';
-import 'package:frontend/widgets/review_card.dart';
+import 'package:frontend/widgets/review/review_card.dart';
 import 'package:frontend/widgets/booking_confirmation_pop_up.dart';
-import 'package:frontend/widgets/room_image.dart';
-import 'package:frontend/widgets/add_on_pop_up.dart';
+import 'package:frontend/widgets/room/room_image.dart';
+import 'package:frontend/widgets/room/add_on_pop_up.dart';
 
 class DetailRoomPage extends StatefulWidget {
   final Room room;
