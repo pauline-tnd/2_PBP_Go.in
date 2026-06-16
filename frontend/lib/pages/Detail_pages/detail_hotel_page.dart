@@ -59,6 +59,7 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
   final GlobalKey _mapKey = GlobalKey();
   LatLng _center = const LatLng(51.5071, -0.1417);
   String _pickedAddress = '';
+  List<AddOnItem> _addOns = [];
 
   @override
   void initState() {
@@ -132,6 +133,20 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
         _hotelDetail = hotelDetail;
         _isWishlisted = data['is_wishlist'] ?? false;
         _rooms = [];
+        _addOns = (hotelDetail['add_ons'] as List<dynamic>? ?? [])
+            .map(
+              (e) => AddOnItem(
+                id: int.tryParse(e['id']?.toString() ?? '') ?? 0,
+                name: e['name'] ?? '',
+                price: double.tryParse(e['price'].toString()) ?? 0.0,
+                icon:
+                    FacilityIcons.iconMap[e['icon']?['icon']
+                        ?.toString()
+                        .trim()] ??
+                    Icons.room_service_outlined,
+              ),
+            )
+            .toList();
 
         for (final r in roomsRaw) {
           try {
@@ -821,6 +836,7 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
 
                   return RoomCard(
                     room: room,
+                    addOns: _addOns,
                     imageUrl: combinedImages.isNotEmpty
                         ? combinedImages.first
                         : null,
