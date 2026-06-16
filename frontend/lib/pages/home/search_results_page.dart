@@ -7,6 +7,8 @@ import 'package:frontend/widgets/sorting_bar.dart';
 import 'package:frontend/widgets/layout/skeleton_loader.dart';
 import 'package:frontend/services/api_services.dart';
 import 'package:frontend/pages/main_shell.dart';
+import 'package:frontend/models/wishlist.dart';
+import 'package:frontend/extensions/snackbar.dart';
 
 class FilterState {
   final RangeValues priceRange;
@@ -62,27 +64,112 @@ class SearchResultsPage extends StatefulWidget {
 class _SearchResultsPageState extends State<SearchResultsPage> {
   SortOption _currentSort = SortOption.none;
   FilterState _filterState = const FilterState();
-
   List<Hotel> _allHotels = [];
   bool _isLoading = true;
   Map<String, HotelBadge> _hotelBadges = {};
+  Set<int> _wishlistedHotelIds = {};
+  Map<int, int> _wishlistIdsByHotelId = {};
+  final Set<int> _favoriteLoadingHotelIds = {};
 
   @override
   void initState() {
     super.initState();
-    // _fetchHotelsFromSupabase();
     _fetchHotels();
+  }
+
+  void _setWishlists(List<Wishlist> wishlists) {
+    _wishlistIdsByHotelId = {
+      for (final wishlist in wishlists) wishlist.hotelId: wishlist.id,
+    };
+    _wishlistedHotelIds = _wishlistIdsByHotelId.keys.toSet();
+  }
+
+  Future<void> _toggleWishlist(Hotel hotel) async {
+    if (_favoriteLoadingHotelIds.contains(hotel.id)) return;
+
+    final isWishlisted = _wishlistedHotelIds.contains(hotel.id);
+    final previousWishlistId = _wishlistIdsByHotelId[hotel.id];
+
+    setState(() {
+      _favoriteLoadingHotelIds.add(hotel.id);
+
+      if (isWishlisted) {
+        _wishlistedHotelIds.remove(hotel.id);
+        _wishlistIdsByHotelId.remove(hotel.id);
+      } else {
+        _wishlistedHotelIds.add(hotel.id);
+      }
+    });
+
+    try {
+      if (isWishlisted) {
+        final wishlistId = previousWishlistId;
+
+        if (wishlistId == null) return;
+
+        await ApiService.deleteWishlist(wishlistId);
+      } else {
+        final response = await ApiService.storeWishlist(hotel.id);
+
+        final data = response['data'];
+
+        final wishlistId = data is Map<String, dynamic>
+            ? int.tryParse(data['id'].toString())
+            : null;
+
+        if (wishlistId != null && mounted) {
+          setState(() {
+            _wishlistIdsByHotelId[hotel.id] = wishlistId;
+          });
+        }
+      }
+
+      if (!mounted) return;
+
+      context.showAppSnackBar(
+        isWishlisted
+            ? 'Removed from wishlist'
+            : 'Added to wishlist',
+      );
+    } catch (error) {
+      if (!mounted) return;
+
+      setState(() {
+        if (isWishlisted) {
+          _wishlistedHotelIds.add(hotel.id);
+
+          if (previousWishlistId != null) {
+            _wishlistIdsByHotelId[hotel.id] = previousWishlistId;
+          }
+        } else {
+          _wishlistedHotelIds.remove(hotel.id);
+          _wishlistIdsByHotelId.remove(hotel.id);
+        }
+      });
+
+      context.showAppSnackBar(
+        'Wishlist update failed: $error',
+        isError: true,
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _favoriteLoadingHotelIds.remove(hotel.id);
+        });
+      }
+    }
   }
 
   Future<void> _fetchHotels() async {
     try {
       final response = await ApiService.fetchHotels();
+      final wishlists = await ApiService.fetchWishlists();
       final data = response['data'];
       final List<dynamic> hotelItems = data is List
           ? data
           : (data is Map<String, dynamic> && data['data'] is List)
-          ? data['data']
-          : [];
+              ? data['data']
+              : [];
       final List<Hotel> fetchedHotels = hotelItems
           .map((item) => Hotel.fromMap(item as Map<String, dynamic>))
           .toList();
@@ -90,6 +177,7 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
       setState(() {
         _allHotels = fetchedHotels;
         _hotelBadges = assignBadges(_allHotels);
+        _setWishlists(wishlists);
         _isLoading = false;
       });
     } catch (e) {
@@ -250,6 +338,9 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
                                       return HotelCard(
                                         hotel: hotel,
                                         badge: badge,
+                                        isWishlisted: _wishlistedHotelIds.contains(hotel.id),
+                                        isFavoriteLoading: _favoriteLoadingHotelIds.contains(hotel.id),
+                                        onFavoriteTap: () => _toggleWishlist(hotel),
                                       );
                                     },
                                   );
