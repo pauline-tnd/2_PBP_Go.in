@@ -126,7 +126,10 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
 
       final lat = double.tryParse(hotelDetail['latitude']?.toString() ?? '');
       final lng = double.tryParse(hotelDetail['longitude']?.toString() ?? '');
-      final rawReviews = await ApiService.fetchHotelReviews(widget.hotel.id);
+      List<Review> rawReviews = [];
+      try {
+        rawReviews = await ApiService.fetchHotelReviews(widget.hotel.id);
+      } catch (_) {}
 
       if (!mounted) return;
       setState(() {

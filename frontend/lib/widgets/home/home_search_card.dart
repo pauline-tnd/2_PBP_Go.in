@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:frontend/pages/main_shell.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend/providers/location_provider.dart';
+import 'package:frontend/providers/booking_date_provider.dart';
 
 class HomeSearchCard extends StatefulWidget {
   final VoidCallback? onSearch;
