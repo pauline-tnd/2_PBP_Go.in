@@ -185,8 +185,8 @@ class BookingController extends Controller
                 'room_type' => $room->type ?? 'Standard Room',
                 'check_out' => $booking->check_out,
                 'user_id' => $booking->user_id,
-                // 'room_id' => $room->id,
-                // 'booking_detail_id' => $bookingDetail->id,
+                'room_id' => $room->id,
+                'booking_detail_id' => $bookingDetail->id,
                 'review' => $review,
             ]
         ], 200);
