@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:frontend/extensions/snackbar.dart';
 import 'package:frontend/services/api_services.dart';
+import 'package:frontend/widgets/adaptive_image.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 
@@ -10,15 +11,6 @@ class Facility {
   final String icon;
 
   Facility({required this.name, required this.icon});
-
-  static const Map<String, IconData> iconMap = {
-    'wifi': Icons.wifi,
-    'pool': Icons.pool,
-    'restaurant': Icons.restaurant,
-    'parking': Icons.local_parking,
-    'gym': Icons.fitness_center,
-    'ac': Icons.ac_unit,
-  };
 
   factory Facility.fromJson(Map<String, dynamic> json) {
     return Facility(
@@ -60,11 +52,15 @@ class HotelReviewDetail {
     List<Facility> parsedFacilities = facilityList
         .map((f) => Facility.fromJson(f))
         .toList();
-    var imageList = json['hotel']['hotel_images'] as List? ?? [];
-    String img = '';
-    if (imageList.isNotEmpty && imageList[0]['image'] != null) {
-      img = imageList[0]['image'].toString();
-    }
+    // var imageList = json['hotel']['hotel_images'] as List? ?? [];
+    // String img = '';
+    // if (imageList.isNotEmpty && imageList[0]['image'] != null) {
+    //   img = imageList[0]['image'].toString();
+    // }
+    String img =
+        json['hotel']?['hotel_image']?['image'] ??
+        'assets/images/logo.png'; // show hotel image
+
     final review = json['review'];
     return HotelReviewDetail(
       hotelName: json['hotel']['name'] ?? 'Unknown Hotel',
@@ -433,8 +429,8 @@ class _ReviewPageState extends State<ReviewPage> {
                           children: [
                             ClipRRect(
                               borderRadius: BorderRadius.circular(16),
-                              child: Image.network(
-                                hotel.imageName,
+                              child: AdaptiveImage(
+                                imagePath: hotel.imageName,
                                 width: 74,
                                 height: 74,
                                 fit: BoxFit.cover,

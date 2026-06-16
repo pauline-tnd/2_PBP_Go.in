@@ -9,6 +9,8 @@ import 'package:frontend/services/api_services.dart';
 import 'package:frontend/pages/main_shell.dart';
 import 'package:frontend/models/wishlist.dart';
 import 'package:frontend/extensions/snackbar.dart';
+import 'package:provider/provider.dart';
+import 'package:frontend/providers/location_provider.dart';
 
 class FilterState {
   final RangeValues priceRange;
@@ -49,12 +51,16 @@ class SearchResultsPage extends StatefulWidget {
   final String? initialQuery;
   final String? location;
   final String? dateRange;
+  final double? userLat;
+  final double? userLng;
 
   const SearchResultsPage({
     super.key,
     this.initialQuery,
     this.location,
     this.dateRange,
+    this.userLat,
+    this.userLng,
   });
 
   @override
@@ -127,9 +133,7 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
       if (!mounted) return;
 
       context.showAppSnackBar(
-        isWishlisted
-            ? 'Removed from wishlist'
-            : 'Added to wishlist',
+        isWishlisted ? 'Removed from wishlist' : 'Added to wishlist',
       );
     } catch (error) {
       if (!mounted) return;
@@ -147,10 +151,7 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
         }
       });
 
-      context.showAppSnackBar(
-        'Wishlist update failed: $error',
-        isError: true,
-      );
+      context.showAppSnackBar('Wishlist update failed: $error', isError: true);
     } finally {
       if (mounted) {
         setState(() {
@@ -162,14 +163,22 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
 
   Future<void> _fetchHotels() async {
     try {
-      final response = await ApiService.fetchHotels();
+      final location = context.read<LocationProvider>();
+      final query = widget.initialQuery?.trim();
+
+      final response = await ApiService.fetchHotels(
+        search: query,
+        userLat: location.hasLocation ? location.lat : null,
+        userLng: location.hasLocation ? location.lng : null,
+      );
+
       final wishlists = await ApiService.fetchWishlists();
       final data = response['data'];
       final List<dynamic> hotelItems = data is List
           ? data
           : (data is Map<String, dynamic> && data['data'] is List)
-              ? data['data']
-              : [];
+          ? data['data']
+          : [];
       final List<Hotel> fetchedHotels = hotelItems
           .map((item) => Hotel.fromMap(item as Map<String, dynamic>))
           .toList();
@@ -212,6 +221,13 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
           if (!hotel.amenities.contains(amenity)) {
             return false;
           }
+        }
+      }
+      if (widget.userLat != null && widget.userLng != null) {
+        // If distance is > 200, assume it is in meters. Otherwise, in kilometers.
+        final maxDistance = hotel.distance > 200 ? 25000.0 : 25.0;
+        if (hotel.distance > maxDistance) {
+          return false;
         }
       }
       // if (_filterState.selectedRoomTypes.isNotEmpty) {
@@ -338,9 +354,14 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
                                       return HotelCard(
                                         hotel: hotel,
                                         badge: badge,
-                                        isWishlisted: _wishlistedHotelIds.contains(hotel.id),
-                                        isFavoriteLoading: _favoriteLoadingHotelIds.contains(hotel.id),
-                                        onFavoriteTap: () => _toggleWishlist(hotel),
+                                        isWishlisted: _wishlistedHotelIds
+                                            .contains(hotel.id),
+                                        isFavoriteLoading:
+                                            _favoriteLoadingHotelIds.contains(
+                                              hotel.id,
+                                            ),
+                                        onFavoriteTap: () =>
+                                            _toggleWishlist(hotel),
                                       );
                                     },
                                   );

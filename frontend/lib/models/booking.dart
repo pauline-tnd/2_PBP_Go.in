@@ -56,10 +56,9 @@ class Booking {
           room?['name']?.toString() ??
           room?['room_type']?.toString();
       roomImageUrl =
-          room?['image_url']?.toString() ??
-          room?['image']?.toString() ??
-          hotel?['image_url']?.toString() ??
-          hotel?['image']?.toString();
+          // room?['image_url']?.toString() ??
+          // room?['image']?.toString() ??
+          hotel?['hotel_image']?['image'].toString();
 
       for (final rawDetail in rawDetails) {
         if (rawDetail is Map<String, dynamic>) {

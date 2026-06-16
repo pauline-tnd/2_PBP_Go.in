@@ -82,6 +82,20 @@ class HotelController extends Controller
         // Execution : Pagination, load every 10 data
         $hotels = $query->cursorPaginate(10);
 
+        $userLat = $request->query('user_lat');
+        $userLng = $request->query('user_lng');
+
+        if ($userLat !== null && $userLng !== null) {
+            $hotels
+                ->select('hotels.*')
+                ->selectRaw(
+                    '(6371 * acos(cos(radians(?)) * cos(radians(latitude)) * cos(radians(longitude) - radians(?)) + sin(radians(?)) * sin(radians(latitude)))) AS distance',
+                    [$userLat, $userLng, $userLat]
+                )
+                ->having('distance', '<=', 25)
+                ->orderBy('distance');
+        }
+
         return response()->json([
             'data' => $hotels,
         ], 200);
