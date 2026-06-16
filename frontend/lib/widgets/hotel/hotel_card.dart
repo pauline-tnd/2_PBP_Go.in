@@ -10,6 +10,7 @@ class HotelCard extends StatefulWidget {
   final HotelBadge? badge;
   final bool initialIsWishlisted;
   final bool isFavoriteLoading;
+  final bool isWishlisted;
   final VoidCallback? onFavoriteTap;
 
   const HotelCard({
@@ -17,6 +18,7 @@ class HotelCard extends StatefulWidget {
     required this.hotel,
     this.badge,
     this.initialIsWishlisted = false,
+    this.isWishlisted = false,
     this.isFavoriteLoading = false,
     this.onFavoriteTap,
   });
@@ -26,7 +28,6 @@ class HotelCard extends StatefulWidget {
 }
 
 class _HotelCardState extends State<HotelCard> {
-  late bool _isWishlisted;
 
   // versi langsung ke detail page
   // void _openDetailHotelPage() {
@@ -75,20 +76,6 @@ class _HotelCardState extends State<HotelCard> {
         ),
       ),
     );
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _isWishlisted = widget.initialIsWishlisted;
-  }
-
-  @override
-  void didUpdateWidget(covariant HotelCard oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.initialIsWishlisted != widget.initialIsWishlisted) {
-      _isWishlisted = widget.initialIsWishlisted;
-    }
   }
 
   @override
@@ -168,13 +155,7 @@ class _HotelCardState extends State<HotelCard> {
                     behavior: HitTestBehavior.opaque,
                     onTap: () {
                       if (widget.isFavoriteLoading) return;
-                      if (widget.onFavoriteTap != null) {
-                        widget.onFavoriteTap!();
-                      } else {
-                        setState(() {
-                          _isWishlisted = !_isWishlisted;
-                        });
-                      }
+                      widget.onFavoriteTap?.call();
                     },
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(20),
@@ -201,11 +182,11 @@ class _HotelCardState extends State<HotelCard> {
                                   ),
                                 )
                               : Icon(
-                                  _isWishlisted
+                                  widget.isWishlisted
                                       ? Icons.favorite_rounded
                                       : Icons.favorite_border_rounded,
                                   size: 20,
-                                  color: _isWishlisted
+                                  color: widget.isWishlisted
                                       ? const Color(0xFFEF4444)
                                       : Colors.white,
                                 ),
