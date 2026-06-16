@@ -591,8 +591,10 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) =>
-                                        ReviewDetailPage(reviews: reviews),
+                                    builder: (context) => ReviewDetailPage(
+                                      reviews: reviews,
+                                      title: "Hotel Reviews",
+                                    ),
                                   ),
                                 );
                               } catch (e) {

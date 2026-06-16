@@ -758,6 +758,7 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                                     reviews: widget.reviews
                                         .map((r) => Review.fromJson(r))
                                         .toList(),
+                                    title: "Room's Reviews",
                                   ),
                                 ),
                               );
