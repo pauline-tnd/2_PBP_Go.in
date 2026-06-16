@@ -85,9 +85,9 @@ class _AddOnPopUpState extends State<AddOnPopUp> {
       final checkOut = widget.checkOut;
 
       if (checkIn == null || checkOut == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Check-in/out date missing')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Please Pick Date First')));
         return;
       }
 

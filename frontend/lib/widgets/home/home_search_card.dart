@@ -4,6 +4,8 @@ import 'package:frontend/pages/home/search_results_page.dart';
 import 'package:frontend/widgets/home/home_search_field.dart';
 import 'package:intl/intl.dart';
 import 'package:frontend/pages/main_shell.dart';
+import 'package:provider/provider.dart';
+import 'package:frontend/providers/booking_date_provider.dart';
 
 class HomeSearchCard extends StatefulWidget {
   final VoidCallback? onSearch;
@@ -20,6 +22,14 @@ class _HomeSearchCardState extends State<HomeSearchCard> {
     DateTime.now().add(const Duration(days: 1)),
   ];
   String _hotelQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<BookingDateProvider>().setDates(_dates[0], _dates[1]);
+    });
+  }
 
   String _formatDate(DateTime? date) {
     return date == null ? '' : DateFormat('EEE, d MMM yyyy').format(date);
@@ -87,6 +97,10 @@ class _HomeSearchCardState extends State<HomeSearchCard> {
                 value: _dates,
                 onValueChanged: (dates) {
                   setState(() => _dates = dates);
+                  context.read<BookingDateProvider>().setDates(
+                    dates.isNotEmpty ? dates[0] : null,
+                    dates.length > 1 ? dates[1] : null,
+                  );
                 },
               ),
               const SizedBox(height: 12),
