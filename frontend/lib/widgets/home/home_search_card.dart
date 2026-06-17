@@ -11,6 +11,7 @@ import 'package:frontend/providers/booking_date_provider.dart';
 
 class HomeSearchCard extends StatefulWidget {
   final VoidCallback? onSearch;
+
   const HomeSearchCard({super.key, this.onSearch});
 
   @override
@@ -127,21 +128,7 @@ class _HomeSearchCardState extends State<HomeSearchCard> {
   }
 
   void _openSearchResults([String? query]) {
-    final locationProvider = context.read<LocationProvider>();
-    final pickedAddress = locationProvider.address;
-    final typedQuery = query?.trim() ?? _hotelQuery.trim();
-    String finalQuery = '';
-    String finalLocation = 'Anywhere';
-    bool isRadiusSearch = false;
-    if (typedQuery.isNotEmpty) {
-      finalQuery = typedQuery;
-      finalLocation = typedQuery;
-    } else if (pickedAddress.isNotEmpty) {
-      finalLocation = pickedAddress;
-      isRadiusSearch = true; 
-    } else {
-      finalLocation = 'Anywhere';
-    }
+    final searchQuery = query?.trim() ?? _hotelQuery.trim();
     final mainShell = context.findAncestorStateOfType<MainShellState>();
     // final locationProvider = context.read<LocationProvider>();
 
@@ -158,7 +145,6 @@ class _HomeSearchCardState extends State<HomeSearchCard> {
         // userLat: userLat,
         // userLng: userLng,
         dateRange: _getDateRangeText(),
-        isRadiusSearch: isRadiusSearch,
       ),
     );
   }
@@ -189,6 +175,8 @@ class _HomeSearchCardState extends State<HomeSearchCard> {
             onChanged: (query) => _hotelQuery = query,
           ),
           const SizedBox(height: 12),
+
+          // Date field
           GestureDetector(
             onTap: _showDatePicker,
             child: _buildSearchField(
@@ -197,11 +185,13 @@ class _HomeSearchCardState extends State<HomeSearchCard> {
               isHint: false,
             ),
           ),
+
           const SizedBox(height: 8),
           Text(
             '${_getNightCount()} night(s)',
             style: const TextStyle(fontSize: 12, color: Color(0xFF475569)),
           ),
+
           const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
