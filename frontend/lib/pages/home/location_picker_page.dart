@@ -214,6 +214,8 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
 
   // Bottom panel
   Widget _buildBottomPanel() {
+    final hasSavedLocation = context.watch<LocationProvider>().hasLocation;
+
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
       decoration: const BoxDecoration(
@@ -268,6 +270,23 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
             ),
           ),
           const SizedBox(height: 8),
+
+          if (hasSavedLocation) ...[
+            OutlinedButton.icon(
+              onPressed: _unsetLocation,
+              icon: const Icon(Icons.location_off_outlined, size: 18),
+              label: const Text('Unset Location'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFFDC2626),
+                side: const BorderSide(color: Color(0xFFDC2626)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
 
           // Confirm button
           ElevatedButton(
@@ -346,11 +365,11 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
               ),
               ElevatedButton(
                 onPressed: () => Navigator.pop(context, true),
-                child: const Text('Settings'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blueAccent,
                   foregroundColor: Colors.white,
                 ),
+                child: const Text('Settings'),
               ),
             ],
           ),
@@ -376,6 +395,11 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
       _center.longitude,
       _pickedAddress,
     );
+    Navigator.pop(context);
+  }
+
+  void _unsetLocation() {
+    context.read<LocationProvider>().clearLocation();
     Navigator.pop(context);
   }
 }

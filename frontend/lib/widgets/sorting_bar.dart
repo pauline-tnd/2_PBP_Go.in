@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
 
-enum SortOption { none, priceHighToLow, priceLowToHigh, ratingHighToLow, popularity, distance }
+enum SortOption {
+  none,
+  priceHighToLow,
+  priceLowToHigh,
+  ratingHighToLow,
+  popularity,
+  distance,
+}
 
 class SortingBar extends StatelessWidget {
   final SortOption selectedSort;
@@ -34,7 +41,7 @@ class SortingBar extends StatelessWidget {
       case SortOption.none:
         return Icons.remove_rounded;
       case SortOption.priceHighToLow:
-        return Icons.arrow_upward_rounded;
+        return Icons.arrow_downward_rounded;
       case SortOption.priceLowToHigh:
         return Icons.arrow_upward_rounded;
       case SortOption.ratingHighToLow:
@@ -112,7 +119,9 @@ class SortingBar extends StatelessWidget {
                       _sortLabel(option),
                       style: TextStyle(
                         fontSize: 15,
-                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                        fontWeight: isSelected
+                            ? FontWeight.w600
+                            : FontWeight.w400,
                         color: isSelected
                             ? const Color(0xFF3B82F6)
                             : const Color(0xFF1E293B),
@@ -180,7 +189,8 @@ class SortingBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isPriceActive = selectedSort == SortOption.priceHighToLow ||
+    final bool isPriceActive =
+        selectedSort == SortOption.priceHighToLow ||
         selectedSort == SortOption.priceLowToHigh;
     final bool isRatingActive = selectedSort == SortOption.ratingHighToLow;
     final bool isDistanceActive = selectedSort == SortOption.distance;
@@ -242,7 +252,7 @@ class SortingBar extends StatelessWidget {
               if (isPriceActive) {
                 onSortChanged(SortOption.none);
               } else {
-                onSortChanged(SortOption.priceHighToLow);
+                onSortChanged(SortOption.priceLowToHigh);
               }
             },
           ),

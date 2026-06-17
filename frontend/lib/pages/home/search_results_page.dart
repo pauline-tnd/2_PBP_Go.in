@@ -163,13 +163,13 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
 
   Future<void> _fetchHotels() async {
     try {
-      final location = context.read<LocationProvider>();
+      // final location = context.read<LocationProvider>();
       final query = widget.initialQuery?.trim();
 
       final response = await ApiService.fetchHotels(
         search: query,
-        userLat: location.hasLocation ? location.lat : null,
-        userLng: location.hasLocation ? location.lng : null,
+        // userLat: location.hasLocation ? location.lat : null,
+        // userLng: location.hasLocation ? location.lng : null,
       );
 
       final wishlists = await ApiService.fetchWishlists();

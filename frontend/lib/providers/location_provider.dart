@@ -21,6 +21,13 @@ class LocationProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void clearLocation() {
+    _lat = null;
+    _lng = null;
+    _address = 'Choose Location';
+    notifyListeners();
+  }
+
   Future<bool> fetchCurrentLocation({
     Future<bool?> Function()? onGpsDisabled,
   }) async {

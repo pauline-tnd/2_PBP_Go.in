@@ -130,20 +130,20 @@ class _HomeSearchCardState extends State<HomeSearchCard> {
   void _openSearchResults([String? query]) {
     final searchQuery = query?.trim() ?? _hotelQuery.trim();
     final mainShell = context.findAncestorStateOfType<MainShellState>();
-    final locationProvider = context.read<LocationProvider>();
+    // final locationProvider = context.read<LocationProvider>();
 
-    final locationAddress = locationProvider.hasLocation
-        ? locationProvider.address
-        : null;
-    final userLat = locationProvider.lat;
-    final userLng = locationProvider.lng;
+    // final locationAddress = locationProvider.hasLocation
+    //     ? locationProvider.address
+    //     : null;
+    // final userLat = locationProvider.lat;
+    // final userLng = locationProvider.lng;
 
     mainShell?.showOverlayPage(
       SearchResultsPage(
         initialQuery: searchQuery.isEmpty ? null : searchQuery,
-        location: locationAddress,
-        userLat: userLat,
-        userLng: userLng,
+        // location: locationAddress,
+        // userLat: userLat,
+        // userLng: userLng,
         dateRange: _getDateRangeText(),
       ),
     );
