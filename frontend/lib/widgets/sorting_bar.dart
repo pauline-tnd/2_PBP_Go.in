@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-enum SortOption { none, priceHighToLow, priceLowToHigh, ratingHighToLow, popularity, distance }
+enum SortOption { none, priceHighToLow, priceLowToHigh, ratingHighToLow, popularity }
 
 class SortingBar extends StatelessWidget {
   final SortOption selectedSort;
@@ -24,8 +24,8 @@ class SortingBar extends StatelessWidget {
         return 'Rating: High to Low';
       case SortOption.popularity:
         return 'Popularity';
-      case SortOption.distance:
-        return 'Distance';
+      // case SortOption.distance:
+      //   return 'Distance';
     }
   }
 
@@ -41,8 +41,8 @@ class SortingBar extends StatelessWidget {
         return Icons.star_outline_rounded;
       case SortOption.popularity:
         return Icons.local_fire_department_outlined;
-      case SortOption.distance:
-        return Icons.near_me_outlined;
+      // case SortOption.distance:
+      //   return Icons.near_me_outlined;
     }
   }
 
@@ -183,7 +183,7 @@ class SortingBar extends StatelessWidget {
     final bool isPriceActive = selectedSort == SortOption.priceHighToLow ||
         selectedSort == SortOption.priceLowToHigh;
     final bool isRatingActive = selectedSort == SortOption.ratingHighToLow;
-    final bool isDistanceActive = selectedSort == SortOption.distance;
+    // final bool isDistanceActive = selectedSort == SortOption.distance;
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -264,19 +264,19 @@ class SortingBar extends StatelessWidget {
           const SizedBox(width: 8),
 
           // jarak
-          _buildPill(
-            label: 'Distance',
-            icon: Icons.near_me_outlined,
-            isActive: isDistanceActive,
-            onTap: () {
-              if (isDistanceActive) {
-                onSortChanged(SortOption.none);
-              } else {
-                onSortChanged(SortOption.distance);
-              }
-            },
-          ),
-          const SizedBox(width: 8),
+          // _buildPill(
+          //   label: 'Distance',
+          //   icon: Icons.near_me_outlined,
+          //   isActive: isDistanceActive,
+          //   onTap: () {
+          //     if (isDistanceActive) {
+          //       onSortChanged(SortOption.none);
+          //     } else {
+          //       onSortChanged(SortOption.distance);
+          //     }
+          //   },
+          // ),
+          // const SizedBox(width: 8),
 
           // dll, tapi skarang ga kliatan karna uda mentok si jaraknya
           // kl cm 2 tanpa jarak, sisa stlh 3 titik kebanyakan

@@ -225,10 +225,10 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
       }
       if (widget.userLat != null && widget.userLng != null) {
         // If distance is > 200, assume it is in meters. Otherwise, in kilometers.
-        final maxDistance = hotel.distance > 200 ? 25000.0 : 25.0;
-        if (hotel.distance > maxDistance) {
-          return false;
-        }
+        // final maxDistance = hotel.distance > 200 ? 25000.0 : 25.0;
+        // if (hotel.distance > maxDistance) {
+        //   return false;
+        // }
       }
       // if (_filterState.selectedRoomTypes.isNotEmpty) {
       //   bool hasMatch = false;
@@ -258,9 +258,9 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
       case SortOption.popularity:
         result.sort((a, b) => a.popularity.compareTo(b.popularity));
         break;
-      case SortOption.distance:
-        result.sort((a, b) => a.distance.compareTo(b.distance));
-        break;
+      // case SortOption.distance:
+      //   result.sort((a, b) => a.distance.compareTo(b.distance));
+      //   break;
     }
 
     return result;
