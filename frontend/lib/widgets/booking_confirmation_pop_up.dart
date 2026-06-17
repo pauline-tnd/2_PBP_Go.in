@@ -542,11 +542,13 @@ class _BottomActionButton extends StatelessWidget {
     if (outlined) {
       return SizedBox(
         height: btnH,
-        child: OutlinedButton(
+        child: ElevatedButton(
           onPressed: onPressed,
-          style: OutlinedButton.styleFrom(
+          style: ElevatedButton.styleFrom(
             backgroundColor: Colors.white,
-            side: const BorderSide(color: Color(0xFFE2E8F0)),
+            foregroundColor: const Color(0xFF3B82F6),
+            elevation: 5,
+            shadowColor: Colors.black.withValues(alpha: 0.35),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(radius),
             ),
