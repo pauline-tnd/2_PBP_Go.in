@@ -92,7 +92,7 @@ class _WishlistPageState extends State<WishlistPage> {
                 return HotelCard(
                   hotel: hotel,
                   badge: badge,
-                  initialIsWishlisted: true,
+                  isWishlisted: true,
                   onFavoriteTap: () => _deleteWishlist(wishlist.id),
                 );
               }).toList(),
