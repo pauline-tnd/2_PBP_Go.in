@@ -115,8 +115,9 @@ class _HomeRecommendedSectionState extends State<HomeRecommendedSection> {
                             child: HotelCard(
                               hotel: hotel,
                               badge: badge,
-                              initialIsWishlisted: widget.wishlistedHotelIds
-                                  .contains(hotel.id),
+                              isWishlisted: widget.wishlistedHotelIds.contains(
+                                hotel.id,
+                              ),
                               isFavoriteLoading: widget.favoriteLoadingHotelIds
                                   .contains(hotel.id),
                               onFavoriteTap: () =>
