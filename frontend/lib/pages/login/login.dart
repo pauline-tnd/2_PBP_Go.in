@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:frontend/extensions/snackbar.dart';
+import 'package:frontend/services/google_auth_service.dart';
 import 'package:http/http.dart' as http;
 
 import 'register.dart';
@@ -173,15 +174,37 @@ class _LoginPageState extends State<LoginPage> {
 
   Future<void> _handleGoogleSignIn() async {
     FocusScope.of(context).unfocus();
+
+    // Clear semua error
     setState(() {
       _generalError = null;
       _emailError = null;
       _passwordError = null;
     });
 
-    setState(() {
-      _generalError = 'Google sign-in is currently unavailable.';
-    });
+    // Google Sign-In
+    final result = await GoogleAuthService.signInWithGoogle();
+
+    // Kalo cancel, balik
+    if (result.wasCancelled) return;
+
+    if (result.isSuccess) {
+      // Pastiin widget masih mounted sebelum navigate
+      if (!mounted) return;
+
+      // Navigate ke home, hapus semua route sebelumnya
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const MainShell()),
+        (route) => false,
+      );
+      // Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
+    } else {
+      if (!mounted) return;
+
+      setState(() {
+        _generalError = result.message;
+      });
+    }
   }
 
   @override

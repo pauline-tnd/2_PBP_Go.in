@@ -10,6 +10,18 @@
 	<key>NSFaceIDUsageDescription</key>
 	<string>Use biometric authentication to confirm your payment</string>
 
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.149066511053-ehl1auas0ifut2d3lfqro0e4ob8kc0uh</string>
+			</array>
+		</dict>
+	</array>
+
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>
