@@ -505,22 +505,25 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            widget.hotelName,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                              color: Color(0xFF4F8DF7),
+                          Flexible(
+                            child: Text(
+                              widget.hotelName,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: Color(0xFF4F8DF7),
+                              ),
+                              softWrap: true,
                             ),
                           ),
-                          const Spacer(),
+                          const SizedBox(width: 8),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               Text(
                                 'Rp $priceFormatted',
                                 style: const TextStyle(
-                                  fontSize: 18,
+                                  fontSize: 14, // ← reduced from 18
                                   fontWeight: FontWeight.w700,
                                   color: Color(0xFF4F8DF7),
                                 ),
@@ -561,52 +564,77 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
 
                       const SizedBox(height: 16),
 
-                      Row(
-                        children: [
-                          _InfoChip(
-                            icon: Icons.person_outline_rounded,
-                            label: 'CAPACITY',
-                            value: '${room.capacity} Guest',
-                          ),
-                          const SizedBox(width: 8),
-                          _InfoChip(
-                            icon: Icons.square_foot_rounded,
-                            label: 'SIZE',
-                            value: '${room.roomSize} m\u00B2',
-                          ),
-                          const SizedBox(width: 8),
-                          const _InfoChip(
-                            icon: Icons.hotel_outlined,
-                            label: 'BED TYPE',
-                            value: '1 King',
-                          ),
-                        ],
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          final isNarrow = constraints.maxWidth < 280;
+                          if (isNarrow) {
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                _InfoChip(
+                                  icon: Icons.person_outline_rounded,
+                                  label: 'CAPACITY',
+                                  value: '${room.capacity} Guest',
+                                  expand: false,
+                                ),
+                                const SizedBox(height: 8),
+                                _InfoChip(
+                                  icon: Icons.square_foot_rounded,
+                                  label: 'SIZE',
+                                  value: '${room.roomSize} m\u00B2',
+                                  expand: false,
+                                ),
+                                const SizedBox(height: 8),
+                                _InfoChip(
+                                  icon: Icons.hotel_outlined,
+                                  label: 'BED TYPE',
+                                  value: '1 King',
+                                  expand: false,
+                                ),
+                              ],
+                            );
+                          }
+                          return Row(
+                            children: [
+                              _InfoChip(
+                                icon: Icons.person_outline_rounded,
+                                label: 'CAPACITY',
+                                value: '${room.capacity} Guest',
+                              ),
+                              const SizedBox(width: 8),
+                              _InfoChip(
+                                icon: Icons.square_foot_rounded,
+                                label: 'SIZE',
+                                value: '${room.roomSize} m\u00B2',
+                              ),
+                              const SizedBox(width: 8),
+                              _InfoChip(
+                                icon: Icons.hotel_outlined,
+                                label: 'BED TYPE',
+                                value: '1 King',
+                              ),
+                            ],
+                          );
+                        },
                       ),
 
                       const SizedBox(height: 24),
 
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'Main Amenities',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF1E293B),
-                            ),
-                          ),
-                          if (_getMainAmenities().length > 4)
-                            GestureDetector(
-                              onTap: _showMainAmenitiesSheet,
-                              child: const Icon(
-                                Icons.more_vert_outlined,
-                                color: Color(0xFF4F8DF7),
-                              ),
-                            ),
-                        ],
+                      _SectionHeader(
+                        title: 'Main Amenities',
+                        trailing: _getMainAmenities().length > 4
+                            ? GestureDetector(
+                                onTap: _showMainAmenitiesSheet,
+                                child: const Icon(
+                                  Icons.more_vert_outlined,
+                                  color: Color(0xFF4F8DF7),
+                                ),
+                              )
+                            : null,
                       ),
+
                       const SizedBox(height: 12),
+
                       ..._getMainAmenities().take(4).map((f) {
                         final facility = FacilityIcons.fromJson(f);
                         final icon =
@@ -616,28 +644,21 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                       }),
                       const SizedBox(height: 20),
 
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'Room Amenities',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF1E293B),
-                            ),
-                          ),
-                          if (_getRoomAmenities().length > 4)
-                            GestureDetector(
-                              onTap: _showRoomAmenitiesSheet,
-                              child: const Icon(
-                                Icons.more_vert_outlined,
-                                color: Color(0xFF4F8DF7),
-                              ),
-                            ),
-                        ],
+                      _SectionHeader(
+                        title: 'Room Amenities',
+                        trailing: _getRoomAmenities().length > 4
+                            ? GestureDetector(
+                                onTap: _showRoomAmenitiesSheet,
+                                child: const Icon(
+                                  Icons.more_vert_outlined,
+                                  color: Color(0xFF4F8DF7),
+                                ),
+                              )
+                            : null,
                       ),
+
                       const SizedBox(height: 12),
+
                       ..._getRoomAmenities()
                           .take(4)
                           .map(
@@ -709,18 +730,10 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
 
                       const SizedBox(height: 24),
 
-                      Row(
-                        children: [
-                          const Text(
-                            "Room's review",
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF1E293B),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Container(
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          final isNarrow = constraints.maxWidth < 280;
+                          final starBadge = Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 8,
                               vertical: 3,
@@ -730,6 +743,7 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Row(
+                              mainAxisSize: MainAxisSize.min,
                               children: [
                                 const Icon(
                                   Icons.star_rounded,
@@ -747,23 +761,21 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                                 ),
                               ],
                             ),
-                          ),
-                          const Spacer(),
-                          GestureDetector(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => ReviewDetailPage(
-                                    reviews: widget.reviews
-                                        .map((r) => Review.fromJson(r))
-                                        .toList(),
-                                    title: "Room's Reviews",
-                                  ),
+                          );
+                          final seeAll = GestureDetector(
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => ReviewDetailPage(
+                                  reviews: widget.reviews
+                                      .map((r) => Review.fromJson(r))
+                                      .toList(),
+                                  title: "Room's Reviews",
                                 ),
-                              );
-                            },
+                              ),
+                            ),
                             child: Row(
+                              mainAxisSize: MainAxisSize.min,
                               children: const [
                                 Text(
                                   'See All',
@@ -775,14 +787,50 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                                 ),
                                 Icon(
                                   Icons.chevron_right_rounded,
-                                  // Icons.more_vert_outlined,
                                   color: Color(0xFF4F8DF7),
                                   size: 18,
                                 ),
                               ],
                             ),
-                          ),
-                        ],
+                          );
+
+                          if (isNarrow) {
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  "Room's review",
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF1E293B),
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                starBadge,
+                                const SizedBox(height: 4),
+                                seeAll,
+                              ],
+                            );
+                          }
+
+                          return Row(
+                            children: [
+                              const Text(
+                                "Room's review",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFF1E293B),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              starBadge,
+                              const Spacer(),
+                              seeAll,
+                            ],
+                          );
+                        },
                       ),
 
                       const SizedBox(height: 12),
@@ -946,55 +994,57 @@ class _InfoChip extends StatelessWidget {
   final IconData icon;
   final String label;
   final String value;
+  final bool expand;
   const _InfoChip({
     required this.icon,
     required this.label,
     required this.value,
+    this.expand = true,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06),
-              blurRadius: 14,
-              offset: const Offset(0, 4),
+    final content = Container(
+      width: expand ? null : double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: const Color(0xFF4F8DF7), size: 20),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 9,
+              color: Color(0xFF94A3B8),
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.4,
             ),
-          ],
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: const Color(0xFF4F8DF7), size: 20),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 9,
-                color: Color(0xFF94A3B8),
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.4,
-              ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF1E293B),
             ),
-            const SizedBox(height: 2),
-            Text(
-              value,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF1E293B),
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
+            textAlign: TextAlign.center,
+          ),
+        ],
       ),
     );
+    return expand ? Expanded(child: content) : content;
   }
 }
 
@@ -1017,6 +1067,40 @@ class _FacilityRow extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  final String title;
+  final Widget? trailing;
+  const _SectionHeader({required this.title, this.trailing});
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isNarrow = constraints.maxWidth < 280;
+        final titleWidget = Text(
+          title,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF1E293B),
+          ),
+        );
+        if (trailing == null) return titleWidget;
+        if (isNarrow) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [titleWidget, const SizedBox(height: 4), trailing!],
+          );
+        }
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [titleWidget, trailing!],
+        );
+      },
     );
   }
 }

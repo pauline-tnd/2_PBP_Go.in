@@ -578,106 +578,129 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
                       const SizedBox(height: 12),
                       Container(height: 1, color: const Color(0xFFF1F5F9)),
                       const SizedBox(height: 10),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          GestureDetector(
-                            behavior: HitTestBehavior.opaque,
-                            onTap: () {
-                              try {
-                                final reviews = _hotelReviews;
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          final isNarrow = constraints.maxWidth < 300;
 
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => ReviewDetailPage(
-                                      reviews: reviews,
-                                      title: "Hotel Reviews",
-                                    ),
-                                  ),
-                                );
-                              } catch (e) {
-                                debugPrint('Review parse error: $e');
-                              }
-                            },
+                          final ratingBadge = Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 7,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFEF3C7),
+                              borderRadius: BorderRadius.circular(24),
+                            ),
                             child: Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
+                              mainAxisSize: MainAxisSize.min,
                               children: [
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 7,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFFEF3C7),
-                                    borderRadius: BorderRadius.circular(24),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      const Icon(
-                                        Icons.star_outline_rounded,
-                                        color: Color(0xFFF59E0B),
-                                        size: 16,
-                                      ),
-                                      const SizedBox(width: 5),
-                                      Text(
-                                        '$rating / 5',
-                                        style: const TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w700,
-                                          color: Color(0xFFF59E0B),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                                const Icon(
+                                  Icons.star_outline_rounded,
+                                  color: Color(0xFFF59E0B),
+                                  size: 16,
                                 ),
-                                const SizedBox(width: 14),
-                                SizedBox(
-                                  width: 72,
-                                  height: 30,
-                                  child: Stack(
-                                    children: [
-                                      for (int i = 0; i < 3; i++)
-                                        Positioned(
-                                          left: i * 20.0,
-                                          child: Container(
-                                            width: 30,
-                                            height: 30,
-                                            decoration: BoxDecoration(
-                                              shape: BoxShape.circle,
-                                              color: [
-                                                const Color(0xFF94A3B8),
-                                                const Color(0xFF64748B),
-                                                const Color(0xFF3B82F6),
-                                              ][i],
-                                              border: Border.all(
-                                                color: Colors.white,
-                                                width: 2,
-                                              ),
-                                            ),
-                                            child: const Icon(
-                                              Icons.person,
-                                              size: 16,
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(width: 6),
+                                const SizedBox(width: 5),
                                 Text(
-                                  '${totalReviews > 99 ? '99+' : totalReviews}',
+                                  '$rating / 5',
                                   style: const TextStyle(
-                                    fontSize: 13,
-                                    color: Color(0xFF64748B),
-                                    fontWeight: FontWeight.w500,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFFF59E0B),
                                   ),
                                 ),
                               ],
                             ),
-                          ),
-                        ],
+                          );
+
+                          final avatarRow = Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              SizedBox(
+                                width: 72,
+                                height: 30,
+                                child: Stack(
+                                  children: [
+                                    for (int i = 0; i < 3; i++)
+                                      Positioned(
+                                        left: i * 20.0,
+                                        child: Container(
+                                          width: 30,
+                                          height: 30,
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color: [
+                                              const Color(0xFF94A3B8),
+                                              const Color(0xFF64748B),
+                                              const Color(0xFF3B82F6),
+                                            ][i],
+                                            border: Border.all(
+                                              color: Colors.white,
+                                              width: 2,
+                                            ),
+                                          ),
+                                          child: const Icon(
+                                            Icons.person,
+                                            size: 16,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                '${totalReviews > 99 ? '99+' : totalReviews}',
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: Color(0xFF64748B),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          );
+
+                          return Align(
+                            alignment: Alignment.centerRight,
+                            child: GestureDetector(
+                              behavior: HitTestBehavior.opaque,
+                              onTap: () {
+                                try {
+                                  final reviews = _hotelReviews;
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => ReviewDetailPage(
+                                        reviews: reviews,
+                                        title: "Hotel Reviews",
+                                      ),
+                                    ),
+                                  );
+                                } catch (e) {
+                                  debugPrint('Review parse error: $e');
+                                }
+                              },
+                              child: isNarrow
+                                  ? Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.end,
+                                      children: [
+                                        ratingBadge,
+                                        const SizedBox(height: 8),
+                                        avatarRow,
+                                      ],
+                                    )
+                                  : Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        ratingBadge,
+                                        const SizedBox(width: 14),
+                                        avatarRow,
+                                      ],
+                                    ),
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),

@@ -102,76 +102,82 @@ class _CarouselState extends State<Carousel> {
   Widget build(BuildContext context) {
     if (_images.isEmpty) return const SizedBox.shrink();
 
-    final screenW = MediaQuery.of(context).size.width;
-    const centerH = 150.0;
-    const centerW = 220.0;
-    const sideH = 105.0;
-    const sideW = 150.0;
-    final leftX = (screenW - centerW) / 2 - sideW + 60;
-    final rightX = (screenW - centerW) / 2 + centerW - 60;
-    final centerX = (screenW - centerW) / 2;
-    const duration = Duration(milliseconds: 350);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final availW = constraints.maxWidth;
+        final scale = (availW / 400).clamp(0.7, 1.0);
+        final centerH = widget.height * scale;
+        final rawW = availW < 380 ? availW * 0.65 : availW * 0.60;
+        final centerW = rawW.clamp(0.0, centerH * 1.4);
+        final sideH = centerH * 0.70;
+        final sideW = centerW * 0.68;
+        final leftX = (availW - centerW) / 2 - sideW + 60;
+        final rightX = (availW - centerW) / 2 + centerW - 60;
+        final centerX = (availW - centerW) / 2;
+        const duration = Duration(milliseconds: 350);
 
-    final List<Widget> boxes = [];
-    final renderOrder = [
-      _leftIndex,
-      _rightIndex,
-      _current,
-    ].whereType<int>().toList();
+        final List<Widget> boxes = [];
+        final renderOrder = [
+          _leftIndex,
+          _rightIndex,
+          _current,
+        ].whereType<int>().toList();
 
-    for (final i in renderOrder) {
-      final isCenter = i == _current;
-      final isLeft = i == _leftIndex;
-      final isRight = i == _rightIndex;
+        for (final i in renderOrder) {
+          final isCenter = i == _current;
+          final isLeft = i == _leftIndex;
+          final isRight = i == _rightIndex;
 
-      final double targetX = isCenter
-          ? centerX
-          : isLeft
-          ? leftX
-          : rightX;
-      final double targetTop = isCenter ? 0 : (centerH - sideH) / 2;
-      final double targetW = isCenter ? centerW : sideW;
-      final double targetH = isCenter ? centerH : sideH;
-      final double radius = isCenter ? 22 : 20;
+          final double targetX = isCenter
+              ? centerX
+              : isLeft
+              ? leftX
+              : rightX;
+          final double targetTop = isCenter ? 0 : (centerH - sideH) / 2;
+          final double targetW = isCenter ? centerW : sideW;
+          final double targetH = isCenter ? centerH : sideH;
+          final double radius = isCenter ? 22 : 20;
 
-      final int capturedIndex = i;
-      final bool capturedIsLeft = isLeft;
-      final bool capturedIsRight = isRight;
-      final int? capturedRightIndex = _rightIndex;
+          final int capturedIndex = i;
+          final bool capturedIsLeft = isLeft;
+          final bool capturedIsRight = isRight;
+          final int? capturedRightIndex = _rightIndex;
 
-      boxes.add(
-        AnimatedPositioned(
-          key: ValueKey(capturedIndex),
-          duration: duration,
-          curve: Curves.easeInOut,
-          left: targetX,
-          top: targetTop,
-          width: targetW,
-          height: targetH,
-          child: GestureDetector(
-            onTap: () {
-              if (capturedIsLeft) _goTo(capturedIndex, direction: -1);
-              if (capturedIsRight) _goTo(capturedIndex, direction: 1);
-              if (!capturedIsLeft && !capturedIsRight)
-                _goTo(capturedRightIndex ?? 0, direction: 1);
-            },
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(radius),
-              child: _FallbackImage(
-                imagePath: _images[capturedIndex],
-                width: targetW,
-                height: targetH,
-                borderRadius: BorderRadius.circular(radius),
+          boxes.add(
+            AnimatedPositioned(
+              key: ValueKey(capturedIndex),
+              duration: duration,
+              curve: Curves.easeInOut,
+              left: targetX,
+              top: targetTop,
+              width: targetW,
+              height: targetH,
+              child: GestureDetector(
+                onTap: () {
+                  if (capturedIsLeft) _goTo(capturedIndex, direction: -1);
+                  if (capturedIsRight) _goTo(capturedIndex, direction: 1);
+                  if (!capturedIsLeft && !capturedIsRight)
+                    _goTo(capturedRightIndex ?? 0, direction: 1);
+                },
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(radius),
+                  child: _FallbackImage(
+                    imagePath: _images[capturedIndex],
+                    width: targetW,
+                    height: targetH,
+                    borderRadius: BorderRadius.circular(radius),
+                  ),
+                ),
               ),
             ),
-          ),
-        ),
-      );
-    }
+          );
+        }
 
-    return SizedBox(
-      height: centerH + 20,
-      child: Stack(clipBehavior: Clip.hardEdge, children: boxes),
+        return SizedBox(
+          height: centerH + 20,
+          child: Stack(clipBehavior: Clip.hardEdge, children: boxes),
+        );
+      },
     );
   }
 }
