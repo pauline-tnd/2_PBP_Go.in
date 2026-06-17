@@ -260,39 +260,42 @@ class _ReviewButtonState extends State<_ReviewButton> {
         border: Border.all(color: const Color(0xFFE0E4EA)),
         borderRadius: BorderRadius.circular(10),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          Text(
-            'Review',
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF64748B),
-            ),
-          ),
-          const SizedBox(width: 6),
-
-          ...List.generate(5, (i) {
-            return GestureDetector(
-              onTap: () {
-                widget.onRate?.call(i + 1);
-
-                if (!widget.hasReview) {
-                  setState(() => _rating = i + 1);
-                }
-              },
-              child: Icon(
-                i < _rating ? Icons.star : Icons.star_border,
-                size: 17,
-                color: i < _rating
-                    ? const Color(0xFFFFC107)
-                    : const Color(0xFFBDBDBD),
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            Text(
+              'Review',
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF64748B),
               ),
-            );
-          }),
-        ],
+            ),
+            const SizedBox(width: 6),
+
+            ...List.generate(5, (i) {
+              return GestureDetector(
+                onTap: () {
+                  widget.onRate?.call(i + 1);
+
+                  if (!widget.hasReview) {
+                    setState(() => _rating = i + 1);
+                  }
+                },
+                child: Icon(
+                  i < _rating ? Icons.star : Icons.star_border,
+                  size: 17,
+                  color: i < _rating
+                      ? const Color(0xFFFFC107)
+                      : const Color(0xFFBDBDBD),
+                ),
+              );
+            }),
+          ],
+        ),
       ),
     );
   }

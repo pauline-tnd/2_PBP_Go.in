@@ -56,69 +56,73 @@ class _HomeSearchCardState extends State<HomeSearchCard> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (_) {
-        return Padding(
-          // padding: const EdgeInsets.all(16),
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CalendarDatePicker2(
-                config: CalendarDatePicker2Config(
-                  calendarType: CalendarDatePicker2Type.range,
-                  // Selected date (start & end date)
-                  selectedDayHighlightColor: const Color(0xFF3B82F6),
+        return SafeArea(
+          child: SingleChildScrollView(
+            child: Padding(
+              // padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CalendarDatePicker2(
+                    config: CalendarDatePicker2Config(
+                      calendarType: CalendarDatePicker2Type.range,
+                      // Selected date (start & end date)
+                      selectedDayHighlightColor: const Color(0xFF3B82F6),
 
-                  // Selected days
-                  selectedDayTextStyle: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
+                      // Selected days
+                      selectedDayTextStyle: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+
+                      // Days in range
+                      dayTextStyle: const TextStyle(color: Color(0xFF1E293B)),
+
+                      // Disabled days
+                      disabledDayTextStyle: const TextStyle(
+                        color: Color(0xFFCBD5E1),
+                      ),
+
+                      // Today
+                      todayTextStyle: const TextStyle(
+                        color: Color(0xFF3B82F6),
+                        fontWeight: FontWeight.bold,
+                      ),
+
+                      // Month & year header
+                      controlsTextStyle: const TextStyle(
+                        color: Color(0xFF1E293B),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    value: _dates,
+                    onValueChanged: (dates) {
+                      setState(() => _dates = dates);
+                      context.read<BookingDateProvider>().setDates(
+                        dates.isNotEmpty ? dates[0] : null,
+                        dates.length > 1 ? dates[1] : null,
+                      );
+                    },
                   ),
-
-                  // Days in range
-                  dayTextStyle: const TextStyle(color: Color(0xFF1E293B)),
-
-                  // Disabled days
-                  disabledDayTextStyle: const TextStyle(
-                    color: Color(0xFFCBD5E1),
-                  ),
-
-                  // Today
-                  todayTextStyle: const TextStyle(
-                    color: Color(0xFF3B82F6),
-                    fontWeight: FontWeight.bold,
-                  ),
-
-                  // Month & year header
-                  controlsTextStyle: const TextStyle(
-                    color: Color(0xFF1E293B),
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                value: _dates,
-                onValueChanged: (dates) {
-                  setState(() => _dates = dates);
-                  context.read<BookingDateProvider>().setDates(
-                    dates.isNotEmpty ? dates[0] : null,
-                    dates.length > 1 ? dates[1] : null,
-                  );
-                },
-              ),
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF3B82F6),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF3B82F6),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                      ),
+                      child: const Text('Confirm'),
                     ),
                   ),
-                  child: const Text('Confirm'),
-                ),
+                ],
               ),
-            ],
+            ),
           ),
         );
       },

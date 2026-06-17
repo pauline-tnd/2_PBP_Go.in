@@ -65,36 +65,50 @@ class HotelController extends Controller
             // select raw = inject raw, plain SQL statements
             // 6371 = earth's radius in kilometer (Km unit)
             // radians = convert degrees to radians
-            $query->selectRaw("hotels.*, 
-            (6371 * acos(
-            cos( radians(?) ) 
-            * cos( radians( latitude ) ) 
-            * cos( radians( longitude ) - radians(?) ) + 
-            sin( radians(?) ) 
-            * sin( radians( latitude ) ) ) 
-            ) AS distance", [$lat, $lng, $lat])
-                ->orderBy('distance', 'asc'); // shortest distance
+            $distanceFormula = "
+            (
+                6371 * acos(
+                    cos(radians(?))
+                    * cos(radians(latitude))
+                    * cos(radians(longitude) - radians(?))
+                    + sin(radians(?))
+                    * sin(radians(latitude))
+                )
+            )
+            ";
+
+            $subQuery = Hotel::hotelCard()
+                ->selectRaw("hotels.*, {$distanceFormula} AS distance", [
+                    $lat,
+                    $lng,
+                    $lat,
+                ]);
+
+            $query = Hotel::query()
+                ->fromSub($subQuery, 'hotel_distances')
+                ->where('distance', '<=', 25)
+                ->orderBy('distance'); // shortest distance
         } else {
             // Default sort
             $query->orderBy('id', 'desc');
         }
 
-        // Execution : Pagination, load every 10 data
-        $hotels = $query->cursorPaginate(10);
+        // Execution : Pagination, load every 5 data
+        $hotels = $query->cursorPaginate(5);
 
-        $userLat = $request->query('user_lat');
-        $userLng = $request->query('user_lng');
+        // $userLat = $request->query('user_lat');
+        // $userLng = $request->query('user_lng');
 
-        if ($userLat !== null && $userLng !== null) {
-            $hotels
-                ->select('hotels.*')
-                ->selectRaw(
-                    '(6371 * acos(cos(radians(?)) * cos(radians(latitude)) * cos(radians(longitude) - radians(?)) + sin(radians(?)) * sin(radians(latitude)))) AS distance',
-                    [$userLat, $userLng, $userLat]
-                )
-                ->having('distance', '<=', 25)
-                ->orderBy('distance');
-        }
+        // if ($userLat !== null && $userLng !== null) {
+        //     $hotels
+        //         ->select('hotels.*')
+        //         ->selectRaw(
+        //             '(6371 * acos(cos(radians(?)) * cos(radians(latitude)) * cos(radians(longitude) - radians(?)) + sin(radians(?)) * sin(radians(latitude)))) AS distance',
+        //             [$userLat, $userLng, $userLat]
+        //         )
+        //         ->having('distance', '<=', 25)
+        //         ->orderBy('distance');
+        // }
 
         return response()->json([
             'data' => $hotels,
