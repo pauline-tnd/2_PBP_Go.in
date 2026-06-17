@@ -6,17 +6,6 @@
 	<string>149066511053-ehl1auas0ifut2d3lfqro0e4ob8kc0uh.apps.googleusercontent.com</string>
 	<key>REVERSED_CLIENT_ID</key>
 	<string>com.googleusercontent.apps.149066511053-ehl1auas0ifut2d3lfqro0e4ob8kc0uh</string>
-	<key>CFBundleURLTypes</key>
-	<array>
-		<dict>
-			<key>CFBundleTypeRole</key>
-			<string>Editor</string>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>com.googleusercontent.apps.149066511053-ehl1auas0ifut2d3lfqro0e4ob8kc0uh</string>
-			</array>
-		</dict>
-	</array>
 	<key>API_KEY</key>
 	<string>AIzaSyBIwnfKv_FT50i7xjwu5CSgbPjCIRa9Jdg</string>
 	<key>GCM_SENDER_ID</key>
