@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/pages/login.dart';
+import 'package:frontend/pages/login/login.dart';
 import 'package:frontend/services/api_services.dart';
 
 class LogoutButton extends StatefulWidget {
@@ -66,9 +66,7 @@ class _LogoutButtonState extends State<LogoutButton> {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text(
           'Logout',
           style: TextStyle(
@@ -78,13 +76,13 @@ class _LogoutButtonState extends State<LogoutButton> {
         ),
         content: const Text(
           'Are you sure you want to logout?',
-          style: TextStyle(
-            color: Color(0xFF64748B),
-          ),
+          style: TextStyle(color: Color(0xFF64748B)),
         ),
         actions: [
           TextButton(
-            onPressed: _isSubmitting ? null : () => Navigator.pop(dialogContext),
+            onPressed: _isSubmitting
+                ? null
+                : () => Navigator.pop(dialogContext),
             child: const Text(
               'Cancel',
               style: TextStyle(

@@ -5,9 +5,10 @@ import 'package:frontend/models/review.dart';
 import 'package:frontend/models/room.dart';
 import 'package:frontend/models/bookingDetail.dart' as details;
 import 'package:frontend/models/facilityIcons.dart';
+import 'package:frontend/models/addOn.dart';
 
-import 'package:frontend/widgets/room_card.dart';
-import 'package:frontend/widgets/hotel_image.dart';
+import 'package:frontend/widgets/room/room_card.dart';
+import 'package:frontend/widgets/hotel/hotel_image.dart';
 import 'package:frontend/widgets/common/carousel.dart';
 import 'package:frontend/widgets/booking_confirmation_pop_up.dart';
 
@@ -19,13 +20,21 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import 'package:frontend/pages/settings/review_detail_page.dart';
-import 'package:frontend/pages/review_page.dart';
 import 'package:frontend/pages/payment_confirmation_page.dart';
 
 class DetailHotelPage extends StatefulWidget {
   final Hotel hotel;
+  final List<AddOnItem> addOns;
+  final DateTime? checkIn;
+  final DateTime? checkOut;
 
-  const DetailHotelPage({super.key, required this.hotel});
+  const DetailHotelPage({
+    super.key,
+    required this.hotel,
+    required this.addOns,
+    this.checkIn,
+    this.checkOut,
+  });
 
   @override
   State<DetailHotelPage> createState() => _DetailHotelPageState();
@@ -38,9 +47,11 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
   bool _isWishlistLoading = false;
   bool _isExpanded = false;
   int? _wishlistId;
+  int? _bookingId;
   Map<String, dynamic>? _hotelDetail;
   List<Room> _rooms = [];
   List<details.BookingDetail> _tempBookedList = [];
+  List<Review> _hotelReviews = [];
   bool _loading = true;
   String? _error;
   final MapController _mapController = MapController();
@@ -48,6 +59,7 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
   final GlobalKey _mapKey = GlobalKey();
   LatLng _center = const LatLng(51.5071, -0.1417);
   String _pickedAddress = '';
+  List<AddOnItem> _addOns = [];
 
   @override
   void initState() {
@@ -114,12 +126,30 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
 
       final lat = double.tryParse(hotelDetail['latitude']?.toString() ?? '');
       final lng = double.tryParse(hotelDetail['longitude']?.toString() ?? '');
+      List<Review> rawReviews = [];
+      try {
+        rawReviews = await ApiService.fetchHotelReviews(widget.hotel.id);
+      } catch (_) {}
 
       if (!mounted) return;
       setState(() {
         _hotelDetail = hotelDetail;
         _isWishlisted = data['is_wishlist'] ?? false;
         _rooms = [];
+        _addOns = (hotelDetail['add_ons'] as List<dynamic>? ?? [])
+            .map(
+              (e) => AddOnItem(
+                id: int.tryParse(e['id']?.toString() ?? '') ?? 0,
+                name: e['name'] ?? '',
+                price: double.tryParse(e['price'].toString()) ?? 0.0,
+                icon:
+                    FacilityIcons.iconMap[e['icon']?['icon']
+                        ?.toString()
+                        .trim()] ??
+                    Icons.room_service_outlined,
+              ),
+            )
+            .toList();
 
         for (final r in roomsRaw) {
           try {
@@ -143,6 +173,7 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
           );
         }
 
+        _hotelReviews = rawReviews;
         _loading = false;
       });
     } catch (e) {
@@ -277,6 +308,7 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
       backgroundColor: Colors.transparent,
       builder: (sheetContext) => BookingConfirmationPopUp(
         bookingDetails: _tempBookedList,
+        allAddOns: widget.addOns,
         hotelName: widget.hotel.name,
         hotelLocation: widget.hotel.location,
         previewImageUrl: widget.hotel.imagePath ?? '',
@@ -385,17 +417,26 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
         .whereType<String>()
         .toList();
 
-    final List<String> carouselImages = [];
+    final roomsRaw = _hotelDetail?['rooms'] as List<dynamic>? ?? [];
 
-    if (hotelImages.isNotEmpty) {
-      carouselImages.add(hotelImages.first);
-    }
-    if (_rooms.isNotEmpty && _rooms.first.roomImages.isNotEmpty) {
-      carouselImages.add(_rooms.first.roomImages[0]);
-    }
-    if (_rooms.isNotEmpty && _rooms.first.roomImages.length > 1) {
-      carouselImages.add(_rooms.first.roomImages[1]);
-    }
+    final List<String> allRoomImages = roomsRaw.expand((r) {
+      if (r is! Map<String, dynamic>) return <String>[];
+      return (r['room_images'] as List<dynamic>? ?? [])
+          .map((e) => e['image']?.toString() ?? '')
+          .where((img) => img.isNotEmpty);
+    }).toList();
+
+    final List<String> carouselImages = [
+      ...hotelImages,
+      ...allRoomImages.take(3),
+    ];
+    final List<String> displayImages = carouselImages.isNotEmpty
+        ? carouselImages
+        : [
+            ...hotelImages,
+            'assets/images/RoomDefault/hotel_room_1.png',
+            'assets/images/RoomDefault/hotel_room_2.png',
+          ];
 
     final facilities =
         (_hotelDetail?['hotel_facilities'] as List<dynamic>? ?? []);
@@ -426,7 +467,7 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SizedBox(
-          height: 300,
+          height: 400,
           child: Stack(
             clipBehavior: Clip.none,
             children: [
@@ -449,7 +490,7 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
               Positioned(
                 left: 16,
                 right: 16,
-                bottom: -90,
+                bottom: 10,
                 child: Container(
                   padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
                   decoration: BoxDecoration(
@@ -544,35 +585,15 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
                             behavior: HitTestBehavior.opaque,
                             onTap: () {
                               try {
-                                final reviews =
-                                    (_hotelDetail?['reviews']
-                                                as List<dynamic>? ??
-                                            [])
-                                        .whereType<Map<String, dynamic>>()
-                                        .map((r) {
-                                          final review =
-                                              Map<String, dynamic>.from(r);
-
-                                          review['description'] =
-                                              review['description']
-                                                  ?.toString() ??
-                                              '';
-
-                                          review['created_at'] =
-                                              review['created_at']?.toString();
-
-                                          review['image'] = review['image']
-                                              ?.toString();
-
-                                          return Review.fromJson(review);
-                                        })
-                                        .toList();
+                                final reviews = _hotelReviews;
 
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) =>
-                                        ReviewDetailPage(reviews: reviews),
+                                    builder: (context) => ReviewDetailPage(
+                                      reviews: reviews,
+                                      title: "Hotel Reviews",
+                                    ),
                                   ),
                                 );
                               } catch (e) {
@@ -666,22 +687,26 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
           ),
         ),
 
-        const SizedBox(height: 144),
+        const SizedBox(height: 44),
 
-        if (carouselImages.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Carousel(imageUrls: carouselImages, height: 220),
-          ),
+        // if (carouselImages.isNotEmpty)
+        //   Padding(
+        //     padding: const EdgeInsets.symmetric(horizontal: 16),
+        //     child: Carousel(imageUrls: carouselImages, height: 220),
+        //   ),
 
-        if (carouselImages.isEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Container(
-              height: 2,
-              color: const Color.fromARGB(255, 213, 218, 224),
-            ),
-          ),
+        // if (carouselImages.isEmpty)
+        //   Padding(
+        //     padding: const EdgeInsets.symmetric(horizontal: 16),
+        //     child: Container(
+        //       height: 2,
+        //       color: const Color.fromARGB(255, 213, 218, 224),
+        //     ),
+        //   ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Carousel(imageUrls: displayImages, height: 220),
+        ),
 
         const SizedBox(height: 24),
 
@@ -805,23 +830,40 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
                           .map((e) => e['image']?.toString() ?? '')
                           .where((image) => image.isNotEmpty)
                           .toList();
-                  final firstImage = roomImages.isNotEmpty
-                      ? roomImages.first
-                      : null;
+
+                  final List<String> combinedImages = roomImages.isNotEmpty
+                      ? roomImages.cast<String>()
+                      : hotelImages.isNotEmpty
+                      ? <String>[hotelImages.first]
+                      : <String>[];
 
                   return RoomCard(
                     room: room,
-                    imageUrl: firstImage,
-                    imageUrls: roomImages,
+                    addOns: _addOns,
+                    imageUrl: combinedImages.isNotEmpty
+                        ? combinedImages.first
+                        : null,
+                    imageUrls: combinedImages,
+                    facilities: facilities
+                        .map(
+                          (f) => Map<String, dynamic>.from(
+                            f as Map<String, dynamic>,
+                          ),
+                        )
+                        .toList(),
                     hotelName: hotel.name,
                     hotelLocation: hotel.location,
                     reviewScore: double.tryParse(rating) ?? hotel.userRating,
                     tempBookedList: _tempBookedList,
-                    onNavigatedBack: (updatedList) {
-                      if (mounted) {
-                        setState(
-                          () => _tempBookedList = List.from(updatedList),
-                        );
+                    checkIn: widget.checkIn,
+                    checkOut: widget.checkOut,
+                    existingBookingId: _bookingId,
+                    onNavigatedBack: (result) {
+                      if (mounted && result != null) {
+                        setState(() {
+                          _tempBookedList = List.from(result['list'] as List);
+                          _bookingId = result['bookingId'] as int?; // ADD
+                        });
                       }
                     },
                   );

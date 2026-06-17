@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/widgets/booking_confirmation_pop_up.dart';
 import 'package:intl/intl.dart';
+import 'package:frontend/services/api_services.dart';
+
 import 'package:frontend/models/bookingDetail.dart' as booking_detail;
 import 'package:frontend/models/room.dart';
 import 'package:frontend/models/addOn.dart';
-import 'package:frontend/widgets/room_image.dart';
-import 'package:frontend/widgets/add_on_pop_up.dart';
-import 'package:frontend/pages/review_page.dart';
-import 'package:frontend/pages/payment_confirmation_page.dart';
 import 'package:frontend/models/review.dart';
-import 'package:frontend/widgets/review_card.dart';
+import 'package:frontend/models/facilityIcons.dart';
+import 'package:frontend/pages/settings/review_detail_page.dart';
+import 'package:frontend/pages/payment_confirmation_page.dart';
+import 'package:frontend/widgets/review/review_card.dart';
+import 'package:frontend/widgets/booking_confirmation_pop_up.dart';
+import 'package:frontend/widgets/room/room_image.dart';
+import 'package:frontend/widgets/room/add_on_pop_up.dart';
 
 class DetailRoomPage extends StatefulWidget {
   final Room room;
@@ -22,6 +25,9 @@ class DetailRoomPage extends StatefulWidget {
   final String hotelLocation;
   final double reviewScore;
   final List<booking_detail.BookingDetail> tempBookedList;
+  final DateTime? checkIn;
+  final DateTime? checkOut;
+  final int? existingBookingId;
 
   const DetailRoomPage({
     super.key,
@@ -35,6 +41,9 @@ class DetailRoomPage extends StatefulWidget {
     this.hotelLocation = '',
     required this.reviewScore,
     this.tempBookedList = const [],
+    this.checkIn,
+    this.checkOut,
+    this.existingBookingId,
   });
 
   @override
@@ -45,24 +54,28 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
   int _currentImageIndex = 0;
   final PageController _pageController = PageController();
   late List<booking_detail.BookingDetail> _localTempList;
+  int? _bookingId;
+
+  static const List<String> _defaultRoomImages = [
+    'assets/images/RoomDefault/hotel_room_1.png',
+    'assets/images/RoomDefault/hotel_room_2.png',
+    'assets/images/RoomDefault/hotel_room_3.png',
+    'assets/images/RoomDefault/hotel_room_4.png',
+    'assets/images/RoomDefault/hotel_room_5.png',
+    'assets/images/RoomDefault/hotel_room_6.png',
+    'assets/images/RoomDefault/hotel_room_7.png',
+    'assets/images/RoomDefault/hotel_room_8.png',
+  ];
 
   @override
   void initState() {
     super.initState();
     _localTempList = List.from(widget.tempBookedList);
+    _bookingId = widget.existingBookingId;
   }
 
   List<Map<String, dynamic>> _getMainAmenities() {
-    const mainAmenitiesList = [
-      'Free WiFi',
-      'Housekeeping',
-      '24-hour room service',
-      'Telephone',
-      'Non-smoking room',
-    ];
-    return widget.facilities
-        .where((f) => mainAmenitiesList.contains(f['name']))
-        .toList();
+    return widget.facilities.toList();
   }
 
   List<Map<String, dynamic>> _getRoomAmenities() {
@@ -84,9 +97,11 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
     super.dispose();
   }
 
-  void _openAddOnPopUp() {
+  void _openAddOnPopUp({int? editIndex}) {
+    final pageContext = context;
+
     showModalBottomSheet(
-      context: context,
+      context: pageContext,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => AddOnPopUp(
@@ -99,32 +114,83 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
         ),
         roomImage: widget.imageUrls.isNotEmpty ? widget.imageUrls.first : '',
         existingBookings: _localTempList,
-        onConfirmationCustomAnother: (updatedList) {
+        editIndex: editIndex,
+        checkIn: widget.checkIn,
+        checkOut: widget.checkOut,
+        existingBookingId: _bookingId,
+
+        onContinue: editIndex != null
+            ? (selected, notes) async {
+                final detail = _localTempList[editIndex!];
+
+                if (detail.id != 0) {
+                  await ApiService.updateBookingDetail(detail.id, notes: notes);
+
+                  try {
+                    final res = await ApiService.fetchAddOnsByBookingDetail(
+                      detail.id,
+                    );
+                    final existing = res['data'] as List;
+                    for (final ao in existing) {
+                      await ApiService.deleteBookingDetailAddOn(
+                        ao['id'] as int,
+                      );
+                    }
+                  } catch (_) {}
+
+                  for (final addOn in selected) {
+                    await ApiService.storeBookingDetailAddOn(
+                      bookingDetailId: detail.id,
+                      addOnId: addOn.id,
+                      qty: 1,
+                      subTotal: addOn.price,
+                    );
+                  }
+                }
+
+                if (mounted) {
+                  setState(() {
+                    detail.selectedAddOns = selected;
+                    detail.notes = notes;
+                  });
+                }
+              }
+            : null,
+
+        onConfirmationCustomAnother: (updatedList, bookingId) {
+          if (!mounted) return;
           setState(() {
             _localTempList = List.from(updatedList);
+            _bookingId = bookingId;
           });
 
           showModalBottomSheet(
-            context: context,
+            context: pageContext,
             isScrollControlled: true,
             backgroundColor: Colors.transparent,
             builder: (popupContext) => BookingConfirmationPopUp(
-              bookingDetails: updatedList,
+              bookingDetails: List.from(updatedList),
+              allAddOns: widget.addOns,
               hotelName: widget.hotelName,
               hotelLocation: widget.hotelLocation,
               previewImageUrl: widget.imageUrls.isNotEmpty
                   ? widget.imageUrls.first
                   : '',
+              checkIn: widget.checkIn,
+              checkOut: widget.checkOut,
               onCustomAnother: () {
                 Navigator.pop(popupContext);
-
-                Future.delayed(Duration(milliseconds: 150), () {
-                  _openAddOnPopUp();
+                Future.delayed(const Duration(milliseconds: 150), () {
+                  if (mounted)
+                    Navigator.pop(pageContext, {
+                      'list': _localTempList,
+                      'bookingId': _bookingId,
+                    });
                 });
               },
               onBookNow: (bookingList) {
                 Navigator.pop(popupContext);
-                Navigator.of(context).push(
+                Navigator.of(pageContext).push(
                   MaterialPageRoute(
                     builder: (_) => PaymentConfirmationPage(
                       hotelName: widget.hotelName,
@@ -138,6 +204,7 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                 );
               },
               onBookingListChanged: (bookingList) {
+                if (!mounted) return;
                 setState(() {
                   _localTempList = List.from(bookingList);
                 });
@@ -145,6 +212,143 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
             ),
           );
         },
+      ),
+    );
+  }
+
+  void _showAddOnsSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Add On',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF4F8DF7),
+                ),
+              ),
+              const SizedBox(height: 16),
+              ...widget.addOns.map(
+                (item) => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 3),
+                  child: Row(
+                    children: [
+                      const Text(
+                        '• ',
+                        style: TextStyle(color: Color(0xFF94A3B8)),
+                      ),
+                      Text(
+                        item.name,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFF1E293B),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showMainAmenitiesSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Main Amenities',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF4F8DF7),
+                ),
+              ),
+              const SizedBox(height: 16),
+              ..._getMainAmenities().map((f) {
+                final facility = FacilityIcons.fromJson(f);
+                final icon =
+                    FacilityIcons.iconMap[facility.icon] ??
+                    Icons.check_circle_outline_rounded;
+                return _FacilityRow(icon: icon, name: facility.name);
+              }),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showRoomAmenitiesSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Room Amenities',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF4F8DF7),
+                ),
+              ),
+              const SizedBox(height: 16),
+              ..._getRoomAmenities().map(
+                (item) => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 3),
+                  child: Row(
+                    children: [
+                      const Text(
+                        '• ',
+                        style: TextStyle(color: Color(0xFF94A3B8)),
+                      ),
+                      Text(
+                        item['name'] ?? item,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFF1E293B),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -158,42 +362,32 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
     ).format(room.price.toInt());
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF8FAFC),
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
             backgroundColor: Colors.white,
+            surfaceTintColor: Colors.white,
             elevation: 0,
             pinned: true,
             expandedHeight: 0,
-            leading: GestureDetector(
-              onTap: () => Navigator.pop(context, _localTempList),
-              child: Container(
-                margin: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.08),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: const Icon(
-                  Icons.chevron_left_rounded,
-                  color: Color(0xFF1E293B),
-                  size: 24,
-                ),
+            leading: IconButton(
+              onPressed: () => Navigator.pop(context, {
+                'list': _localTempList,
+                'bookingId': _bookingId,
+              }),
+              icon: const Icon(
+                Icons.chevron_left_rounded,
+                color: Color(0xFF0F172A),
+                size: 28,
               ),
             ),
             title: const Text(
               'Room Detail',
               style: TextStyle(
-                color: Color(0xFF1E293B),
+                color: Color(0xFF111827),
                 fontSize: 16,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w500,
               ),
             ),
             centerTitle: true,
@@ -209,15 +403,16 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                     children: [
                       PageView.builder(
                         controller: _pageController,
-                        itemCount: widget.imageUrls.isEmpty
-                            ? 1
-                            : widget.imageUrls.length,
+                        itemCount: widget.imageUrls.isNotEmpty
+                            ? widget.imageUrls.length
+                            : _defaultRoomImages.length,
                         onPageChanged: (index) =>
                             setState(() => _currentImageIndex = index),
                         itemBuilder: (context, index) {
-                          final url = widget.imageUrls.isEmpty
-                              ? null
-                              : widget.imageUrls[index];
+                          final effectiveImages = widget.imageUrls.isNotEmpty
+                              ? widget.imageUrls
+                              : _defaultRoomImages;
+                          final url = effectiveImages[index];
                           return RoomImage(
                             imagePath: url,
                             placeholderColor: const Color(0xFF94A3B8),
@@ -227,7 +422,10 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                           );
                         },
                       ),
-                      if (widget.imageUrls.length > 1) ...[
+                      if ((widget.imageUrls.isNotEmpty
+                              ? widget.imageUrls.length
+                              : _defaultRoomImages.length) >
+                          1)
                         Positioned(
                           left: 12,
                           top: 0,
@@ -246,51 +444,55 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                             ),
                           ),
                         ),
-                        Positioned(
-                          right: 12,
-                          top: 0,
-                          bottom: 0,
-                          child: Center(
-                            child: _CarouselButton(
-                              icon: Icons.chevron_right_rounded,
-                              onTap: () {
-                                if (_currentImageIndex <
-                                    widget.imageUrls.length - 1) {
-                                  _pageController.nextPage(
-                                    duration: const Duration(milliseconds: 300),
-                                    curve: Curves.easeInOut,
-                                  );
-                                }
-                              },
-                            ),
+                      Positioned(
+                        right: 12,
+                        top: 0,
+                        bottom: 0,
+                        child: Center(
+                          child: _CarouselButton(
+                            icon: Icons.chevron_right_rounded,
+                            onTap: () {
+                              if (_currentImageIndex <
+                                  (widget.imageUrls.isNotEmpty
+                                          ? widget.imageUrls.length
+                                          : _defaultRoomImages.length) -
+                                      1) {
+                                _pageController.nextPage(
+                                  duration: const Duration(milliseconds: 300),
+                                  curve: Curves.easeInOut,
+                                );
+                              }
+                            },
                           ),
                         ),
-                        Positioned(
-                          bottom: 12,
-                          left: 0,
-                          right: 0,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: List.generate(
-                              widget.imageUrls.length,
-                              (i) => AnimatedContainer(
-                                duration: const Duration(milliseconds: 250),
-                                margin: const EdgeInsets.symmetric(
-                                  horizontal: 3,
-                                ),
-                                width: i == _currentImageIndex ? 18 : 6,
-                                height: 6,
-                                decoration: BoxDecoration(
-                                  color: i == _currentImageIndex
-                                      ? Colors.white
-                                      : Colors.white.withValues(alpha: 0.5),
-                                  borderRadius: BorderRadius.circular(3),
-                                ),
+                      ),
+                      Positioned(
+                        bottom: 12,
+                        left: 0,
+                        right: 0,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: List.generate(
+                            widget.imageUrls.isNotEmpty
+                                ? widget.imageUrls.length
+                                : _defaultRoomImages.length,
+                            (i) => AnimatedContainer(
+                              duration: const Duration(milliseconds: 250),
+                              margin: const EdgeInsets.symmetric(horizontal: 3),
+                              width: i == _currentImageIndex ? 18 : 6,
+                              height: 6,
+                              decoration: BoxDecoration(
+                                color: i == _currentImageIndex
+                                    ? const Color(0xFFCBD5E1)
+                                    : const Color(
+                                        0xFF94A3B8,
+                                      ).withValues(alpha: 0.55),
+                                borderRadius: BorderRadius.circular(3),
                               ),
                             ),
                           ),
                         ),
-                      ],
+                      ),
                     ],
                   ),
                 ),
@@ -306,9 +508,9 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                           Text(
                             widget.hotelName,
                             style: const TextStyle(
-                              fontSize: 13,
+                              fontSize: 16,
                               fontWeight: FontWeight.w500,
-                              color: Color(0xFF3B82F6),
+                              color: Color(0xFF4F8DF7),
                             ),
                           ),
                           const Spacer(),
@@ -318,9 +520,9 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                               Text(
                                 'Rp $priceFormatted',
                                 style: const TextStyle(
-                                  fontSize: 16,
+                                  fontSize: 18,
                                   fontWeight: FontWeight.w700,
-                                  color: Color(0xFF3B82F6),
+                                  color: Color(0xFF4F8DF7),
                                 ),
                               ),
                               const Text(
@@ -340,7 +542,7 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                       Text(
                         room.type,
                         style: const TextStyle(
-                          fontSize: 22,
+                          fontSize: 24,
                           fontWeight: FontWeight.w700,
                           color: Color(0xFF1E293B),
                         ),
@@ -351,9 +553,9 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                       Text(
                         room.description,
                         style: const TextStyle(
-                          fontSize: 13,
-                          color: Color(0xFF64748B),
-                          height: 1.5,
+                          fontSize: 12,
+                          color: Color(0xFF94A3B8),
+                          height: 1.3,
                         ),
                       ),
 
@@ -368,13 +570,13 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                           ),
                           const SizedBox(width: 8),
                           _InfoChip(
-                            icon: Icons.straighten_rounded,
+                            icon: Icons.square_foot_rounded,
                             label: 'SIZE',
                             value: '${room.roomSize} m\u00B2',
                           ),
                           const SizedBox(width: 8),
                           const _InfoChip(
-                            icon: Icons.bed_outlined,
+                            icon: Icons.hotel_outlined,
                             label: 'BED TYPE',
                             value: '1 King',
                           ),
@@ -383,21 +585,35 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
 
                       const SizedBox(height: 24),
 
-                      const Text(
-                        'Main Amenities',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF1E293B),
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Main Amenities',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF1E293B),
+                            ),
+                          ),
+                          if (_getMainAmenities().length > 4)
+                            GestureDetector(
+                              onTap: _showMainAmenitiesSheet,
+                              child: const Icon(
+                                Icons.more_vert_outlined,
+                                color: Color(0xFF4F8DF7),
+                              ),
+                            ),
+                        ],
                       ),
                       const SizedBox(height: 12),
-                      ..._getMainAmenities().map(
-                        (f) => _FacilityRow(
-                          icon: f['icon'] as IconData,
-                          name: f['name'] as String,
-                        ),
-                      ),
+                      ..._getMainAmenities().take(4).map((f) {
+                        final facility = FacilityIcons.fromJson(f);
+                        final icon =
+                            FacilityIcons.iconMap[facility.icon] ??
+                            Icons.check_circle_outline_rounded;
+                        return _FacilityRow(icon: icon, name: facility.name);
+                      }),
                       const SizedBox(height: 20),
 
                       Row(
@@ -413,10 +629,10 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                           ),
                           if (_getRoomAmenities().length > 4)
                             GestureDetector(
-                              onTap: () {},
+                              onTap: _showRoomAmenitiesSheet,
                               child: const Icon(
                                 Icons.more_vert_outlined,
-                                color: Color(0xFF3B82F6),
+                                color: Color(0xFF4F8DF7),
                               ),
                             ),
                         ],
@@ -431,13 +647,13 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                                 children: [
                                   const Text(
                                     '• ',
-                                    style: TextStyle(color: Color(0xFF64748B)),
+                                    style: TextStyle(color: Color(0xFF94A3B8)),
                                   ),
                                   Text(
                                     item['name'] ?? item,
                                     style: const TextStyle(
                                       fontSize: 13,
-                                      color: Color(0xFF64748B),
+                                      color: Color(0xFF1E293B),
                                     ),
                                   ),
                                 ],
@@ -446,35 +662,50 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                           ),
                       const SizedBox(height: 24),
 
-                      const Text(
-                        'Add On',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF1E293B),
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Add On',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF1E293B),
+                            ),
+                          ),
+                          if (widget.addOns.length > 4)
+                            GestureDetector(
+                              onTap: _showAddOnsSheet,
+                              child: const Icon(
+                                Icons.more_vert_outlined,
+                                color: Color(0xFF4F8DF7),
+                              ),
+                            ),
+                        ],
                       ),
                       const SizedBox(height: 8),
-                      ...widget.addOns.map(
-                        (item) => Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 3),
-                          child: Row(
-                            children: [
-                              const Text(
-                                '• ',
-                                style: TextStyle(color: Color(0xFF64748B)),
+                      ...widget.addOns
+                          .take(4)
+                          .map(
+                            (item) => Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 3),
+                              child: Row(
+                                children: [
+                                  const Text(
+                                    '• ',
+                                    style: TextStyle(color: Color(0xFF94A3B8)),
+                                  ),
+                                  Text(
+                                    item.name,
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      color: Color(0xFF1E293B),
+                                    ),
+                                  ),
+                                ],
                               ),
-                              Text(
-                                item.name,
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  color: Color(0xFF64748B),
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
-                        ),
-                      ),
 
                       const SizedBox(height: 24),
 
@@ -523,8 +754,12 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (_) =>
-                                      ReviewPage(bookingId: room.id.toString()),
+                                  builder: (_) => ReviewDetailPage(
+                                    reviews: widget.reviews
+                                        .map((r) => Review.fromJson(r))
+                                        .toList(),
+                                    title: "Room's Reviews",
+                                  ),
                                 ),
                               );
                             },
@@ -534,13 +769,14 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                                   'See All',
                                   style: TextStyle(
                                     fontSize: 13,
-                                    color: Color(0xFF3B82F6),
+                                    color: Color(0xFF4F8DF7),
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
                                 Icon(
                                   Icons.chevron_right_rounded,
-                                  color: Color(0xFF3B82F6),
+                                  // Icons.more_vert_outlined,
+                                  color: Color(0xFF4F8DF7),
                                   size: 18,
                                 ),
                               ],
@@ -552,7 +788,7 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                       const SizedBox(height: 12),
 
                       SizedBox(
-                        height: 200,
+                        height: 130,
                         child: widget.reviews.isEmpty
                             ? const Center(
                                 child: Text(
@@ -566,7 +802,7 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                             : ListView.separated(
                                 scrollDirection: Axis.horizontal,
                                 itemCount: widget.reviews.length,
-                                separatorBuilder: (_, __) =>
+                                separatorBuilder: (_, _) =>
                                     const SizedBox(width: 12),
                                 itemBuilder: (context, index) {
                                   final review = Review.fromJson(
@@ -578,8 +814,10 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                                       onTap: () => Navigator.push(
                                         context,
                                         MaterialPageRoute(
-                                          builder: (_) => ReviewPage(
-                                            bookingId: room.id.toString(),
+                                          builder: (_) => ReviewDetailPage(
+                                            reviews: widget.reviews
+                                                .map((r) => Review.fromJson(r))
+                                                .toList(),
                                           ),
                                         ),
                                       ),
@@ -608,11 +846,11 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                   child: ElevatedButton(
                     onPressed: _openAddOnPopUp,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF3B82F6),
+                      backgroundColor: const Color(0xFF4F8DF7),
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(24),
                       ),
                       elevation: 0,
                     ),
@@ -633,9 +871,10 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                         child: OutlinedButton(
                           onPressed: () => Navigator.pop(context),
                           style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: Color(0xFFE2E8F0)),
+                            side: const BorderSide(color: Color(0xFFE5E7EB)),
+                            backgroundColor: Colors.white,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
+                              borderRadius: BorderRadius.circular(24),
                             ),
                           ),
                           child: const Text(
@@ -643,7 +882,7 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
-                              color: Color(0xFF64748B),
+                              color: Color(0xFF94A3B8),
                             ),
                           ),
                         ),
@@ -656,10 +895,10 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                         child: ElevatedButton(
                           onPressed: _openAddOnPopUp,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF3B82F6),
+                            backgroundColor: const Color(0xFF4F8DF7),
                             foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
+                              borderRadius: BorderRadius.circular(24),
                             ),
                             elevation: 0,
                           ),
@@ -691,19 +930,13 @@ class _CarouselButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 36,
-        height: 36,
+        width: 44,
+        height: 44,
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.85),
-          borderRadius: BorderRadius.circular(10),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
-              blurRadius: 8,
-            ),
-          ],
+          color: Colors.black.withValues(alpha: 0.28),
+          borderRadius: BorderRadius.circular(14),
         ),
-        child: Icon(icon, color: const Color(0xFF1E293B), size: 22),
+        child: Icon(icon, color: Colors.white, size: 24),
       ),
     );
   }
@@ -725,21 +958,27 @@ class _InfoChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
         decoration: BoxDecoration(
-          color: const Color(0xFFF8FAFC),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.06),
+              blurRadius: 14,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Column(
           children: [
-            Icon(icon, color: const Color(0xFF3B82F6), size: 20),
+            Icon(icon, color: const Color(0xFF4F8DF7), size: 20),
             const SizedBox(height: 4),
             Text(
               label,
               style: const TextStyle(
                 fontSize: 9,
                 color: Color(0xFF94A3B8),
-                fontWeight: FontWeight.w500,
-                letterSpacing: 0.5,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.4,
               ),
             ),
             const SizedBox(height: 2),
@@ -770,11 +1009,11 @@ class _FacilityRow extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 10),
       child: Row(
         children: [
-          Icon(icon, color: const Color(0xFF3B82F6), size: 20),
+          Icon(icon, color: const Color(0xFF4F8DF7), size: 20),
           const SizedBox(width: 10),
           Text(
             name,
-            style: const TextStyle(fontSize: 13, color: Color(0xFF1E293B)),
+            style: const TextStyle(fontSize: 13, color: Color(0xFF111827)),
           ),
         ],
       ),

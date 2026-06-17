@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
-import 'pages/search_results_page.dart';
+import 'pages/home/search_results_page.dart';
 import 'providers/location_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'pages/landing-page.dart';
+import 'pages/login/landing-page.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend/providers/hotel_search_provider.dart';
+import 'package:frontend/providers/booking_date_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -38,6 +39,7 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => LocationProvider()),
         ChangeNotifierProvider(create: (_) => HotelSearchProvider()),
+        ChangeNotifierProvider(create: (_) => BookingDateProvider()),
       ],
       child: ResponsiveSizer(
         builder: (context, orientation, screenType) {

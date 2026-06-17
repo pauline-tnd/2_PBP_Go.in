@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/models/hotel.dart';
-import 'package:frontend/widgets/hotel_card.dart';
+import 'package:frontend/widgets/hotel/hotel_card.dart';
 
 class HomeRecommendedSection extends StatefulWidget {
   final List<Hotel> hotels;
@@ -115,8 +115,9 @@ class _HomeRecommendedSectionState extends State<HomeRecommendedSection> {
                             child: HotelCard(
                               hotel: hotel,
                               badge: badge,
-                              initialIsWishlisted: widget.wishlistedHotelIds
-                                  .contains(hotel.id),
+                              isWishlisted: widget.wishlistedHotelIds.contains(
+                                hotel.id,
+                              ),
                               isFavoriteLoading: widget.favoriteLoadingHotelIds
                                   .contains(hotel.id),
                               onFavoriteTap: () =>

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/hotel.dart';
-import '../hotel_card.dart';
+import '../hotel/hotel_card.dart';
 
 class HomeYouMightLike extends StatelessWidget {
   final List<Hotel> hotels;
@@ -44,7 +44,7 @@ class HomeYouMightLike extends StatelessWidget {
               return HotelCard(
                 hotel: hotel,
                 badge: badge,
-                initialIsWishlisted: wishlistedHotelIds.contains(hotel.id),
+                isWishlisted: wishlistedHotelIds.contains(hotel.id),
                 isFavoriteLoading: favoriteLoadingHotelIds.contains(hotel.id),
                 onFavoriteTap: () => onFavoriteTap?.call(hotel),
               );

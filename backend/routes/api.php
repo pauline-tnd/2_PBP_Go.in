@@ -10,7 +10,8 @@ use App\Http\Controllers\{
     BookingDetailAddOnController,
     ReviewController,
     WishlistController,
-    UserController
+    UserController,
+    AddOnController
 };
 
 // Public Route
@@ -41,6 +42,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Read Hotel
     Route::apiResource('hotels', HotelController::class)
         ->only(['index', 'show']);
+
+    Route::apiResource('add-ons', AddOnController::class)->only(['index']);
     
     // Read Room (nested)
     Route::apiResource('rooms', RoomController::class)

@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 
-enum SortOption { none, priceHighToLow, priceLowToHigh, ratingHighToLow, popularity, distance }
+enum SortOption {
+  none,
+  priceHighToLow,
+  priceLowToHigh,
+  ratingHighToLow,
+  popularity,
+}
 
 class SortingBar extends StatelessWidget {
   final SortOption selectedSort;
@@ -24,8 +30,8 @@ class SortingBar extends StatelessWidget {
         return 'Rating: High to Low';
       case SortOption.popularity:
         return 'Popularity';
-      case SortOption.distance:
-        return 'Distance';
+      // case SortOption.distance:
+      //   return 'Distance';
     }
   }
 
@@ -34,15 +40,15 @@ class SortingBar extends StatelessWidget {
       case SortOption.none:
         return Icons.remove_rounded;
       case SortOption.priceHighToLow:
-        return Icons.arrow_upward_rounded;
+        return Icons.arrow_downward_rounded;
       case SortOption.priceLowToHigh:
         return Icons.arrow_upward_rounded;
       case SortOption.ratingHighToLow:
         return Icons.star_outline_rounded;
       case SortOption.popularity:
         return Icons.local_fire_department_outlined;
-      case SortOption.distance:
-        return Icons.near_me_outlined;
+      // case SortOption.distance:
+      //   return Icons.near_me_outlined;
     }
   }
 
@@ -112,7 +118,9 @@ class SortingBar extends StatelessWidget {
                       _sortLabel(option),
                       style: TextStyle(
                         fontSize: 15,
-                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                        fontWeight: isSelected
+                            ? FontWeight.w600
+                            : FontWeight.w400,
                         color: isSelected
                             ? const Color(0xFF3B82F6)
                             : const Color(0xFF1E293B),
@@ -180,10 +188,11 @@ class SortingBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isPriceActive = selectedSort == SortOption.priceHighToLow ||
+    final bool isPriceActive =
+        selectedSort == SortOption.priceHighToLow ||
         selectedSort == SortOption.priceLowToHigh;
     final bool isRatingActive = selectedSort == SortOption.ratingHighToLow;
-    final bool isDistanceActive = selectedSort == SortOption.distance;
+    // final bool isDistanceActive = selectedSort == SortOption.distance;
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -242,7 +251,7 @@ class SortingBar extends StatelessWidget {
               if (isPriceActive) {
                 onSortChanged(SortOption.none);
               } else {
-                onSortChanged(SortOption.priceHighToLow);
+                onSortChanged(SortOption.priceLowToHigh);
               }
             },
           ),
@@ -264,19 +273,19 @@ class SortingBar extends StatelessWidget {
           const SizedBox(width: 8),
 
           // jarak
-          _buildPill(
-            label: 'Distance',
-            icon: Icons.near_me_outlined,
-            isActive: isDistanceActive,
-            onTap: () {
-              if (isDistanceActive) {
-                onSortChanged(SortOption.none);
-              } else {
-                onSortChanged(SortOption.distance);
-              }
-            },
-          ),
-          const SizedBox(width: 8),
+          // _buildPill(
+          //   label: 'Distance',
+          //   icon: Icons.near_me_outlined,
+          //   isActive: isDistanceActive,
+          //   onTap: () {
+          //     if (isDistanceActive) {
+          //       onSortChanged(SortOption.none);
+          //     } else {
+          //       onSortChanged(SortOption.distance);
+          //     }
+          //   },
+          // ),
+          // const SizedBox(width: 8),
 
           // dll, tapi skarang ga kliatan karna uda mentok si jaraknya
           // kl cm 2 tanpa jarak, sisa stlh 3 titik kebanyakan

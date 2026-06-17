@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/models/review.dart';
 import 'package:frontend/widgets/review/review_filter.dart';
-import 'package:frontend/widgets/review_card.dart';
+import 'package:frontend/widgets/review/review_card.dart';
 
 class ReviewDetailPage extends StatefulWidget {
   final List<Review> reviews;
+  final String title;
 
-  const ReviewDetailPage({super.key, required this.reviews});
+  const ReviewDetailPage({
+    super.key,
+    required this.reviews,
+    this.title = "Reviews",
+  });
 
   @override
   State<ReviewDetailPage> createState() => _ReviewDetailPageState();
@@ -26,7 +31,7 @@ class _ReviewDetailPageState extends State<ReviewDetailPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Room's Review"), centerTitle: true),
+      appBar: AppBar(title: Text(widget.title), centerTitle: true),
       body: Stack(
         children: [
           Column(

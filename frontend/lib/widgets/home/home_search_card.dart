@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
-import 'package:frontend/pages/search_results_page.dart';
+import 'package:frontend/pages/home/search_results_page.dart';
+import 'package:frontend/providers/booking_date_provider.dart';
 import 'package:frontend/widgets/home/home_search_field.dart';
 import 'package:intl/intl.dart';
 import 'package:frontend/pages/main_shell.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend/providers/location_provider.dart';
+import 'package:frontend/providers/booking_date_provider.dart';
 
 class HomeSearchCard extends StatefulWidget {
   final VoidCallback? onSearch;
@@ -21,6 +23,14 @@ class _HomeSearchCardState extends State<HomeSearchCard> {
     DateTime.now().add(const Duration(days: 1)),
   ];
   String _hotelQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<BookingDateProvider>().setDates(_dates[0], _dates[1]);
+    });
+  }
 
   String _formatDate(DateTime? date) {
     return date == null ? '' : DateFormat('EEE, d MMM yyyy').format(date);
@@ -88,6 +98,10 @@ class _HomeSearchCardState extends State<HomeSearchCard> {
                 value: _dates,
                 onValueChanged: (dates) {
                   setState(() => _dates = dates);
+                  context.read<BookingDateProvider>().setDates(
+                    dates.isNotEmpty ? dates[0] : null,
+                    dates.length > 1 ? dates[1] : null,
+                  );
                 },
               ),
               const SizedBox(height: 12),
@@ -129,10 +143,20 @@ class _HomeSearchCardState extends State<HomeSearchCard> {
       finalLocation = 'Anywhere';
     }
     final mainShell = context.findAncestorStateOfType<MainShellState>();
+    // final locationProvider = context.read<LocationProvider>();
+
+    // final locationAddress = locationProvider.hasLocation
+    //     ? locationProvider.address
+    //     : null;
+    // final userLat = locationProvider.lat;
+    // final userLng = locationProvider.lng;
+
     mainShell?.showOverlayPage(
       SearchResultsPage(
-        initialQuery: finalQuery,
-        location: finalLocation,
+        initialQuery: searchQuery.isEmpty ? null : searchQuery,
+        // location: locationAddress,
+        // userLat: userLat,
+        // userLng: userLng,
         dateRange: _getDateRangeText(),
         isRadiusSearch: isRadiusSearch,
       ),

@@ -19,7 +19,7 @@ class BookingController extends Controller
         $userId = Auth::user()->id;
 
         $bookings = Booking::with([
-            'bookingDetails.room.hotel',
+            'bookingDetails.room.hotel.hotelImage',
             'bookingDetails.addOns.addOn',
             'bookingDetails.review'
         ])
@@ -129,7 +129,7 @@ class BookingController extends Controller
         foreach ($booking->bookingDetails as $detail) {
             $roomPrice = $detail->room->price ?? 0;
             $addOnPrice = 0;
-            
+
             foreach ($detail->addOns as $detailAddOn) {
                 $addOnPrice += ($detailAddOn->addOn->price ?? 0) * $detailAddOn->qty;
             }
@@ -164,7 +164,7 @@ class BookingController extends Controller
     {
         $booking = Booking::with([
             'bookingDetails.review',
-            'bookingDetails.room.hotel.hotelImages',
+            'bookingDetails.room.hotel.hotelImage',
             'bookingDetails.room.hotel.hotelFacilities.icon'
         ])->find($id);
         if (!$booking) {
@@ -179,7 +179,7 @@ class BookingController extends Controller
             'data' => [
                 'hotel' => [
                     'name' => $room->hotel->name ?? 'Unknown Hotel',
-                    'hotel_images' => $room->hotel->hotelImages ?? [],
+                    'hotel_image' => $room->hotel->hotelImage ?? '',
                     'hotel_facilities' => $room->hotel->hotelFacilities ?? [],
                 ],
                 'room_type' => $room->type ?? 'Standard Room',

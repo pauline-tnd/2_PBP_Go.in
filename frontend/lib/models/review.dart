@@ -47,6 +47,13 @@ class Review {
       'description': description,
       'image': image,
       'created_at': createdAt,
+      'user': user != null
+          ? {
+              'id': user!.id,
+              'username': user!.username,
+              'profile_image': user!.profileImage,
+            }
+          : null,
     };
   }
 }

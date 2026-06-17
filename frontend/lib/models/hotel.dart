@@ -12,7 +12,7 @@ class Hotel {
   final String? imagePath;
   final Color placeholderColor;
   final int popularity;
-  final double distance;
+  // final double distance;
   final List<String> amenities;
   final List<String> roomTypes;
 
@@ -26,7 +26,7 @@ class Hotel {
     this.imagePath,
     required this.placeholderColor,
     required this.popularity,
-    required this.distance,
+    // required this.distance,
     required this.amenities,
     required this.roomTypes,
   });
@@ -90,7 +90,7 @@ class Hotel {
       pricePerNight: minPrice,
       userRating: averageRating,
       popularity: map['popularity'] ?? map['total_bookings'] ?? 0,
-      distance: (map['distance'] ?? 0).toDouble(),
+      // distance: (map['distance'] ?? 0).toDouble(),
       imagePath: imageUrl,
       placeholderColor: const Color(0xFF1E3A5F),
       amenities: facilitiesList,

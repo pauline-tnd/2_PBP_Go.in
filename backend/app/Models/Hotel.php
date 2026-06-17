@@ -70,7 +70,8 @@ class Hotel extends Model
     // Hotel.php
     public function scopeHotelCard($query)
     {
-        return $query->with('hotelImage')
+        return $query
+            ->with(['hotelImage', 'hotelFacilities.icon'])
             ->withMin('rooms as start_from_price', 'price')
             ->withAvg('reviews as hotel_rating', 'rating')
             ->withCount('bookingDetails as total_bookings');

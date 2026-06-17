@@ -6,11 +6,13 @@ extension SnackbarExtension on BuildContext {
     bool isError = false,
     bool isWarning = false,
   }) {
-    ScaffoldMessenger.of(this)
+    final messenger = ScaffoldMessenger.maybeOf(this);
+    if (messenger == null) return;
+    messenger
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
-          content: Text(message, style: TextStyle(fontWeight: FontWeight.bold)),
+          content: Text(message, style: const TextStyle(fontWeight: FontWeight.bold)),
           behavior: SnackBarBehavior.floating,
           margin: const EdgeInsets.fromLTRB(24, 0, 24, 650),
           backgroundColor: isError
