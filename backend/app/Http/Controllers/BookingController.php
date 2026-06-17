@@ -196,7 +196,6 @@ class BookingController extends Controller
         string $bookingNumber
     ) {
         $qrBookingNumber = "Kode Booking {$bookingNumber}";
-
         $qrCode = null;
 
         try {

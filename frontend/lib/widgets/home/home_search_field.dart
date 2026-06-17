@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:frontend/models/hotel.dart';
 import 'package:frontend/providers/hotel_search_provider.dart';
 import 'package:frontend/utils/image_path.dart';
+import 'package:frontend/providers/location_provider.dart';
 
 class HomeSearchField extends StatefulWidget {
   final void Function(Hotel hotel) onHotelSelected;
@@ -30,6 +31,7 @@ class _HomeSearchFieldState extends State<HomeSearchField> {
   final TextEditingController _ctrl = TextEditingController();
   final FocusNode _focus = FocusNode();
   final LayerLink _layerLink = LayerLink();
+  String _lastProviderAddress = '';
 
   OverlayEntry? _overlay;
   Timer? _debounce;
@@ -254,8 +256,6 @@ class _HomeSearchFieldState extends State<HomeSearchField> {
     );
   }
 
-  // ── State tiles ──────────────────────────────────────────
-
   Widget _buildLoadingTile() {
     return Material(
       elevation: 8,
@@ -314,6 +314,21 @@ class _HomeSearchFieldState extends State<HomeSearchField> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final address = context.watch<LocationProvider>().address;
+    if (address.isNotEmpty && address != _lastProviderAddress) {
+      _lastProviderAddress = address;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_ctrl.text != address) {
+          _ctrl.text = address;
+          widget.onChanged?.call(address);
+        }
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return TapRegion(
       groupId: _tapRegionGroupId,
@@ -339,8 +354,6 @@ class _HomeSearchFieldState extends State<HomeSearchField> {
                     color: _primary.withValues(alpha: 0.7),
                     size: 22,
                   ),
-
-                  // Loading / clear icon
                   suffixIcon: provider.isLoading
                       ? const Padding(
                           padding: EdgeInsets.all(14),
@@ -386,16 +399,13 @@ class _HomeSearchFieldState extends State<HomeSearchField> {
                 ),
                 onChanged: (val) {
                   widget.onChanged?.call(val);
-                  setState(() {}); // update suffixIcon
+                  setState(() {});
                   _debounce?.cancel();
-
                   if (val.trim().isEmpty) {
                     _hideOverlay();
                     provider.clear();
                     return;
                   }
-
-                  // Wait 500ms after typing
                   _debounce = Timer(const Duration(milliseconds: 500), () {
                     provider.search(val);
                     _showOverlay();
