@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/pages/main_shell.dart';
 import 'package:frontend/models/hotel.dart';
 import 'package:frontend/models/wishlist.dart';
+import 'package:frontend/providers/location_provider.dart';
 import 'package:frontend/services/api_services.dart';
 import 'package:frontend/widgets/home/home_header.dart';
 import 'package:frontend/widgets/home/home_search_card.dart';
@@ -10,6 +11,7 @@ import 'package:frontend/widgets/home/home_recommended_section.dart';
 import 'package:frontend/widgets/home/home_you_might_like.dart';
 import 'package:frontend/widgets/layout/skeleton_loader.dart';
 import 'package:frontend/extensions/snackbar.dart';
+import 'package:provider/provider.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -20,37 +22,81 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   List<Hotel> _allHotels = [];
+  List<Hotel> _recommendHotels = [];
   bool _isLoading = true;
   Map<String, HotelBadge> _hotelBadges = {};
   Set<int> _wishlistedHotelIds = {};
   Map<int, int> _wishlistIdsByHotelId = {};
   final Set<int> _favoriteLoadingHotelIds = {};
+  String _lastAddress = '';
 
   @override
   void initState() {
     super.initState();
-    _fetchHotels();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    final location = context.watch<LocationProvider>();
+
+    if (location.address != _lastAddress) {
+      _lastAddress = location.address;
+      _fetchHotels();
+    }
   }
 
   Future<void> _fetchHotels() async {
+    final location = context.read<LocationProvider>();
+
+    final hasLocation =
+        location.lat != null &&
+        location.lng != null &&
+        location.address != "Choose Location";
+
     try {
       final hotelsResponse = await ApiService.fetchHotels();
-      final wishlists = await ApiService.fetchWishlists();
+
       final hotelItems = _extractHotelItems(hotelsResponse);
 
       final List<Hotel> fetchedHotels = hotelItems.map((item) {
         return Hotel.fromMap(item as Map<String, dynamic>);
       }).toList();
 
+      List<Hotel> recommendedHotels = fetchedHotels;
+
+      if (hasLocation) {
+        print('Lat : ${location.lat}');
+        print('Lng : ${location.lng}');
+
+        final recommendResponse = await ApiService.fetchHotels(
+          userLat: location.lat,
+          userLng: location.lng,
+          sortBy: 'distance',
+        );
+
+        final recommendItems = _extractHotelItems(recommendResponse);
+
+        recommendedHotels = recommendItems.map((item) {
+          return Hotel.fromMap(item as Map<String, dynamic>);
+        }).toList();
+      }
+
+      final wishlists = await ApiService.fetchWishlists();
+
       if (!mounted) return;
+
       setState(() {
         _allHotels = fetchedHotels;
-        _hotelBadges = assignBadges(_allHotels);
+        _recommendHotels = recommendedHotels;
+        _hotelBadges = assignBadges(fetchedHotels);
         _setWishlists(wishlists);
         _isLoading = false;
       });
     } catch (error) {
       if (!mounted) return;
+
       setState(() {
         _isLoading = false;
       });
@@ -168,7 +214,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                       const SizedBox(height: 8),
                       HomeYouMightLike(
-                        hotels: _allHotels,
+                        hotels: _recommendHotels,
                         hotelBadges: _hotelBadges,
                         wishlistedHotelIds: _wishlistedHotelIds,
                         favoriteLoadingHotelIds: _favoriteLoadingHotelIds,
