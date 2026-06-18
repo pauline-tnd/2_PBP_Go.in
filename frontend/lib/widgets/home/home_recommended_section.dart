@@ -8,6 +8,8 @@ class HomeRecommendedSection extends StatefulWidget {
   final Set<int> wishlistedHotelIds;
   final Set<int> favoriteLoadingHotelIds;
   final ValueChanged<Hotel>? onFavoriteTap;
+  final VoidCallback? onEndReached;
+  final bool isLoadingMore;
 
   const HomeRecommendedSection({
     super.key,
@@ -16,6 +18,8 @@ class HomeRecommendedSection extends StatefulWidget {
     this.wishlistedHotelIds = const {},
     this.favoriteLoadingHotelIds = const {},
     this.onFavoriteTap,
+    this.onEndReached,
+    this.isLoadingMore = false,
   });
 
   @override
@@ -106,8 +110,30 @@ class _HomeRecommendedSectionState extends State<HomeRecommendedSection> {
                         top: 50,
                         bottom: 10,
                       ),
-                      itemCount: widget.hotels.length,
+                      itemCount:
+                          widget.hotels.length + (widget.isLoadingMore ? 1 : 0),
                       itemBuilder: (context, index) {
+                        if (index >= widget.hotels.length) {
+                          return const Padding(
+                            padding: EdgeInsets.only(right: 16),
+                            child: Center(
+                              child: SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              ),
+                            ),
+                          );
+                        }
+
+                        if (index >= widget.hotels.length - 2) {
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            widget.onEndReached?.call();
+                          });
+                        }
+
                         final hotel = widget.hotels[index];
                         final badge = widget.hotelBadges[hotel.name];
 

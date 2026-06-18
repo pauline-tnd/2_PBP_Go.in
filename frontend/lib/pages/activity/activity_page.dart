@@ -57,10 +57,12 @@ class _ActivityPageState extends State<ActivityPage> {
     _bookingsFuture = ApiService.fetchBookings();
   }
 
-  void _refresh() {
+  Future<void> _refresh() async {
     setState(() {
       _bookingsFuture = ApiService.fetchBookings();
     });
+
+    await _bookingsFuture;
   }
 
   /// Convert a [Booking] from the API to a [BookingItem] for the UI.
@@ -126,184 +128,189 @@ class _ActivityPageState extends State<ActivityPage> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF0F4F8),
-      body: ActivityHeader(
-        body: FutureBuilder<List<Booking>>(
-          future: _bookingsFuture,
-          builder: (context, snapshot) {
-            // ── Loading ──────────────────────────────────────────
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(
-                child: Padding(
-                  padding: EdgeInsets.only(top: 80),
-                  child: CircularProgressIndicator(color: Color(0xFF2563EB)),
-                ),
-              );
-            }
-
-            // ── Error ────────────────────────────────────────────
-            if (snapshot.hasError) {
-              return Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 32,
-                    vertical: 80,
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.wifi_off_rounded,
-                        size: 56,
-                        color: Color(0xFF9098A3),
-                      ),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'Gagal memuat data',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF1A2340),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        '${snapshot.error}',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: Color(0xFF9098A3),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      ElevatedButton.icon(
-                        onPressed: _refresh,
-                        icon: const Icon(Icons.refresh_rounded, size: 18),
-                        label: const Text('Coba lagi'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF2563EB),
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }
-
-            // ── Success ──────────────────────────────────────────
-            final bookings = snapshot.data ?? [];
-            final bookingsById = {
-              for (final booking in bookings) booking.id.toString(): booking,
-            };
-            final allItems = bookings.map(_toBookingItem).toList();
-            final filteredItems = _filterItems(allItems);
-
-            return SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: contentMaxWidth),
+      body: RefreshIndicator(
+        onRefresh: _refresh,
+        child: ActivityHeader(
+          body: FutureBuilder<List<Booking>>(
+            future: _bookingsFuture,
+            builder: (context, snapshot) {
+              // ── Loading ──────────────────────────────────────────
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(
                   child: Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      horizontalPadding,
-                      0,
-                      horizontalPadding,
-                      0,
+                    padding: EdgeInsets.only(top: 80),
+                    child: CircularProgressIndicator(color: Color(0xFF2563EB)),
+                  ),
+                );
+              }
+
+              // ── Error ────────────────────────────────────────────
+              if (snapshot.hasError) {
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 32,
+                      vertical: 80,
                     ),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.7),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          padding: const EdgeInsets.fromLTRB(0, 12, 0, 0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Dropdown filter
-                              ActivityFilterDropdown(
-                                selected: _selectedFilter,
-                                onChanged: (filter) {
-                                  setState(() => _selectedFilter = filter);
-                                },
-                              ),
-                              const SizedBox(height: 16),
-
-                              // Booking cards
-                              ...filteredItems.map((item) {
-                                final booking = bookingsById[item.id];
-
-                                return ActivityCard(
-                                  item: item,
-                                  onBookingDetail: () {
-                                    if (booking == null) return;
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            BookingDetailPage(booking: booking),
-                                      ),
-                                    );
-                                  },
-                                  onReview: (rating) async {
-                                    await Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => ReviewPage(
-                                          bookingId: item.id,
-                                          isReadOnly: item.hasReview,
-                                        ),
-                                      ),
-                                    );
-                                    _refresh();
-                                  },
-                                );
-                              }),
-
-                              // Empty state
-                              if (filteredItems.isEmpty)
-                                Center(
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 40,
-                                    ),
-                                    child: Column(
-                                      children: [
-                                        Icon(
-                                          Icons.receipt_long_outlined,
-                                          size: 48,
-                                          color: Colors.grey[400],
-                                        ),
-                                        const SizedBox(height: 12),
-                                        Text(
-                                          allItems.isEmpty
-                                              ? 'There is no booking yet'
-                                              : 'There is no booking with this status',
-                                          style: const TextStyle(
-                                            color: Color(0xFF9098A3),
-                                            fontSize: 14,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                            ],
+                        const Icon(
+                          Icons.wifi_off_rounded,
+                          size: 56,
+                          color: Color(0xFF9098A3),
+                        ),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'Gagal memuat data',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF1A2340),
                           ),
                         ),
-                        SizedBox(height: 130),
+                        const SizedBox(height: 8),
+                        Text(
+                          '${snapshot.error}',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: Color(0xFF9098A3),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        ElevatedButton.icon(
+                          onPressed: _refresh,
+                          icon: const Icon(Icons.refresh_rounded, size: 18),
+                          label: const Text('Coba lagi'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF2563EB),
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ),
+                );
+              }
+
+              // ── Success ──────────────────────────────────────────
+              final bookings = snapshot.data ?? [];
+              final bookingsById = {
+                for (final booking in bookings) booking.id.toString(): booking,
+              };
+              final allItems = bookings.map(_toBookingItem).toList();
+              final filteredItems = _filterItems(allItems);
+
+              return SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: contentMaxWidth),
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        horizontalPadding,
+                        0,
+                        horizontalPadding,
+                        0,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.7),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            padding: const EdgeInsets.fromLTRB(0, 12, 0, 0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Dropdown filter
+                                ActivityFilterDropdown(
+                                  selected: _selectedFilter,
+                                  onChanged: (filter) {
+                                    setState(() => _selectedFilter = filter);
+                                  },
+                                ),
+                                const SizedBox(height: 16),
+
+                                // Booking cards
+                                ...filteredItems.map((item) {
+                                  final booking = bookingsById[item.id];
+
+                                  return ActivityCard(
+                                    item: item,
+                                    onBookingDetail: () {
+                                      if (booking == null) return;
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              BookingDetailPage(
+                                                booking: booking,
+                                              ),
+                                        ),
+                                      );
+                                    },
+                                    onReview: (rating) async {
+                                      await Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => ReviewPage(
+                                            bookingId: item.id,
+                                            isReadOnly: item.hasReview,
+                                          ),
+                                        ),
+                                      );
+                                      _refresh();
+                                    },
+                                  );
+                                }),
+
+                                // Empty state
+                                if (filteredItems.isEmpty)
+                                  Center(
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 40,
+                                      ),
+                                      child: Column(
+                                        children: [
+                                          Icon(
+                                            Icons.receipt_long_outlined,
+                                            size: 48,
+                                            color: Colors.grey[400],
+                                          ),
+                                          const SizedBox(height: 12),
+                                          Text(
+                                            allItems.isEmpty
+                                                ? 'There is no booking yet'
+                                                : 'There is no booking with this status',
+                                            style: const TextStyle(
+                                              color: Color(0xFF9098A3),
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                          SizedBox(height: 130),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-            );
-          },
+              );
+            },
+          ),
         ),
       ),
     );

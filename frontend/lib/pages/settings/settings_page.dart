@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/widgets/common/refresh_page.dart';
 import 'edit_profile_page.dart';
 import 'preferences_page.dart';
 import 'help_centre_page.dart';
@@ -27,10 +28,10 @@ class _SettingsPageState extends State<SettingsPage> {
     fetchUser();
   }
 
-  Future<void> _refreshPage() async {
-    await fetchUser();
-    await Future.delayed(const Duration(milliseconds: 100));
-  }
+  // Future<void> _refreshPage() async {
+  //   await fetchUser();
+  //   await Future.delayed(const Duration(milliseconds: 100));
+  // }
 
   Future<void> fetchUser() async {
     try {
@@ -53,8 +54,8 @@ class _SettingsPageState extends State<SettingsPage> {
     final isTablet = screenWidth >= 768;
     final isDesktop = screenWidth >= 1024;
     final horizontalPadding = isDesktop
-      ? screenWidth * 0.18
-      : isTablet
+        ? screenWidth * 0.18
+        : isTablet
         ? screenWidth * 0.1
         : 24.0;
     return Scaffold(
@@ -62,7 +63,7 @@ class _SettingsPageState extends State<SettingsPage> {
       body: Stack(
         children: [
           RefreshIndicator(
-            onRefresh: _refreshPage,
+            onRefresh: () => refreshPage(fetchUser),
             color: const Color(0xFF3B82F6),
             child: SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
@@ -72,8 +73,8 @@ class _SettingsPageState extends State<SettingsPage> {
                     height: isDesktop
                         ? 300
                         : isTablet
-                            ? 270
-                            : 240,
+                        ? 270
+                        : 240,
                     child: Stack(
                       clipBehavior: Clip.none,
                       children: [
@@ -87,10 +88,7 @@ class _SettingsPageState extends State<SettingsPage> {
                               gradient: LinearGradient(
                                 begin: Alignment.topCenter,
                                 end: Alignment.bottomCenter,
-                                colors: [
-                                  Color(0xFF0E4399),
-                                  Color(0xFF3B82F6),
-                                ],
+                                colors: [Color(0xFF0E4399), Color(0xFF3B82F6)],
                               ),
                             ),
                           ),
@@ -105,10 +103,7 @@ class _SettingsPageState extends State<SettingsPage> {
                               gradient: LinearGradient(
                                 begin: Alignment.topCenter,
                                 end: Alignment.bottomCenter,
-                                colors: [
-                                  Color(0xFF3B82F6),
-                                  Color(0xFFF5F7F8),
-                                ],
+                                colors: [Color(0xFF3B82F6), Color(0xFFF5F7F8)],
                               ),
                             ),
                           ),
@@ -158,9 +153,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const SettingsSectionTitle(
-                          title: 'ACCOUNT SETTINGS',
-                        ),
+                        const SettingsSectionTitle(title: 'ACCOUNT SETTINGS'),
                         const SizedBox(height: 12),
                         SettingsGroup(
                           items: [
@@ -171,7 +164,8 @@ class _SettingsPageState extends State<SettingsPage> {
                                 final result = await Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => const EditProfilePage(),
+                                    builder: (context) =>
+                                        const EditProfilePage(),
                                   ),
                                 );
                                 if (result == true) {
@@ -219,8 +213,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) =>
-                                        const ContactUsPage(),
+                                    builder: (context) => const ContactUsPage(),
                                   ),
                                 );
                               },
@@ -232,8 +225,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) =>
-                                        const FaqPage(),
+                                    builder: (context) => const FaqPage(),
                                   ),
                                 );
                               },
@@ -266,7 +258,13 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  static Widget _buildProfileCard(bool isTablet, bool isDesktop, String username, String email, String? profileImage) {
+  static Widget _buildProfileCard(
+    bool isTablet,
+    bool isDesktop,
+    String username,
+    String email,
+    String? profileImage,
+  ) {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(isTablet ? 24 : 20),
@@ -369,17 +367,17 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 const SizedBox(height: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFEACD80).withAlpha(128),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: ShaderMask(
                     shaderCallback: (bounds) => const LinearGradient(
-                      colors: [
-                        Color(0xFFF59E0B),
-                        Color(0xFF8F5C06),
-                      ],
+                      colors: [Color(0xFFF59E0B), Color(0xFF8F5C06)],
                       stops: [0.0, 0.61],
                     ).createShader(bounds),
                     blendMode: BlendMode.srcIn,
