@@ -203,7 +203,7 @@ class _HomePageState extends State<HomePage> {
                 : Column(
                     children: [
                       HomeRecommendedSection(
-                        hotels: _allHotels,
+                        hotels: _recommendHotels,
                         hotelBadges: _hotelBadges,
                         wishlistedHotelIds: _wishlistedHotelIds,
                         favoriteLoadingHotelIds: _favoriteLoadingHotelIds,
@@ -211,7 +211,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                       const SizedBox(height: 8),
                       HomeYouMightLike(
-                        hotels: _recommendHotels,
+                        hotels: _allHotels,
                         hotelBadges: _hotelBadges,
                         wishlistedHotelIds: _wishlistedHotelIds,
                         favoriteLoadingHotelIds: _favoriteLoadingHotelIds,
