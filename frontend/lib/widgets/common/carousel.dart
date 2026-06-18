@@ -104,15 +104,18 @@ class _CarouselState extends State<Carousel> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final availW = constraints.maxWidth;
-        final scale = (availW / 400).clamp(0.7, 1.0);
+        final scale = (availW / 400).clamp(0.65, 1.15);
         final centerH = widget.height * scale;
-        final rawW = availW < 380 ? availW * 0.65 : availW * 0.60;
-        final centerW = rawW.clamp(0.0, centerH * 1.4);
+        final centerW = (availW * 0.58).clamp(160.0, centerH * 1.4);
         final sideH = centerH * 0.70;
         final sideW = centerW * 0.68;
-        final leftX = (availW - centerW) / 2 - sideW + 60;
-        final rightX = (availW - centerW) / 2 + centerW - 60;
         final centerX = (availW - centerW) / 2;
+        final gap = availW * 0.30;
+        final leftX = (availW / 2 - gap - sideW / 2).clamp(0.0, availW - sideW);
+        final rightX = (availW / 2 + gap - sideW / 2).clamp(
+          0.0,
+          availW - sideW,
+        );
         const duration = Duration(milliseconds: 350);
 
         final List<Widget> boxes = [];
