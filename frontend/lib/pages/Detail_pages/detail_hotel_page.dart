@@ -693,6 +693,8 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
                                       builder: (context) => ReviewDetailPage(
                                         reviews: reviews,
                                         title: "Hotel Reviews",
+                                        showRoomFilter: true,
+                                        showRoomType: true,
                                       ),
                                     ),
                                   );

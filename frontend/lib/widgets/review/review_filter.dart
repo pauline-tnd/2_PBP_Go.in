@@ -11,7 +11,19 @@ class ReviewFilter {
 // Main Widget
 class ReviewFilterBar extends StatefulWidget {
   final ValueChanged<int?>? onFilterChanged;
-  const ReviewFilterBar({super.key, this.onFilterChanged});
+  final ValueChanged<String?>? onRoomFilterChanged;
+  final List<String> roomTypes;
+  final String? selectedRoomType;
+  final bool showRoomFilter;
+
+  const ReviewFilterBar({
+    super.key,
+    this.onFilterChanged,
+    this.onRoomFilterChanged,
+    this.roomTypes = const [],
+    this.selectedRoomType,
+    this.showRoomFilter = false,
+  });
 
   @override
   State<ReviewFilterBar> createState() => _ReviewFilterBarState();
@@ -31,26 +43,140 @@ class _ReviewFilterBarState extends State<ReviewFilterBar> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: Color(0xFFD6E4F7),
-        border: Border.all(color: Colors.grey.shade300),
-      ),
-      child: Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        alignment: WrapAlignment.center,
-        children: List.generate(_filters.length, (index) {
-          return _FilterChip(
-            filter: _filters[index],
-            isActive: _selectedIndex == index,
-            onTap: () {
-              setState(() => _selectedIndex = index);
-              widget.onFilterChanged?.call(_filters[index].stars);
-            },
-          );
-        }),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isCompact = constraints.maxWidth < 600;
+
+        return Container(
+          width: double.infinity,
+          padding: EdgeInsets.symmetric(
+            horizontal: isCompact ? 16 : 32,
+            vertical: 14,
+          ),
+          decoration: BoxDecoration(
+            color: const Color(0xFFD6E4F7),
+            border: Border(
+              top: BorderSide(color: Colors.grey.shade300),
+              bottom: BorderSide(color: Colors.grey.shade300),
+            ),
+          ),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 920),
+              child: Wrap(
+                spacing: isCompact ? 10 : 14,
+                runSpacing: 10,
+                alignment: WrapAlignment.center,
+                runAlignment: WrapAlignment.center,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  _FilterChip(
+                    filter: _filters[0],
+                    isActive: _selectedIndex == 0,
+                    onTap: () {
+                      setState(() => _selectedIndex = 0);
+                      widget.onFilterChanged?.call(_filters[0].stars);
+                    },
+                  ),
+                  if (widget.showRoomFilter)
+                    _RoomFilterChip(
+                      roomTypes: widget.roomTypes,
+                      selectedRoomType: widget.selectedRoomType,
+                      onChanged: widget.onRoomFilterChanged,
+                    ),
+                  ...List.generate(_filters.length - 1, (index) {
+                    final filterIndex = index + 1;
+                    return _FilterChip(
+                      filter: _filters[filterIndex],
+                      isActive: _selectedIndex == filterIndex,
+                      onTap: () {
+                        setState(() => _selectedIndex = filterIndex);
+                        widget.onFilterChanged?.call(
+                          _filters[filterIndex].stars,
+                        );
+                      },
+                    );
+                  }),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _RoomFilterChip extends StatelessWidget {
+  final List<String> roomTypes;
+  final String? selectedRoomType;
+  final ValueChanged<String?>? onChanged;
+
+  const _RoomFilterChip({
+    required this.roomTypes,
+    required this.selectedRoomType,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    const activeColor = Color(0xFF3B82F6);
+    const allRoomsValue = '__all_rooms__';
+
+    return PopupMenuButton<String>(
+      tooltip: 'Filter by room',
+      onSelected: (value) {
+        onChanged?.call(value == allRoomsValue ? null : value);
+      },
+      itemBuilder: (context) => [
+        const PopupMenuItem<String>(
+          value: allRoomsValue,
+          child: Text('All Rooms'),
+        ),
+        ...roomTypes.map(
+          (roomType) =>
+              PopupMenuItem<String>(value: roomType, child: Text(roomType)),
+        ),
+      ],
+      child: Container(
+        height: 40,
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+        decoration: BoxDecoration(
+          color: selectedRoomType == null
+              ? Colors.white
+              : activeColor.withValues(alpha: 0.15),
+          border: Border.all(
+            color: selectedRoomType == null
+                ? const Color(0xFFE2E8F0)
+                : activeColor,
+            width: 1.5,
+          ),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 160),
+              child: Text(
+                selectedRoomType ?? 'By Room',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: activeColor,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            const SizedBox(width: 4),
+            const Icon(
+              Icons.keyboard_arrow_down_rounded,
+              color: activeColor,
+              size: 20,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -75,7 +201,8 @@ class _FilterChip extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+        height: 40,
+        padding: const EdgeInsets.symmetric(horizontal: 14),
         decoration: BoxDecoration(
           color: isActive ? activeColor.withValues(alpha: 0.15) : Colors.white,
           border: Border.all(
@@ -85,7 +212,7 @@ class _FilterChip extends StatelessWidget {
           borderRadius: BorderRadius.circular(10),
         ),
         child: Row(
-          mainAxisSize: MainAxisSize.max,
+          mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (filter.stars != null) ...[

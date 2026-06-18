@@ -6,12 +6,14 @@ class ReviewCard extends StatelessWidget {
   final Review review;
   final VoidCallback? onImageTap;
   final bool isExpanded;
+  final bool showRoomType;
 
   const ReviewCard({
     super.key,
     required this.review,
     this.onImageTap,
     this.isExpanded = false,
+    this.showRoomType = false,
   });
 
   @override
@@ -48,9 +50,7 @@ class ReviewCard extends StatelessWidget {
                       Text(
                         review.createdAt != null
                             ? review.createdAt!.length >= 19
-                                  ? review.createdAt!.substring(0, 10) +
-                                        '  ' +
-                                        review.createdAt!.substring(11, 19)
+                                  ? '${review.createdAt!.substring(0, 10)}  ${review.createdAt!.substring(11, 19)}'
                                   : review.createdAt!
                             : 'Date not found',
                         style: const TextStyle(
@@ -83,17 +83,41 @@ class ReviewCard extends StatelessWidget {
                   ? TextOverflow.visible
                   : TextOverflow.ellipsis,
             ),
-            if (review.image != null) ...[
+            if (review.image != null && isExpanded) ...[
               const SizedBox(height: 10),
               GestureDetector(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.network(
-                    review.image!,
-                    // ukuran gambar beda antara expanded dan tidak
-                    width: isExpanded ? double.infinity : 90,
-                    height: isExpanded ? 180 : 70,
-                    fit: BoxFit.cover,
+                onTap: onImageTap,
+                child: SizedBox.square(
+                  // width: 20,
+                  dimension: 150,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.network(review.image!, fit: BoxFit.cover),
+                  ),
+                ),
+              ),
+            ],
+            if (showRoomType && review.roomType != null) ...[
+              const SizedBox(height: 12),
+              Align(
+                alignment: Alignment.centerRight,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF3B82F6).withValues(alpha: 0.12),
+                    border: Border.all(color: const Color(0xFF3B82F6)),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Text(
+                    review.roomType!,
+                    style: const TextStyle(
+                      color: Color(0xFF3B82F6),
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                    ),
                   ),
                 ),
               ),

@@ -9,6 +9,7 @@ class Review {
   final String description;
   final String? image;
   final String? createdAt;
+  final String? roomType;
   final ReviewUser? user;
 
   Review({
@@ -20,10 +21,14 @@ class Review {
     required this.description,
     this.image,
     this.createdAt,
+    this.roomType,
     this.user,
   });
 
   factory Review.fromJson(Map<String, dynamic> json) {
+    final room = json['room'] as Map<String, dynamic>?;
+    final image = json['image_url']?.toString() ?? json['image']?.toString();
+
     return Review(
       id: json['id'] ?? 0,
       userId: json['user_id'] ?? 0,
@@ -31,8 +36,13 @@ class Review {
       bookingDetailId: json['booking_detail_id'] ?? 0,
       rating: json['rating'] ?? 0,
       description: json['description'] ?? '',
-      image: json['image'],
+      image: image?.trim().isEmpty == true ? null : image,
       createdAt: json['created_at'],
+      roomType:
+          json['room_type']?.toString() ??
+          room?['type']?.toString() ??
+          room?['name']?.toString() ??
+          room?['room_type']?.toString(),
       user: json['user'] != null ? ReviewUser.fromJson(json['user']) : null,
     );
   }
@@ -47,6 +57,7 @@ class Review {
       'description': description,
       'image': image,
       'created_at': createdAt,
+      'room_type': roomType,
       'user': user != null
           ? {
               'id': user!.id,

@@ -4,6 +4,7 @@ import 'package:frontend/models/hotel.dart';
 import 'package:frontend/models/wishlist.dart';
 import 'package:frontend/services/api_services.dart';
 import 'package:frontend/widgets/hotel/hotel_card.dart';
+import 'package:responsive_sizer/responsive_sizer.dart';
 
 class WishlistPage extends StatefulWidget {
   final VoidCallback? onBack;
@@ -80,23 +81,71 @@ class _WishlistPageState extends State<WishlistPage> {
 
           final hotelBadges = assignBadges(hotels);
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(24, 24, 24, 120),
-            physics: const BouncingScrollPhysics(),
-            child: Column(
-              children: wishlists.map((wishlist) {
-                final hotelMap = wishlist.hotel;
-                if (hotelMap == null) return const SizedBox.shrink();
-                final hotel = Hotel.fromMap(hotelMap);
-                final badge = hotelBadges[hotel.name];
-                return HotelCard(
-                  hotel: hotel,
-                  badge: badge,
-                  isWishlisted: true,
-                  onFavoriteTap: () => _deleteWishlist(wishlist.id),
-                );
-              }).toList(),
-            ),
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              int crossAxisCount = 1;
+              double childAspectRatio = 1.038;
+
+              if (constraints.maxWidth >= 1200) {
+                crossAxisCount = 4;
+              } else if (constraints.maxWidth >= 900) {
+                crossAxisCount = 3;
+              } else if (constraints.maxWidth >= 600) {
+                crossAxisCount = 2;
+              }
+
+              if (constraints.maxWidth >= 1200) {
+                childAspectRatio = 0.72;
+              } else if (constraints.maxWidth >= 1100) {
+                childAspectRatio = 0.75;
+              } else if (constraints.maxWidth >= 900) {
+                childAspectRatio = 0.70;
+              } else if (constraints.maxWidth >= 750) {
+                childAspectRatio = 0.82;
+              } else if (constraints.maxWidth >= 700) {
+                childAspectRatio = 0.81;
+              } else if (constraints.maxWidth >= 650) {
+                childAspectRatio = 0.77;
+              } else if (constraints.maxWidth >= 620) {
+                childAspectRatio = 0.75;
+              } else if (constraints.maxWidth >= 600) {
+                childAspectRatio = 0.70;
+              }
+
+              return SingleChildScrollView(
+                padding: EdgeInsets.fromLTRB(5.w, 2.h, 5.w, 14.h),
+                physics: const BouncingScrollPhysics(),
+                child: GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: wishlists.length,
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: crossAxisCount,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                    childAspectRatio: childAspectRatio,
+                  ),
+                  itemBuilder: (context, index) {
+                    final wishlist = wishlists[index];
+
+                    final hotelMap = wishlist.hotel;
+                    if (hotelMap == null) {
+                      return const SizedBox.shrink();
+                    }
+
+                    final hotel = Hotel.fromMap(hotelMap);
+                    final badge = hotelBadges[hotel.name];
+
+                    return HotelCard(
+                      hotel: hotel,
+                      badge: badge,
+                      isWishlisted: true,
+                      onFavoriteTap: () => _deleteWishlist(wishlist.id),
+                    );
+                  },
+                ),
+              );
+            },
           );
         },
       ),
@@ -106,7 +155,7 @@ class _WishlistPageState extends State<WishlistPage> {
   Widget _buildEmptyState() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 120),
+      padding: EdgeInsets.symmetric(vertical: 12.h),
       child: Column(
         children: [
           Icon(
