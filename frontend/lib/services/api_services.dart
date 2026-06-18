@@ -119,11 +119,9 @@ class ApiService {
       Uri.parse('$baseUrl/user'),
       headers: headers,
     );
-
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
-      print(response.body);
       throw Exception('Failed to load user: ${response.body}');
     }
   }
@@ -167,8 +165,6 @@ class ApiService {
         'new_password_confirmation': newPasswordConfirmation,
       }),
     );
-    print("STATUS: ${response.statusCode}");
-    print("BODY: ${response.body}");
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
