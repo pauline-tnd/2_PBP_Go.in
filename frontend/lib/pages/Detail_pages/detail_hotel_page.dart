@@ -61,6 +61,8 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
   LatLng _center = const LatLng(51.5071, -0.1417);
   String _pickedAddress = '';
   List<AddOnItem> _addOns = [];
+  List<String> _displayImages = [];
+  List<dynamic> _roomsRaw = [];
 
   @override
   void initState() {
@@ -121,15 +123,8 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
 
   Future<void> _loadDetail() async {
     try {
-      final results = await Future.wait<dynamic>([
-        ApiService.fetchHotelDetail(widget.hotel.id),
-        ApiService.fetchHotelReviews(
-          widget.hotel.id,
-        ).catchError((_) => <Review>[]),
-      ]);
+      final data = await ApiService.fetchHotelDetail(widget.hotel.id);
 
-      final data = results[0] as Map<String, dynamic>;
-      final rawReviews = results[1] as List<Review>;
       final hotelDetail = data['data'] as Map<String, dynamic>? ?? {};
       final roomsRaw = hotelDetail['rooms'] as List<dynamic>? ?? [];
 
@@ -176,9 +171,35 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
           );
         }
 
-        _hotelReviews = rawReviews;
+        _roomsRaw = roomsRaw;
+        final hotelImages =
+            (hotelDetail['hotel_images'] as List<dynamic>? ?? [])
+                .map((e) => e['image']?.toString())
+                .whereType<String>()
+                .toList();
+        final allRoomImages = roomsRaw.expand((r) {
+          if (r is! Map<String, dynamic>) return <String>[];
+          return (r['room_images'] as List<dynamic>? ?? [])
+              .map((e) => e['image']?.toString() ?? '')
+              .where((img) => img.isNotEmpty);
+        }).toList();
+        final carouselImages = [...hotelImages, ...allRoomImages.take(3)];
+        _displayImages = carouselImages.isNotEmpty
+            ? carouselImages
+            : [
+                ...hotelImages,
+                'assets/images/RoomDefault/hotel_room_1.png',
+                'assets/images/RoomDefault/hotel_room_2.png',
+              ];
+
         _loading = false;
       });
+
+      ApiService.fetchHotelReviews(widget.hotel.id)
+          .then((reviews) {
+            if (mounted) setState(() => _hotelReviews = reviews);
+          })
+          .catchError((_) {});
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -436,27 +457,7 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
         .map((e) => e['image']?.toString())
         .whereType<String>()
         .toList();
-
-    final roomsRaw = _hotelDetail?['rooms'] as List<dynamic>? ?? [];
-
-    final List<String> allRoomImages = roomsRaw.expand((r) {
-      if (r is! Map<String, dynamic>) return <String>[];
-      return (r['room_images'] as List<dynamic>? ?? [])
-          .map((e) => e['image']?.toString() ?? '')
-          .where((img) => img.isNotEmpty);
-    }).toList();
-
-    final List<String> carouselImages = [
-      ...hotelImages,
-      ...allRoomImages.take(3),
-    ];
-    final List<String> displayImages = carouselImages.isNotEmpty
-        ? carouselImages
-        : [
-            ...hotelImages,
-            'assets/images/RoomDefault/hotel_room_1.png',
-            'assets/images/RoomDefault/hotel_room_2.png',
-          ];
+    final displayImages = _displayImages;
 
     final facilities =
         (_hotelDetail?['hotel_facilities'] as List<dynamic>? ?? []);

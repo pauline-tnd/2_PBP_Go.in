@@ -259,26 +259,41 @@ class _BookingConfirmationPopUpState extends State<BookingConfirmationPopUp> {
         editIndex: index,
         onContinue: (selected, notes) async {
           if (detail.id != 0) {
-            await ApiService.updateBookingDetail(detail.id, notes: notes);
+            final ops = <Future>[
+              ApiService.updateBookingDetail(detail.id, notes: notes),
+            ];
 
             try {
               final res = await ApiService.fetchAddOnsByBookingDetail(
                 detail.id,
               );
-              final existing = res['data'] as List;
+              final existing = (res['data'] as List?) ?? [];
+              final selectedIds = selected.map((a) => a.id).toSet();
+              final existingIds = <int>{};
+
               for (final ao in existing) {
-                await ApiService.deleteBookingDetailAddOn(ao['id'] as int);
+                final aid = (ao['add_on_id'] ?? ao['add_on']?['id']) as int?;
+                final rowId = ao['id'] as int;
+                if (aid != null) existingIds.add(aid);
+                if (aid == null || !selectedIds.contains(aid)) {
+                  ops.add(ApiService.deleteBookingDetailAddOn(rowId));
+                }
+              }
+              for (final addOn in selected) {
+                if (!existingIds.contains(addOn.id)) {
+                  ops.add(
+                    ApiService.storeBookingDetailAddOn(
+                      bookingDetailId: detail.id,
+                      addOnId: addOn.id,
+                      qty: 1,
+                      subTotal: addOn.price,
+                    ),
+                  );
+                }
               }
             } catch (_) {}
 
-            for (final addOn in selected) {
-              await ApiService.storeBookingDetailAddOn(
-                bookingDetailId: detail.id,
-                addOnId: addOn.id,
-                qty: 1,
-                subTotal: addOn.price,
-              );
-            }
+            await Future.wait(ops);
           }
 
           if (mounted) {

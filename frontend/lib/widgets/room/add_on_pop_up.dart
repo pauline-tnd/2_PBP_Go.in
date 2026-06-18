@@ -46,6 +46,7 @@ class AddOnPopUp extends StatefulWidget {
 class _AddOnPopUpState extends State<AddOnPopUp> {
   final Set<int> _selectedIndexes = {};
   final TextEditingController _notesController = TextEditingController();
+  bool _submitting = false;
 
   @override
   void initState() {
@@ -70,17 +71,20 @@ class _AddOnPopUpState extends State<AddOnPopUp> {
   }
 
   Future<void> _handleContinue() async {
+    if (_submitting) return;
+    setState(() => _submitting = true);
+
     final selected = _selectedIndexes.map((i) => widget.addOns[i]).toList();
     final notes = _notesController.text;
 
-    if (widget.onContinue != null) {
-      await widget.onContinue!(selected, notes);
-      if (!mounted) return;
-      Navigator.pop(context);
-      return;
-    }
-
     try {
+      if (widget.onContinue != null) {
+        await widget.onContinue!(selected, notes);
+        if (!mounted) return;
+        Navigator.pop(context);
+        return;
+      }
+
       final checkIn = widget.checkIn;
       final checkOut = widget.checkOut;
 
@@ -138,14 +142,14 @@ class _AddOnPopUpState extends State<AddOnPopUp> {
 
       if (!mounted) return;
       Navigator.pop(context);
-      Future.delayed(const Duration(milliseconds: 100), () {
-        widget.onConfirmationCustomAnother?.call(allDetails, bookingId);
-      });
+      widget.onConfirmationCustomAnother?.call(allDetails, bookingId);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Failed: $e')));
+    } finally {
+      if (mounted) setState(() => _submitting = false);
     }
   }
 
@@ -332,23 +336,33 @@ class _AddOnPopUpState extends State<AddOnPopUp> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: _handleContinue,
+                      onPressed: _submitting ? null : _handleContinue,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF3B82F6),
                         foregroundColor: Colors.white,
+                        disabledBackgroundColor: const Color(0xFF93C5FD),
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14),
                         ),
                         elevation: 0,
                       ),
-                      child: const Text(
-                        'Continue',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                      child: _submitting
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Text(
+                              'Continue',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                     ),
                   ),
 
