@@ -911,4 +911,25 @@ class ApiService {
       throw Exception('Failed to delete addon: ${response.body}');
     }
   }
+
+  static Future<Map<String, dynamic>> storeBookingFull({
+    required String checkIn,
+    required String checkOut,
+    String status = 'paid',
+    required List<Map<String, dynamic>> items,
+  }) async {
+    final headers = await _authHeaders();
+    final response = await http.post(
+      Uri.parse('$baseUrl/bookings/full'),
+      headers: headers,
+      body: jsonEncode({
+        'check_in': checkIn,
+        'check_out': checkOut,
+        'status': status,
+        'items': items,
+      }),
+    );
+    if (response.statusCode == 201) return jsonDecode(response.body);
+    throw Exception('Failed to create booking: ${response.body}');
+  }
 }

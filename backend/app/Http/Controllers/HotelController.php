@@ -85,22 +85,7 @@ class HotelController extends Controller
             $query->orderBy('id', 'desc');
         }
 
-        // Execution : Pagination, load every 5 data
         $hotels = $query->cursorPaginate(5);
-
-        // $userLat = $request->query('user_lat');
-        // $userLng = $request->query('user_lng');
-
-        // if ($userLat !== null && $userLng !== null) {
-        //     $hotels
-        //         ->select('hotels.*')
-        //         ->selectRaw(
-        //             '(6371 * acos(cos(radians(?)) * cos(radians(latitude)) * cos(radians(longitude) - radians(?)) + sin(radians(?)) * sin(radians(latitude)))) AS distance',
-        //             [$userLat, $userLng, $userLat]
-        //         )
-        //         ->having('distance', '<=', 25)
-        //         ->orderBy('distance');
-        // }
 
         return response()->json([
             'data' => $hotels,
@@ -110,14 +95,11 @@ class HotelController extends Controller
     public function show(string $id) // hotel detail
     {
         $hotel = Hotel::with([
-            'hotelImages',
-            'hotelFacilities.icon', // facilities and icon
-
-            // room list
-            'rooms.roomImages',
+            'hotelImages:id,hotel_id,image',
+            'hotelFacilities.icon',
+            'rooms:id,hotel_id,type,price,capacity,room_size',
+            'rooms.roomImages:id,room_id,image',
             'rooms.roomFacilities',
-
-            // add ons
             'addOns',
             'addOns.icon',
         ])

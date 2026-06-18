@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'dart:async';
 import 'package:frontend/services/api_services.dart';
 import 'package:frontend/models/bookingDetail.dart';
 import 'package:frontend/models/addOn.dart';
@@ -44,6 +45,23 @@ class BookingConfirmationPopUp extends StatefulWidget {
 }
 
 class _BookingConfirmationPopUpState extends State<BookingConfirmationPopUp> {
+  final Map<int, Timer> _qtyTimers = {};
+
+  @override
+  void dispose() {
+    for (final t in _qtyTimers.values) t.cancel();
+    super.dispose();
+  }
+
+  void _debouncedQtyUpdate(BookingDetail detail) {
+    _qtyTimers[detail.id]?.cancel();
+    _qtyTimers[detail.id] = Timer(const Duration(milliseconds: 600), () {
+      if (detail.id != 0) {
+        ApiService.updateBookingDetail(detail.id, totalRoom: detail.quantity);
+      }
+    });
+  }
+
   static const _blue = Color(0xFF3B82F6);
   static const _dark = Color(0xFF1E293B);
   static const _muted = Color(0xFF94A3B8);
@@ -156,12 +174,7 @@ class _BookingConfirmationPopUpState extends State<BookingConfirmationPopUp> {
                                   widget.onBookingListChanged?.call(
                                     List.from(widget.bookingDetails),
                                   );
-                                  if (detail.id != 0) {
-                                    await ApiService.updateBookingDetail(
-                                      detail.id,
-                                      totalRoom: detail.quantity,
-                                    );
-                                  }
+                                  _debouncedQtyUpdate(detail);
                                 }
                               },
                               child: const Padding(
@@ -188,12 +201,7 @@ class _BookingConfirmationPopUpState extends State<BookingConfirmationPopUp> {
                                 widget.onBookingListChanged?.call(
                                   List.from(widget.bookingDetails),
                                 );
-                                if (detail.id != 0) {
-                                  await ApiService.updateBookingDetail(
-                                    detail.id,
-                                    totalRoom: detail.quantity,
-                                  );
-                                }
+                                _debouncedQtyUpdate(detail);
                               },
                               child: const Padding(
                                 padding: EdgeInsets.all(4),

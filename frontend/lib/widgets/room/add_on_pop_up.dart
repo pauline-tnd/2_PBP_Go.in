@@ -95,36 +95,25 @@ class _AddOnPopUpState extends State<AddOnPopUp> {
         return;
       }
 
-      int bookingId;
-      if (widget.existingBookingId != null) {
-        bookingId = widget.existingBookingId!;
-      } else {
-        final bookingRes = await ApiService.storeBooking(
-          checkIn: checkIn.toIso8601String().split('T').first,
-          checkOut: checkOut.toIso8601String().split('T').first,
-          status: widget.status,
-        );
-        bookingId = bookingRes['booking']['id'] as int;
-      }
-
-      final detailRes = await ApiService.storeBookingDetail(
-        bookingId: bookingId,
-        roomId: widget.room.id,
-        totalRoom: 1,
-        notes: notes.isEmpty ? null : notes,
+      final res = await ApiService.storeBookingFull(
+        checkIn: checkIn.toIso8601String().split('T').first,
+        checkOut: checkOut.toIso8601String().split('T').first,
+        status: widget.status,
+        items: [
+          {
+            'room_id': widget.room.id,
+            'total_room': 1,
+            'notes': notes.isEmpty ? null : notes,
+            'add_ons': selected
+                .map((a) => {'add_on_id': a.id, 'qty': 1})
+                .toList(),
+          },
+        ],
       );
-      final bookingDetailId = detailRes['detail']['id'] as int;
 
-      await Future.wait(
-        selected.map(
-          (addOn) => ApiService.storeBookingDetailAddOn(
-            bookingDetailId: bookingDetailId,
-            addOnId: addOn.id,
-            qty: 1,
-            subTotal: addOn.price,
-          ),
-        ),
-      );
+      final bookingId = res['booking']['id'] as int;
+      final bookingDetailId =
+          (res['booking']['booking_details'] as List).first['id'] as int;
 
       final newDetail = BookingDetail(
         id: bookingDetailId,

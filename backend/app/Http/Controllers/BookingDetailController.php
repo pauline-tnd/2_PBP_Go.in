@@ -75,9 +75,15 @@ class BookingDetailController extends Controller
             'total_room' => 'integer|min:1',
             'notes' => 'nullable|string'
         ]);
+        
+        $pricingChanged = array_key_exists('total_room', $validated)
+            || array_key_exists('room_id', $validated);
+
         $detail->update($validated);
 
-        BookingController::calculateTotal($detail->booking_id);
+        if ($pricingChanged) {
+            BookingController::calculateTotal($detail->booking_id);
+        }
 
         return response()->json([
             'message' => 'Booking Detail Updated',

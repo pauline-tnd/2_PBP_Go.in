@@ -8,9 +8,9 @@ use App\Models\Room;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
-use Illuminate\Support\Facades\Http;
 
 class BookingController extends Controller
 {
@@ -19,12 +19,13 @@ class BookingController extends Controller
         $userId = Auth::user()->id;
 
         $bookings = Booking::with([
+            'bookingDetails:id,booking_id,room_id,total_room,sub_total',
+            'bookingDetails.room:id,hotel_id,type,price',
+            'bookingDetails.room.hotel:id,name,location',
             'bookingDetails.room.hotel.hotelImage',
-            'bookingDetails.addOns.addOn',
-            'bookingDetails.review'
         ])
             ->where('user_id', $userId)
-            ->orderBy('id', 'desc')
+            ->latest()
             ->get();
         if ($bookings->isEmpty()) {
             return response()->json([
@@ -49,27 +50,8 @@ class BookingController extends Controller
         return response()->json($booking);
     }
 
-    // public function userBookings()
-    // {
-    //     $userId = Auth::user()->id;
-
-    //     $bookings = Booking::with([
-    //         'bookingDetails.room.hotel'
-    //     ])
-    //     ->where('user_id', $userId)
-    //     ->get();
-    //     if ($bookings->isEmpty()) {
-    //         return response()->json([
-    //             'message' => 'User belum memiliki booking'
-    //         ], 404);
-    //     }
-    //     return response()->json($bookings);
-    // }
-
     public function store(Request $request)
     {
-        // $subTotal = Booking::whereHas('bookingDetails');
-        // $totalPrice = ;
 
         $validated = $request->validate([
             'check_in' => 'required|date|after_or_equal:today',
@@ -81,16 +63,13 @@ class BookingController extends Controller
 
 
         $validated['user_id'] = Auth::user()->id;
-        // $validated['status'] = $validated['status'] ?? 'paid';
 
         if ($validated['status'] != "cancelled") {
             $validated['booking_number'] = 'BK-' . strtoupper(Str::random(8));
-
-            [$qrCode] = $this->generateQrCodes($validated['booking_number']);
-            $validated['qr_code'] = $qrCode;
         }
 
         $booking = Booking::create($validated);
+
         return response()->json([
             'message' => 'Booking berhasil dibuat',
             'booking' => $booking
@@ -100,9 +79,6 @@ class BookingController extends Controller
     public function update(Request $request, Booking $booking)
     {
         $validated = $request->validate([
-            // 'check_in' => 'date',
-            // 'check_out' => 'date|after:check_in',
-            // 'total_price' => 'numeric|min:0',
             'status' => [Rule::in(['paid', 'completed', 'cancelled'])],
         ]);
 
@@ -127,6 +103,8 @@ class BookingController extends Controller
 
         $totalPrice = 0;
 
+        $updates = [];
+
         foreach ($booking->bookingDetails as $detail) {
             $roomPrice = $detail->room->price ?? 0;
             $addOnPrice = 0;
@@ -135,15 +113,18 @@ class BookingController extends Controller
                 $addOnPrice += ($detailAddOn->addOn->price ?? 0) * $detailAddOn->qty;
             }
 
-            $roomSubTotal = $roomPrice * $detail->total_room;
-            $subTotal = $roomSubTotal + $addOnPrice;
-            BookingDetail::where('id', $detail->id)->update(['sub_total' => $subTotal]);
-
+            $subTotal = ($roomPrice * $detail->total_room) + $addOnPrice;
+            $updates[$detail->id] = $subTotal;
             $totalPrice += $subTotal;
         }
 
-        $booking->total_price = $totalPrice * $duration;
-        $booking->save();
+        \DB::transaction(function () use ($updates, $booking, $totalPrice, $duration) {
+            foreach ($updates as $id => $subTotal) {
+                BookingDetail::where('id', $id)->update(['sub_total' => $subTotal]);
+            }
+            $booking->total_price = $totalPrice * $duration;
+            $booking->save();
+        });
     }
 
 
@@ -193,20 +174,81 @@ class BookingController extends Controller
         ], 200);
     }
 
-    private function generateQrCodes(
-        string $bookingNumber
-    ) {
-        $qrBookingNumber = "Kode Booking {$bookingNumber}";
-        $qrCode = null;
+    public function storeFull(Request $request)
+    {
+        $validated = $request->validate([
+            'check_in'  => 'required|date|after_or_equal:today',
+            'check_out' => 'required|date|after:check_in',
+            'status'    => ['required', Rule::in(['paid', 'completed', 'cancelled'])],
+            'items'                       => 'required|array|min:1',
+            'items.*.room_id'             => 'required|exists:rooms,id',
+            'items.*.total_room'          => 'required|integer|min:1',
+            'items.*.notes'               => 'nullable|string',
+            'items.*.add_ons'             => 'array',
+            'items.*.add_ons.*.add_on_id' => 'required|exists:add_ons,id',
+            'items.*.add_ons.*.qty'       => 'required|integer|min:1',
+        ]);
 
-        try {
-            $qrResponse = Http::timeout(10)->get('https://api.qrserver.com/v1/create-qr-code/?size=150x150&margin=2&data=' . urlencode($qrBookingNumber));
-            if ($qrResponse->successful()) {
-                $qrCode = base64_encode($qrResponse->body());
+        $booking = DB::transaction(function () use ($validated) {
+            $booking = Booking::create([
+                'user_id'        => Auth::id(),
+                'check_in'       => $validated['check_in'],
+                'check_out'      => $validated['check_out'],
+                'status'         => $validated['status'],
+                'booking_number' => $validated['status'] !== 'cancelled'
+                    ? 'BK-' . strtoupper(Str::random(8)) : null,
+                'total_price'    => 0,
+            ]);
+
+            $roomIds = collect($validated['items'])->pluck('room_id')->unique();
+            $rooms   = Room::whereIn('id', $roomIds)->get()->keyBy('id');
+
+            $addOnIds = collect($validated['items'])
+                ->flatMap(fn($i) => collect($i['add_ons'] ?? [])->pluck('add_on_id'))
+                ->unique();
+            $addOns = \App\Models\AddOn::whereIn('id', $addOnIds)->get()->keyBy('id');
+
+            $duration = max(1, (int) Carbon::parse($validated['check_in'])
+                ->diffInDays(Carbon::parse($validated['check_out'])));
+
+            $total = 0;
+            foreach ($validated['items'] as $item) {
+                $room     = $rooms[$item['room_id']];
+                $addOnSum = 0;
+                $rows     = [];
+
+                foreach ($item['add_ons'] ?? [] as $ao) {
+                    $price     = $addOns[$ao['add_on_id']]->price ?? 0;
+                    $addOnSum += $price * $ao['qty'];
+                    $rows[]    = [
+                        'add_on_id' => $ao['add_on_id'],
+                        'qty'       => $ao['qty'],
+                        'sub_total' => $price * $ao['qty'],
+                    ];
+                }
+
+                $subTotal = ($room->price * $item['total_room']) + $addOnSum;
+
+                $detail = $booking->bookingDetails()->create([
+                    'room_id'    => $item['room_id'],
+                    'total_room' => $item['total_room'],
+                    'notes'      => $item['notes'] ?? null,
+                    'sub_total'  => $subTotal,
+                ]);
+
+                foreach ($rows as &$r) $r['booking_detail_id'] = $detail->id;
+                if ($rows) \App\Models\BookingDetailAddOn::insert($rows);
+
+                $total += $subTotal;
             }
-        } catch (\Exception) {
-        }
 
-        return [$qrCode];
+            $booking->update(['total_price' => $total * $duration]);
+            return $booking;
+        });
+
+        return response()->json([
+            'message' => 'Booking created',
+            'booking' => $booking->load('bookingDetails.addOns.addOn'),
+        ], 201);
     }
 }
