@@ -8,13 +8,28 @@ extension SnackbarExtension on BuildContext {
   }) {
     final messenger = ScaffoldMessenger.maybeOf(this);
     if (messenger == null) return;
+    final media = MediaQuery.of(this);
+    final width = media.size.width;
+    final horizontalMargin = width < 600 ? 20.0 : (width - 520) / 2;
+    final bottomMargin = media.padding.bottom + (width < 600 ? 96.0 : 28.0);
+
     messenger
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
-          content: Text(message, style: const TextStyle(fontWeight: FontWeight.bold)),
+          content: Text(
+            message,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+          ),
           behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.fromLTRB(24, 0, 24, 650),
+          margin: EdgeInsets.fromLTRB(
+            horizontalMargin,
+            0,
+            horizontalMargin,
+            bottomMargin,
+          ),
           backgroundColor: isError
               ? const Color(0xFFEF4444)
               : isWarning

@@ -25,7 +25,7 @@ class BookingController extends Controller
             'bookingDetails.room.hotel.hotelImage',
         ])
             ->where('user_id', $userId)
-            ->latest()
+            ->orderBy('id', 'desc')
             ->get();
         if ($bookings->isEmpty()) {
             return response()->json([

@@ -14,7 +14,9 @@ class WishlistController extends Controller
 
         $wishlist = Wishlist::with([
             'hotel' => fn($q) => $q->hotelCard()
-        ])->where('user_id', '=', $user_id)->get();
+        ])->where('user_id', '=', $user_id)
+            ->orderBy('id', 'desc')
+            ->get();
 
         return response()->json([
             'message' => 'Wishlist successfully loaded',

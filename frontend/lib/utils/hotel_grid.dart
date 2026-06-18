@@ -10,7 +10,7 @@ class HotelGridConfig {
 
 HotelGridConfig getHotelGridConfig(double width) {
   int crossAxisCount = 1;
-  double childAspectRatio = 0.98;
+  double childAspectRatio = 0.85;
 
   if (width >= 1200) {
     crossAxisCount = 4;

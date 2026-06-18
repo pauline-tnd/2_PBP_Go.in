@@ -77,8 +77,16 @@ class HotelController extends Controller
             )
             ";
 
-            $query->selectRaw("hotels.*, {$distanceFormula} AS distance", [$lat, $lng, $lat])
-                ->having('distance', '<=', 25)
+            $subQuery = Hotel::hotelCard()
+                ->selectRaw("hotels.*, {$distanceFormula} AS distance", [
+                    $lat,
+                    $lng,
+                    $lat,
+                ]);
+
+            $query = Hotel::with(['hotelImage'])
+                ->fromSub($subQuery, 'hotel_distances')
+                ->where('distance', '<=', 25)
                 ->orderBy('distance'); // shortest distance
         } else {
             // Default sort

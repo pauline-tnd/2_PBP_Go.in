@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/models/booking.dart';
-import 'package:frontend/pages/activity/receipt_download.dart' show showReceiptPreview;
+import 'package:frontend/pages/activity/receipt_download.dart'
+    show showReceiptPreview;
 import 'package:qr_flutter/qr_flutter.dart';
 
 class BookingDetailPage extends StatelessWidget {
@@ -242,6 +243,7 @@ class _ReceiptAppBar extends StatelessWidget {
         border: Border(bottom: BorderSide(color: Color(0xFFE2E8F0))),
       ),
       child: AppBar(
+        centerTitle: true,
         title: const Text("Receipt Details", style: TextStyle(fontSize: 18)),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,

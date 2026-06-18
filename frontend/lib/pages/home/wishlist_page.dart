@@ -52,6 +52,7 @@ class _WishlistPageState extends State<WishlistPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        centerTitle: true,
         title: const Text("Wishlist"),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
