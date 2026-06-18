@@ -13,6 +13,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
   final newPasswordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
   Map<String, dynamic>? userData;
+  String? profileImage;
   bool hideCurrent = true;
   bool hideNew = true;
   bool hideConfirm = true;
@@ -23,6 +24,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       final response = await ApiService.getUser();
       setState(() {
         userData = response['data'];
+        profileImage = response['data']['profile_image_url'];
       });
     } catch (e) {
       debugPrint("Error loading user: $e");
@@ -46,7 +48,17 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     );
     return;
   }
-
+  if (currentPasswordController.text == newPasswordController.text) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          "New password cannot be the same as current password",
+        ),
+        backgroundColor: Colors.red,
+      ),
+    );
+    return;
+  }
   if (newPasswordController.text != confirmPasswordController.text) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -187,9 +199,29 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
               ),
               child: Row(
                 children: [
-                  CircleAvatar(
-                    radius: 40,
-                    backgroundImage: const AssetImage("assets/images/profile-photo.png"),
+                  Container(
+                    width: 80,
+                    height: 80,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                    ),
+                    child: ClipOval(
+                      child: profileImage != null && profileImage!.isNotEmpty
+                          ? Image.network(
+                              profileImage!,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Image.asset(
+                                  'assets/images/profile-photo.png',
+                                  fit: BoxFit.cover,
+                                );
+                              },
+                            )
+                          : Image.asset(
+                              'assets/images/profile-photo.png',
+                              fit: BoxFit.cover,
+                            ),
+                    ),
                   ),
                   const SizedBox(width: 20),
                   Expanded(
@@ -302,7 +334,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                   ),
                   SizedBox(height: 8),
                   Text(
-                    "Must include at least 8 characters, one uppercase letter, one number, and one special character.",
+                    "Must include at least 8 characters and cannot be the same as the current password.",
                     style: TextStyle(
                       color: Color(0xFF64748B),
                       fontSize: 12,
