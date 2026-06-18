@@ -9,8 +9,6 @@ import 'package:frontend/services/api_services.dart';
 import 'package:frontend/pages/main_shell.dart';
 import 'package:frontend/models/wishlist.dart';
 import 'package:frontend/extensions/snackbar.dart';
-import 'package:provider/provider.dart';
-import 'package:frontend/providers/location_provider.dart';
 
 class FilterState {
   final RangeValues priceRange;

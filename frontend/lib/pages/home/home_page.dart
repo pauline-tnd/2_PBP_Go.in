@@ -67,9 +67,6 @@ class _HomePageState extends State<HomePage> {
       List<Hotel> recommendedHotels = fetchedHotels;
 
       if (hasLocation) {
-        print('Lat : ${location.lat}');
-        print('Lng : ${location.lng}');
-
         final recommendResponse = await ApiService.fetchHotels(
           userLat: location.lat,
           userLng: location.lng,

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/models/addOn.dart';
-import 'package:frontend/models/room.dart';
 
 class BookingDetail {
   final int id;
