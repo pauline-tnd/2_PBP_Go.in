@@ -9,6 +9,7 @@ import 'package:frontend/services/api_services.dart';
 import 'package:frontend/pages/main_shell.dart';
 import 'package:frontend/models/wishlist.dart';
 import 'package:frontend/extensions/snackbar.dart';
+import 'package:frontend/utils/hotel_grid.dart';
 
 class FilterState {
   final RangeValues priceRange;
@@ -74,11 +75,29 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
   Set<int> _wishlistedHotelIds = {};
   Map<int, int> _wishlistIdsByHotelId = {};
   final Set<int> _favoriteLoadingHotelIds = {};
+  final ScrollController _scrollController = ScrollController();
+  String? _nextCursor;
+  bool _isLoadingMore = false;
 
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_onScroll);
     _fetchHotels();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    final position = _scrollController.position;
+    if (position.pixels >= position.maxScrollExtent - 400) {
+      _fetchMoreHotels();
+    }
   }
 
   void _setWishlists(List<Wishlist> wishlists) {
@@ -171,18 +190,14 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
       );
 
       final wishlists = await ApiService.fetchWishlists();
-      final data = response['data'];
-      final List<dynamic> hotelItems = data is List
-          ? data
-          : (data is Map<String, dynamic> && data['data'] is List)
-          ? data['data']
-          : [];
+      final hotelItems = ApiService.extractPaginatedItems(response);
       final List<Hotel> fetchedHotels = hotelItems
           .map((item) => Hotel.fromMap(item as Map<String, dynamic>))
           .toList();
       if (!mounted) return;
       setState(() {
         _allHotels = fetchedHotels;
+        _nextCursor = ApiService.extractNextCursor(response);
         _hotelBadges = assignBadges(_allHotels);
         _setWishlists(wishlists);
         _isLoading = false;
@@ -191,6 +206,40 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
       if (!mounted) return;
       setState(() {
         _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _fetchMoreHotels() async {
+    final cursor = _nextCursor;
+    if (cursor == null || _isLoadingMore || _isLoading) return;
+
+    setState(() {
+      _isLoadingMore = true;
+    });
+
+    try {
+      final query = widget.initialQuery?.trim();
+      final response = await ApiService.fetchHotels(
+        search: query,
+        cursor: cursor,
+      );
+      final fetchedHotels = ApiService.extractPaginatedItems(response)
+          .map((item) => Hotel.fromMap(item as Map<String, dynamic>))
+          .toList();
+
+      if (!mounted) return;
+
+      setState(() {
+        _allHotels.addAll(fetchedHotels);
+        _nextCursor = ApiService.extractNextCursor(response);
+        _hotelBadges = assignBadges(_allHotels);
+        _isLoadingMore = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _isLoadingMore = false;
       });
     }
   }
@@ -303,6 +352,7 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
               _buildTopBar(),
               Expanded(
                 child: SingleChildScrollView(
+                  controller: _scrollController,
                   padding: EdgeInsets.only(bottom: 14.h),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -322,31 +372,33 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
                             ? _buildEmptyState()
                             : LayoutBuilder(
                                 builder: (context, constraints) {
-                                  int crossAxisCount = 1;
-                                  double childAspectRatio = 1.038;
-                                  if (constraints.maxWidth >= 1200) {
-                                    crossAxisCount = 4;
-                                    childAspectRatio = 0.78;
-                                  } else if (constraints.maxWidth >= 900) {
-                                    crossAxisCount = 3;
-                                    childAspectRatio = 0.82;
-                                  } else if (constraints.maxWidth >= 600) {
-                                    crossAxisCount = 2;
-                                    childAspectRatio = 0.94;
-                                  }
+                                  final config = getHotelGridConfig(
+                                    constraints.maxWidth,
+                                  );
                                   return GridView.builder(
                                     shrinkWrap: true,
                                     physics:
                                         const NeverScrollableScrollPhysics(),
-                                    itemCount: hotels.length,
+                                    itemCount:
+                                        hotels.length + (_isLoadingMore ? 1 : 0),
                                     gridDelegate:
                                         SliverGridDelegateWithFixedCrossAxisCount(
-                                          crossAxisCount: crossAxisCount,
+                                          crossAxisCount:
+                                              config.crossAxisCount,
                                           crossAxisSpacing: 16,
                                           mainAxisSpacing: 16,
-                                          childAspectRatio: childAspectRatio,
+                                          childAspectRatio:
+                                              config.childAspectRatio,
                                         ),
                                     itemBuilder: (context, index) {
+                                      if (index >= hotels.length) {
+                                        return const Center(
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                          ),
+                                        );
+                                      }
+
                                       final hotel = hotels[index];
                                       final badge = _hotelBadges[hotel.name];
                                       return HotelCard(

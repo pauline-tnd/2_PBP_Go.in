@@ -26,8 +26,7 @@ class HotelSearchProvider extends ChangeNotifier {
 
     try {
       final result = await ApiService.fetchHotels(search: query);
-      final data = result['data'];
-      final List rawList = data is Map<String, dynamic> ? data['data'] : data;
+      final rawList = ApiService.extractPaginatedItems(result);
 
       _hotels = rawList
           .map((item) => Hotel.fromMap(item as Map<String, dynamic>))

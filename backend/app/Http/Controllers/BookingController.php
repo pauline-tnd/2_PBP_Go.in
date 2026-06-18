@@ -24,6 +24,7 @@ class BookingController extends Controller
             'bookingDetails.review'
         ])
             ->where('user_id', $userId)
+            ->orderBy('id', 'desc')
             ->get();
         if ($bookings->isEmpty()) {
             return response()->json([

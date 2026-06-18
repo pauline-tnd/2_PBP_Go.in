@@ -316,6 +316,28 @@ class ApiService {
     }
   }
 
+  static List<dynamic> extractPaginatedItems(Map<String, dynamic> response) {
+    final data = response['data'];
+    if (data is List) return data;
+    if (data is Map<String, dynamic> && data['data'] is List) {
+      return data['data'] as List;
+    }
+    return [];
+  }
+
+  static String? extractNextCursor(Map<String, dynamic> response) {
+    final data = response['data'];
+    if (data is! Map<String, dynamic>) return null;
+
+    final nextCursor = data['next_cursor']?.toString();
+    if (nextCursor != null && nextCursor.isNotEmpty) return nextCursor;
+
+    final nextPageUrl = data['next_page_url']?.toString();
+    if (nextPageUrl == null || nextPageUrl.isEmpty) return null;
+
+    return Uri.tryParse(nextPageUrl)?.queryParameters['cursor'];
+  }
+
   static Future<Map<String, dynamic>> fetchHotelDetail(int hotelId) async {
     final headers = await _authHeaders();
     final response = await http.get(

@@ -139,9 +139,7 @@ pw.Widget _buildHeader(pw.MemoryImage logo) {
 }
 
 pw.Widget _buildBookingSection(Booking booking) {
-  final qrData = booking.qrCode.isNotEmpty
-      ? booking.qrCode
-      : booking.bookingNumber;
+  final qrData = booking.bookingNumber;
 
   return pw.Row(
     crossAxisAlignment: pw.CrossAxisAlignment.start,

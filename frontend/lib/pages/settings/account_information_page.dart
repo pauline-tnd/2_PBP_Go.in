@@ -14,6 +14,7 @@ class _AccountInformationPageState extends State<AccountInformationPage> {
   String email = '';
   int userId = 0;
   String createdAt = '';
+  String? profileImage;
 
   @override
   void initState() {
@@ -25,15 +26,13 @@ class _AccountInformationPageState extends State<AccountInformationPage> {
     try {
       final response = await ApiService.getUser();
       final user = response['data'];
-
       if (!mounted) return;
-
       final createdDate = DateTime.parse(user['created_at']);
-
       setState(() {
         username = user['username'] ?? '';
         email = user['email'] ?? '';
         userId = user['id'] ?? 0;
+        profileImage = user['profile_image_url'];
         createdAt =
             "${_monthName(createdDate.month)}, ${createdDate.day.toString().padLeft(2, '0')}, ${createdDate.year}";
       });
@@ -134,10 +133,23 @@ class _AccountInformationPageState extends State<AccountInformationPage> {
                           shape: BoxShape.circle,
                         ),
                         child: ClipOval(
-                          child: Image.asset(
-                            'assets/images/profile-photo.png',
-                            fit: BoxFit.cover,
-                          ),
+                          child: profileImage != null && profileImage!.isNotEmpty
+                              ? Image.network(
+                                  profileImage!,
+                                  fit: BoxFit.cover,
+                                  width: 98,
+                                  height: 98,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Image.asset(
+                                      'assets/images/profile-photo.png',
+                                      fit: BoxFit.cover,
+                                    );
+                                  },
+                                )
+                              : Image.asset(
+                                  'assets/images/profile-photo.png',
+                                  fit: BoxFit.cover,
+                                ),
                         ),
                       ),
                       Positioned(

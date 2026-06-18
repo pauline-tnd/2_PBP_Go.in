@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/utils/hotel_grid.dart';
 import '../../models/hotel.dart';
 import '../hotel/hotel_card.dart';
 
@@ -8,6 +9,8 @@ class HomeYouMightLike extends StatelessWidget {
   final Set<int> wishlistedHotelIds;
   final Set<int> favoriteLoadingHotelIds;
   final ValueChanged<Hotel>? onFavoriteTap;
+  final VoidCallback? onEndReached;
+  final bool isLoadingMore;
 
   const HomeYouMightLike({
     super.key,
@@ -16,6 +19,8 @@ class HomeYouMightLike extends StatelessWidget {
     this.wishlistedHotelIds = const {},
     this.favoriteLoadingHotelIds = const {},
     this.onFavoriteTap,
+    this.onEndReached,
+    this.isLoadingMore = false,
   });
 
   @override
@@ -45,7 +50,18 @@ class HomeYouMightLike extends StatelessWidget {
               wishlistedHotelIds: wishlistedHotelIds,
               favoriteLoadingHotelIds: favoriteLoadingHotelIds,
               onFavoriteTap: onFavoriteTap,
+              onEndReached: onEndReached,
             ),
+          if (isLoadingMore) ...[
+            const SizedBox(height: 12),
+            const Center(
+              child: SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -88,6 +104,7 @@ class _HomeYouMightLikeGrid extends StatelessWidget {
   final Set<int> wishlistedHotelIds;
   final Set<int> favoriteLoadingHotelIds;
   final ValueChanged<Hotel>? onFavoriteTap;
+  final VoidCallback? onEndReached;
 
   const _HomeYouMightLikeGrid({
     required this.hotels,
@@ -95,52 +112,32 @@ class _HomeYouMightLikeGrid extends StatelessWidget {
     required this.wishlistedHotelIds,
     required this.favoriteLoadingHotelIds,
     required this.onFavoriteTap,
+    required this.onEndReached,
   });
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        int crossAxisCount = 1;
-        double childAspectRatio = 1.038;
-
-        if (constraints.maxWidth >= 1200) {
-          crossAxisCount = 4;
-        } else if (constraints.maxWidth >= 900) {
-          crossAxisCount = 3;
-        } else if (constraints.maxWidth >= 600) {
-          crossAxisCount = 2;
-        }
-
-        if (constraints.maxWidth >= 1200) {
-          childAspectRatio = 0.78;
-        } else if (constraints.maxWidth >= 1100) {
-          childAspectRatio = 0.75;
-        } else if (constraints.maxWidth >= 900) {
-          childAspectRatio = 0.70;
-        } else if (constraints.maxWidth >= 750) {
-          childAspectRatio = 0.82;
-        } else if (constraints.maxWidth >= 700) {
-          childAspectRatio = 0.81;
-        } else if (constraints.maxWidth >= 650) {
-          childAspectRatio = 0.77;
-        } else if (constraints.maxWidth >= 620) {
-          childAspectRatio = 0.75;
-        } else if (constraints.maxWidth >= 600) {
-          childAspectRatio = 0.70;
-        }
+        final config = getHotelGridConfig(constraints.maxWidth);
 
         return GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: hotels.length,
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: crossAxisCount,
+            crossAxisCount: config.crossAxisCount,
             crossAxisSpacing: 16,
             mainAxisSpacing: 16,
-            childAspectRatio: childAspectRatio,
+            childAspectRatio: config.childAspectRatio,
           ),
           itemBuilder: (context, index) {
+            if (index >= hotels.length - config.crossAxisCount) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                onEndReached?.call();
+              });
+            }
+
             final hotel = hotels[index];
             final badge = hotelBadges[hotel.name];
 
