@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:ui';
 
 import 'package:frontend/models/hotel.dart';
 import 'package:frontend/models/review.dart';
@@ -366,7 +367,7 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
               child: Container(
                 margin: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.black26,
+                  color: Colors.black26.withAlpha(0),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: const Row(
@@ -391,14 +392,31 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
               ),
             ),
             actions: [
-              IconButton(
-                icon: Icon(
-                  _isWishlisted
-                      ? Icons.favorite_rounded
-                      : Icons.favorite_border_rounded,
-                  color: Colors.white,
+              GestureDetector(
+                onTap: _isWishlistLoading ? null : _toggleWishlist,
+                child: Container(
+                  margin: const EdgeInsets.only(right: 12),
+                  width: 40,
+                  height: 40,
+                  decoration: const BoxDecoration(shape: BoxShape.circle),
+                  child: ClipOval(
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
+                      child: Container(
+                        color: Colors.white.withAlpha(40),
+                        child: Center(
+                          child: Icon(
+                            _isWishlisted
+                                ? Icons.favorite_rounded
+                                : Icons.favorite_border_rounded,
+                            color: Colors.white,
+                            size: 22,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
-                onPressed: _isWishlistLoading ? null : _toggleWishlist,
               ),
             ],
           ),
@@ -711,21 +729,6 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
         ),
 
         const SizedBox(height: 44),
-
-        // if (carouselImages.isNotEmpty)
-        //   Padding(
-        //     padding: const EdgeInsets.symmetric(horizontal: 16),
-        //     child: Carousel(imageUrls: carouselImages, height: 220),
-        //   ),
-
-        // if (carouselImages.isEmpty)
-        //   Padding(
-        //     padding: const EdgeInsets.symmetric(horizontal: 16),
-        //     child: Container(
-        //       height: 2,
-        //       color: const Color.fromARGB(255, 213, 218, 224),
-        //     ),
-        //   ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Carousel(imageUrls: displayImages, height: 220),
