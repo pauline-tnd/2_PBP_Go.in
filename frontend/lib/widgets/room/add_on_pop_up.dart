@@ -111,14 +111,16 @@ class _AddOnPopUpState extends State<AddOnPopUp> {
       );
       final bookingDetailId = detailRes['detail']['id'] as int;
 
-      for (final addOn in selected) {
-        await ApiService.storeBookingDetailAddOn(
-          bookingDetailId: bookingDetailId,
-          addOnId: addOn.id,
-          qty: 1,
-          subTotal: addOn.price,
-        );
-      }
+      await Future.wait(
+        selected.map(
+          (addOn) => ApiService.storeBookingDetailAddOn(
+            bookingDetailId: bookingDetailId,
+            addOnId: addOn.id,
+            qty: 1,
+            subTotal: addOn.price,
+          ),
+        ),
+      );
 
       final newDetail = BookingDetail(
         id: bookingDetailId,

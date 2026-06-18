@@ -121,16 +121,20 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
 
   Future<void> _loadDetail() async {
     try {
-      final data = await ApiService.fetchHotelDetail(widget.hotel.id);
+      final results = await Future.wait<dynamic>([
+        ApiService.fetchHotelDetail(widget.hotel.id),
+        ApiService.fetchHotelReviews(
+          widget.hotel.id,
+        ).catchError((_) => <Review>[]),
+      ]);
+
+      final data = results[0] as Map<String, dynamic>;
+      final rawReviews = results[1] as List<Review>;
       final hotelDetail = data['data'] as Map<String, dynamic>? ?? {};
       final roomsRaw = hotelDetail['rooms'] as List<dynamic>? ?? [];
 
       final lat = double.tryParse(hotelDetail['latitude']?.toString() ?? '');
       final lng = double.tryParse(hotelDetail['longitude']?.toString() ?? '');
-      List<Review> rawReviews = [];
-      try {
-        rawReviews = await ApiService.fetchHotelReviews(widget.hotel.id);
-      } catch (_) {}
 
       if (!mounted) return;
       setState(() {
@@ -155,10 +159,8 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
         for (final r in roomsRaw) {
           try {
             final roomData = Map<String, dynamic>.from(r);
-
             roomData['price'] =
                 double.tryParse(roomData['price']?.toString() ?? '') ?? 0.0;
-
             _rooms.add(Room.fromJson({...roomData, 'hotel': hotelDetail}));
           } catch (e, s) {
             debugPrint('ROOM ERROR: $e');

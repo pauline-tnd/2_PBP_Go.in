@@ -53,11 +53,6 @@ class _RoomCardState extends State<RoomCard> {
         ? widget.imageUrls
         : [if (widget.imageUrl != null) widget.imageUrl!];
     final addOns = widget.addOns ?? widget.room.addOns;
-    final fetchedReviews = await ApiService.fetchRoomReviews(widget.room.id);
-    final reviewScore = fetchedReviews.isEmpty
-        ? 0.0
-        : fetchedReviews.map((r) => r.rating).reduce((a, b) => a + b) /
-              fetchedReviews.length;
 
     final result = await Navigator.push<Map<String, dynamic>>(
       context,
@@ -68,10 +63,10 @@ class _RoomCardState extends State<RoomCard> {
           facilities: widget.facilities,
           roomAmenities: widget.room.roomFacilities,
           addOns: addOns,
-          reviews: fetchedReviews.map((r) => r.toJson()).toList(),
+          reviews: const [], // empty — DetailRoomPage loads itself
           hotelName: widget.hotelName,
           hotelLocation: widget.hotelLocation,
-          reviewScore: widget.reviewScore,
+          reviewScore: 0, // DetailRoomPage computes itself
           tempBookedList: widget.tempBookedList,
           checkIn: widget.checkIn,
           checkOut: widget.checkOut,

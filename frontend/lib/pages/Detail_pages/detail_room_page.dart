@@ -181,7 +181,7 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
               onCustomAnother: () {
                 Navigator.pop(popupContext);
                 Future.delayed(const Duration(milliseconds: 150), () {
-                  if (mounted){
+                  if (mounted) {
                     Navigator.pop(pageContext, {
                       'list': _localTempList,
                       'bookingId': _bookingId,
