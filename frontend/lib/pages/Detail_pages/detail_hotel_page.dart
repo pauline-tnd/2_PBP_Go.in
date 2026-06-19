@@ -346,6 +346,8 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
                 hotelLocation: widget.hotel.location,
                 previewImageUrl: widget.hotel.imagePath ?? '',
                 bookingDetails: List.from(bookingList),
+                checkIn: widget.checkIn,
+                checkOut: widget.checkOut,
               ),
             ),
           );

@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'dart:async';
-import 'package:frontend/services/api_services.dart';
 import 'package:frontend/models/bookingDetail.dart';
 import 'package:frontend/models/addOn.dart';
 import 'package:frontend/widgets/room/add_on_pop_up.dart';
@@ -45,23 +43,6 @@ class BookingConfirmationPopUp extends StatefulWidget {
 }
 
 class _BookingConfirmationPopUpState extends State<BookingConfirmationPopUp> {
-  final Map<int, Timer> _qtyTimers = {};
-
-  @override
-  void dispose() {
-    for (final t in _qtyTimers.values) t.cancel();
-    super.dispose();
-  }
-
-  void _debouncedQtyUpdate(BookingDetail detail) {
-    _qtyTimers[detail.id]?.cancel();
-    _qtyTimers[detail.id] = Timer(const Duration(milliseconds: 600), () {
-      if (detail.id != 0) {
-        ApiService.updateBookingDetail(detail.id, totalRoom: detail.quantity);
-      }
-    });
-  }
-
   static const _blue = Color(0xFF3B82F6);
   static const _dark = Color(0xFF1E293B);
   static const _muted = Color(0xFF94A3B8);
@@ -174,7 +155,6 @@ class _BookingConfirmationPopUpState extends State<BookingConfirmationPopUp> {
                                   widget.onBookingListChanged?.call(
                                     List.from(widget.bookingDetails),
                                   );
-                                  _debouncedQtyUpdate(detail);
                                 }
                               },
                               child: const Padding(
@@ -201,7 +181,6 @@ class _BookingConfirmationPopUpState extends State<BookingConfirmationPopUp> {
                                 widget.onBookingListChanged?.call(
                                   List.from(widget.bookingDetails),
                                 );
-                                _debouncedQtyUpdate(detail);
                               },
                               child: const Padding(
                                 padding: EdgeInsets.all(4),
@@ -266,44 +245,6 @@ class _BookingConfirmationPopUpState extends State<BookingConfirmationPopUp> {
         existingBookings: widget.bookingDetails,
         editIndex: index,
         onContinue: (selected, notes) async {
-          if (detail.id != 0) {
-            final ops = <Future>[
-              ApiService.updateBookingDetail(detail.id, notes: notes),
-            ];
-
-            try {
-              final res = await ApiService.fetchAddOnsByBookingDetail(
-                detail.id,
-              );
-              final existing = (res['data'] as List?) ?? [];
-              final selectedIds = selected.map((a) => a.id).toSet();
-              final existingIds = <int>{};
-
-              for (final ao in existing) {
-                final aid = (ao['add_on_id'] ?? ao['add_on']?['id']) as int?;
-                final rowId = ao['id'] as int;
-                if (aid != null) existingIds.add(aid);
-                if (aid == null || !selectedIds.contains(aid)) {
-                  ops.add(ApiService.deleteBookingDetailAddOn(rowId));
-                }
-              }
-              for (final addOn in selected) {
-                if (!existingIds.contains(addOn.id)) {
-                  ops.add(
-                    ApiService.storeBookingDetailAddOn(
-                      bookingDetailId: detail.id,
-                      addOnId: addOn.id,
-                      qty: 1,
-                      subTotal: addOn.price,
-                    ),
-                  );
-                }
-              }
-            } catch (_) {}
-
-            await Future.wait(ops);
-          }
-
           if (mounted) {
             setState(() {
               detail.selectedAddOns = selected;
@@ -341,24 +282,9 @@ class _BookingConfirmationPopUpState extends State<BookingConfirmationPopUp> {
             ),
           ),
           TextButton(
-            onPressed: () async {
-              final detail = widget.bookingDetails[index];
+            onPressed: () {
               Navigator.pop(dialogCtx);
 
-              if (detail.id != 0) {
-                try {
-                  await ApiService.deleteBookingDetail(detail.id);
-                } catch (e) {
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Failed to delete: $e')),
-                    );
-                  }
-                  return;
-                }
-              }
-
-              if (!mounted) return;
               setState(() {
                 widget.bookingDetails.removeAt(index);
               });

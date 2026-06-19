@@ -3,7 +3,6 @@ import 'package:intl/intl.dart';
 import 'package:frontend/models/addOn.dart';
 // import 'package:frontend/widgets/booking_confirmation_pop_up.dart';
 import 'package:frontend/models/bookingDetail.dart';
-import 'package:frontend/services/api_services.dart';
 
 class AddOnPopUp extends StatefulWidget {
   final String roomType;
@@ -95,28 +94,8 @@ class _AddOnPopUpState extends State<AddOnPopUp> {
         return;
       }
 
-      final res = await ApiService.storeBookingFull(
-        checkIn: checkIn.toIso8601String().split('T').first,
-        checkOut: checkOut.toIso8601String().split('T').first,
-        status: widget.status,
-        items: [
-          {
-            'room_id': widget.room.id,
-            'total_room': 1,
-            'notes': notes.isEmpty ? null : notes,
-            'add_ons': selected
-                .map((a) => {'add_on_id': a.id, 'qty': 1})
-                .toList(),
-          },
-        ],
-      );
-
-      final bookingId = res['booking']['id'] as int;
-      final bookingDetailId =
-          (res['booking']['booking_details'] as List).first['id'] as int;
-
       final newDetail = BookingDetail(
-        id: bookingDetailId,
+        id: 0,
         room: widget.room,
         quantity: 1,
         roomImage: widget.roomImage,
@@ -131,7 +110,7 @@ class _AddOnPopUpState extends State<AddOnPopUp> {
 
       if (!mounted) return;
       Navigator.pop(context);
-      widget.onConfirmationCustomAnother?.call(allDetails, bookingId);
+      widget.onConfirmationCustomAnother?.call(allDetails, 0);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(

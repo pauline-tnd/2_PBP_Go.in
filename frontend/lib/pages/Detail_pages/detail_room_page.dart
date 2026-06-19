@@ -200,6 +200,8 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                           ? widget.imageUrls.first
                           : '',
                       bookingDetails: List.from(bookingList),
+                      checkIn: widget.checkIn,
+                      checkOut: widget.checkOut,
                     ),
                   ),
                 );
