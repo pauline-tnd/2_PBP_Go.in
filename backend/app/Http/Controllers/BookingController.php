@@ -29,11 +29,11 @@ class BookingController extends Controller
             ->where('user_id', $userId)
             ->orderBy('id', 'desc')
             ->get();
-        if ($bookings->isEmpty()) {
-            return response()->json([
-                'message' => 'User belum memiliki booking'
-            ], 404);
-        }
+        // if ($bookings->isEmpty()) { // bukan error, sukses ambil data tapi memang kosong
+        //     return response()->json([
+        //         'message' => 'User belum memiliki booking'
+        //     ], 404);
+        // }
         return response()->json($bookings);
     }
 
