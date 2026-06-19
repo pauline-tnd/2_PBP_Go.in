@@ -19,10 +19,12 @@ class BookingController extends Controller
         $userId = Auth::user()->id;
 
         $bookings = Booking::with([
-            'bookingDetails:id,booking_id,room_id,total_room,sub_total',
+            // 'bookingDetails:id,booking_id,room_id,total_room,sub_total', // ga perlu spesifikin, untuk ambil semua termasuk notes
             'bookingDetails.room:id,hotel_id,type,price',
             'bookingDetails.room.hotel:id,name,location',
             'bookingDetails.room.hotel.hotelImage',
+            'bookingDetails.addOns.addOn:id,hotel_id,name,price', // ga ambil icon aja buat tampilin booking
+            'bookingDetails.review' // harus di ambil semua buat activity
         ])
             ->where('user_id', $userId)
             ->orderBy('id', 'desc')

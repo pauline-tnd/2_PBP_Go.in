@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:frontend/services/app_config.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 class GoogleAuthResult {
@@ -7,25 +8,24 @@ class GoogleAuthResult {
     this.message,
     this.wasCancelled = false,
     this.user,
-    this.idToken,
+    this.firebaseToken,
   });
 
   final bool isSuccess;
   final String? message;
   final bool wasCancelled;
-  final User? user; // Firebase User
-  final String? idToken;
+  final User? user;
+  final String? firebaseToken;
 }
 
 class GoogleAuthService {
-  // v7.x: instance langsung, tidak perlu build method
   static final GoogleSignIn _googleSignIn = GoogleSignIn(
+    serverClientId: AppConfig.googleServerClientId,
     scopes: ['email', 'profile'],
   );
 
   static Future<GoogleAuthResult> signInWithGoogle() async {
     try {
-      // Sign out dulu biar muncul account picker
       await _googleSignIn.signOut();
 
       final GoogleSignInAccount? account = await _googleSignIn.signIn();
@@ -34,40 +34,51 @@ class GoogleAuthService {
         return const GoogleAuthResult(
           isSuccess: false,
           wasCancelled: true,
-          message: 'Google sign-in dibatalkan.',
+          message: 'Google sign-in cancelled.',
         );
       }
 
-      // Ambil auth tokens dari Google
       final GoogleSignInAuthentication googleAuth =
           await account.authentication;
 
-      // Buat credential untuk Firebase
       final OAuthCredential credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
-      // Login ke Firebase pakai credential Google
-      final UserCredential userCredential = await FirebaseAuth.instance
+      final UserCredential firebaseCredential = await FirebaseAuth.instance
           .signInWithCredential(credential);
+
+      final firebaseUser = firebaseCredential.user;
+
+      if (firebaseUser == null) {
+        return const GoogleAuthResult(
+          isSuccess: false,
+          message: 'Firebase user tidak ditemukan.',
+        );
+      }
+
+      final googleIdToken = googleAuth.idToken;
+
+      if (googleIdToken == null || googleIdToken.isEmpty) {
+        return const GoogleAuthResult(
+          isSuccess: false,
+          message: 'Google token tidak ditemukan.',
+        );
+      }
 
       return GoogleAuthResult(
         isSuccess: true,
-        user: userCredential.user,
-        idToken: googleAuth.idToken,
+        user: firebaseUser,
+        firebaseToken: googleIdToken,
       );
     } on FirebaseAuthException catch (e) {
       return GoogleAuthResult(
         isSuccess: false,
         message: _firebaseErrorMessage(e.code),
       );
-    } catch (error) {
-      return GoogleAuthResult(
-        isSuccess: false,
-        message:
-            'Login with Google failed. Check your internet connection. $error',
-      );
+    } catch (e) {
+      return GoogleAuthResult(isSuccess: false, message: e.toString());
     }
   }
 
@@ -81,13 +92,16 @@ class GoogleAuthService {
   static String _firebaseErrorMessage(String code) {
     switch (code) {
       case 'account-exists-with-different-credential':
-        return 'Email already exist. Use another method to login.';
+        return 'Email already exist.';
+
       case 'invalid-credential':
-        return 'Invalid credential. Try again.';
+        return 'Invalid credential.';
+
       case 'network-request-failed':
-        return 'Failed to connect to server. Check your internet connection.';
+        return 'Check internet connection.';
+
       default:
-        return 'Login failed ($code). Try again.';
+        return 'Login failed ($code)';
     }
   }
 }

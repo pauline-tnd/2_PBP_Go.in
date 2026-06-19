@@ -147,6 +147,8 @@ class _RegisterPageState extends State<RegisterPage> {
             await ApiService.saveToken(token);
           }
 
+          if (!mounted) return;
+
           Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(builder: (_) => const MainShell()),
             (route) => false,
@@ -241,7 +243,6 @@ class _RegisterPageState extends State<RegisterPage> {
       _generalError = null;
     });
 
-    // Step 1: Google + Firebase sign-in
     final result = await GoogleAuthService.signInWithGoogle();
 
     if (result.wasCancelled) return;
@@ -256,24 +257,22 @@ class _RegisterPageState extends State<RegisterPage> {
     setState(() => _isSubmitting = true);
 
     try {
-      // Step 2: Cek ke backend apakah user sudah terdaftar
-      final checkResponse = await http
+      final response = await http
           .post(
-            Uri.parse('$_authBaseUrl/auth/google'),
+            Uri.parse('$_authBaseUrl/google-login'),
             headers: {'Accept': 'application/json'},
-            body: {'id_token': result.idToken},
+            body: {'id_token': result.firebaseToken},
           )
           .timeout(const Duration(seconds: 10));
 
       if (!mounted) return;
 
-      final checkData = checkResponse.body.isNotEmpty
-          ? jsonDecode(checkResponse.body) as Map<String, dynamic>
+      final data = response.body.isNotEmpty
+          ? jsonDecode(response.body) as Map<String, dynamic>
           : null;
 
-      // Step 3a: User sudah ada → langsung login, pindah ke home
-      if (checkResponse.statusCode == 200) {
-        final token = checkData?['token']?.toString();
+      if (response.statusCode == 200) {
+        final token = data?['token']?.toString();
         if (token != null && token.isNotEmpty) {
           await ApiService.saveToken(token);
         }
@@ -285,92 +284,10 @@ class _RegisterPageState extends State<RegisterPage> {
         return;
       }
 
-      // Step 3b: User belum ada (404) → daftarkan ke backend
-      if (checkResponse.statusCode == 404) {
-        final googleEmail = result.user?.email ?? '';
-        final googleName = result.user?.displayName ?? '';
-
-        final registerResponse = await http
-            .post(
-              Uri.parse('$_authBaseUrl/register'),
-              headers: {'Accept': 'application/json'},
-              body: {
-                'username': _buildUsername(googleEmail),
-                'name': googleName,
-                'email': googleEmail,
-                // Phone dikosongkan, user bisa update nanti di profile
-                'phone': '',
-                // Password random karena login via Google, tidak perlu password
-                'password':
-                    'google_${result.user?.uid ?? DateTime.now().millisecondsSinceEpoch}',
-                'google_id': result.user?.uid ?? '',
-              },
-            )
-            .timeout(const Duration(seconds: 10));
-
-        if (!mounted) return;
-
-        final registerData = registerResponse.body.isNotEmpty
-            ? jsonDecode(registerResponse.body) as Map<String, dynamic>
-            : null;
-
-        if (registerResponse.statusCode == 201) {
-          // Register berhasil → langsung login dengan Google token
-          final loginResponse = await http
-              .post(
-                Uri.parse('$_authBaseUrl/auth/google'),
-                headers: {'Accept': 'application/json'},
-                body: {'id_token': result.idToken},
-              )
-              .timeout(const Duration(seconds: 10));
-
-          if (!mounted) return;
-
-          final loginData = loginResponse.body.isNotEmpty
-              ? jsonDecode(loginResponse.body) as Map<String, dynamic>
-              : null;
-
-          if (loginResponse.statusCode == 200) {
-            final token = loginData?['token']?.toString();
-            if (token != null && token.isNotEmpty) {
-              await ApiService.saveToken(token);
-            }
-            if (!mounted) return;
-            Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(builder: (_) => const MainShell()),
-              (route) => false,
-            );
-            return;
-          }
-        }
-
-        // Register gagal karena validasi (misal phone required di backend)
-        if (registerResponse.statusCode == 422) {
-          final errors = registerData?['errors'];
-          setState(() {
-            _emailError = _extractFirstError(errors, 'email');
-            _phoneError = _extractFirstError(errors, 'phone');
-            _generalError =
-                _extractAnyError(errors) ??
-                registerData?['message']?.toString() ??
-                'Sign up with Google failed.';
-          });
-          return;
-        }
-
-        setState(() {
-          _generalError =
-              registerData?['message']?.toString() ??
-              'Sign up with Google failed. Please try again.';
-        });
-        return;
-      }
-
-      // Error lainnya dari backend
       setState(() {
         _generalError =
-            checkData?['message']?.toString() ??
-            'Something went wrong. Please try again.';
+            data?['message']?.toString() ??
+            'Sign up with Google failed. Please try again.';
       });
     } on TimeoutException {
       if (!mounted) return;

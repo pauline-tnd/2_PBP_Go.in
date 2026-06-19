@@ -189,15 +189,65 @@ class _LoginPageState extends State<LoginPage> {
     if (result.wasCancelled) return;
 
     if (result.isSuccess) {
-      // Pastiin widget masih mounted sebelum navigate
+      setState(() {
+        _isSubmitting = true;
+      });
+
+      try {
+        final response = await http
+            .post(
+              Uri.parse('$_authBaseUrl/google-login'),
+              headers: {'Accept': 'application/json'},
+              body: {'id_token': result.firebaseToken},
+            )
+            .timeout(const Duration(seconds: 10));
+
+        final Map<String, dynamic>? data = response.body.isNotEmpty
+            ? jsonDecode(response.body) as Map<String, dynamic>
+            : null;
+
+        if (!mounted) return;
+
+        if (response.statusCode != 200) {
+          setState(() {
+            _generalError =
+                data?['message']?.toString() ?? 'Google sign in failed.';
+          });
+          return;
+        }
+
+        final token = data?['token']?.toString();
+        if (token != null && token.isNotEmpty) {
+          await ApiService.saveToken(token);
+        }
+
+        if (!mounted) return;
+      } on TimeoutException {
+        if (!mounted) return;
+        setState(() {
+          _generalError = 'Google sign in timed out. Check your connection.';
+        });
+        return;
+      } catch (_) {
+        if (!mounted) return;
+        setState(() {
+          _generalError = 'Unable to connect to the server.';
+        });
+        return;
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isSubmitting = false;
+          });
+        }
+      }
+
       if (!mounted) return;
 
-      // Navigate ke home, hapus semua route sebelumnya
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const MainShell()),
         (route) => false,
       );
-      // Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
     } else {
       if (!mounted) return;
 

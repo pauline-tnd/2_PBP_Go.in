@@ -195,9 +195,7 @@ class BookingDetailPage extends StatelessWidget {
     final checkIn = DateTime.tryParse(booking.checkIn);
     final checkOut = DateTime.tryParse(booking.checkOut);
     if (checkIn == null || checkOut == null) return 0;
-    final checkInDate = DateTime(checkIn.year, checkIn.month, checkIn.day);
-    final checkOutDate = DateTime(checkOut.year, checkOut.month, checkOut.day);
-    final nights = checkOutDate.difference(checkInDate).inDays;
+    final nights = checkOut.difference(checkIn).inDays;
     return nights < 0 ? 0 : nights;
   }
 

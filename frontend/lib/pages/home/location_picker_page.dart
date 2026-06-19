@@ -6,23 +6,6 @@ import 'package:frontend/models/nominatim.dart';
 import 'package:frontend/providers/location_provider.dart';
 import 'package:frontend/services/api_services.dart';
 import 'package:provider/provider.dart';
-import 'package:permission_handler/permission_handler.dart';
-
-Future<bool> _requestLocationPermission() async {
-  var status = await Permission.location.status;
-
-  if (status.isGranted) return true;
-
-  status = await Permission.location.request();
-
-  if (status.isGranted) return true;
-
-  if (status.isPermanentlyDenied) {
-    await openAppSettings();
-  }
-
-  return false;
-}
 
 class LocationPickerPage extends StatefulWidget {
   const LocationPickerPage({super.key});

@@ -7,6 +7,8 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -60,25 +62,72 @@ class AuthController extends Controller
 
     public function googleLogin(Request $request)
     {
+        $validated = $request->validate([
+            'id_token' => 'required|string',
+        ]);
+
+        $googleResponse = Http::asForm()->get(
+            'https://oauth2.googleapis.com/tokeninfo',
+            ['id_token' => $validated['id_token']]
+        );
+
+        if (! $googleResponse->ok()) {
+            return response()->json([
+                'message' => 'Invalid Google token.',
+            ], 401);
+        }
+
+        $googleUser = $googleResponse->json();
+        $email = $googleUser['email'] ?? null;
+
+        if (! $email || ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return response()->json([
+                'message' => 'Google account email is invalid.',
+            ], 422);
+        }
+
+        $user = User::firstOrCreate(
+            ['email' => $email],
+            [
+                'username' => $googleUser['name']
+                    ?? Str::before($email, '@')
+                    ?? 'google_user',
+                'password' => Hash::make(Str::random(32)),
+                'phone' => '',
+                'profile_image' => $googleUser['picture'] ?? null,
+            ]
+        );
+
+        if (! $user->profile_image && ! empty($googleUser['picture'])) {
+            $user->profile_image = $googleUser['picture'];
+            $user->save();
+        }
+
+        $user->tokens()->delete();
+        $token = $user->createToken('Personal Access Token')->plainTextToken;
+
         return response()->json([
-            'message' => 'Google authentication is currently unavailable.',
-        ], 410);
+            'message' => 'User logged in successfully',
+            'user' => $user,
+            'token' => $token,
+        ], 200);
     }
 
-    public function logout() {
+    public function logout()
+    {
 
         $user = Auth::user();
 
-        if(!$user){
+        if (!$user) {
             return response()->json([
                 'message' => 'Not authorized',
             ], 401);
         }
 
         $user->currentAccessToken()->delete();
-        
+
         return response()->json([
-            'message'=> 'Logged out successfully',
+            'message' => 'Logged out successfully',
         ], 200);
     }
 }
