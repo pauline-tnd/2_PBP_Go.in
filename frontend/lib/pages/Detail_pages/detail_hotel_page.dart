@@ -337,7 +337,9 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
         hotelLocation: widget.hotel.location,
         previewImageUrl: widget.hotel.imagePath ?? '',
         onCustomAnother: () => Navigator.pop(sheetContext),
-        onBookNow: (bookingList) {
+        checkIn: widget.checkIn,
+        checkOut: widget.checkOut,
+        onBookNow: (bookingList, bookingId) {
           Navigator.pop(sheetContext);
           Navigator.of(context).push(
             MaterialPageRoute(
@@ -346,6 +348,7 @@ class _DetailHotelPageState extends State<DetailHotelPage> {
                 hotelLocation: widget.hotel.location,
                 previewImageUrl: widget.hotel.imagePath ?? '',
                 bookingDetails: List.from(bookingList),
+                bookingId: bookingId,
                 checkIn: widget.checkIn,
                 checkOut: widget.checkOut,
               ),

@@ -58,7 +58,7 @@ class BookingController extends Controller
         $validated = $request->validate([
             'check_in' => 'required|date|after_or_equal:today',
             'check_out' => 'required|date|after:check_in',
-            'status' => ['required', Rule::in(['paid', 'completed', 'cancelled'])],
+            'status' => ['required', Rule::in(['pending', 'paid', 'completed', 'cancelled'])],
         ]);
 
         $validated['total_price'] = 0;
@@ -81,7 +81,7 @@ class BookingController extends Controller
     public function update(Request $request, Booking $booking)
     {
         $validated = $request->validate([
-            'status' => [Rule::in(['paid', 'completed', 'cancelled'])],
+            'status' => [Rule::in(['pending', 'paid', 'completed', 'cancelled'])],
         ]);
 
         $validated['user_id'] = Auth::user()->id;
@@ -181,7 +181,7 @@ class BookingController extends Controller
         $validated = $request->validate([
             'check_in'  => 'required|date|after_or_equal:today',
             'check_out' => 'required|date|after:check_in',
-            'status'    => ['required', Rule::in(['paid', 'completed', 'cancelled'])],
+            'status'    => ['required', Rule::in(['pending', 'paid', 'completed', 'cancelled'])],
             'items'                       => 'required|array|min:1',
             'items.*.room_id'             => 'required|exists:rooms,id',
             'items.*.total_room'          => 'required|integer|min:1',

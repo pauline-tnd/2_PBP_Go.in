@@ -13,6 +13,7 @@ class PaymentConfirmationPage extends StatefulWidget {
     required this.hotelName,
     required this.hotelLocation,
     required this.bookingDetails,
+    required this.bookingId,
     this.previewImageUrl = '',
     this.checkIn,
     this.checkOut,
@@ -21,6 +22,7 @@ class PaymentConfirmationPage extends StatefulWidget {
   final String hotelName;
   final String hotelLocation;
   final List<BookingDetail> bookingDetails;
+  final int bookingId;
   final String previewImageUrl;
   final DateTime? checkIn;
   final DateTime? checkOut;
@@ -70,63 +72,13 @@ class _PaymentConfirmationPageState extends State<PaymentConfirmationPage> {
 
   Future<void> _processPayment() async {
     if (_isSubmitting) return;
-
-    setState(() {
-      _isSubmitting = true;
-    });
-
+    setState(() => _isSubmitting = true);
     try {
-      final bookingResponse = await ApiService.storeBooking(
-        checkIn: _formatDate(_checkIn),
-        checkOut: _formatDate(_checkOut),
-        status: 'paid',
-      );
-
-      final bookingMap = bookingResponse['booking'] as Map<String, dynamic>?;
-      final bookingId = int.tryParse(bookingMap?['id']?.toString() ?? '');
-
-      if (bookingId == null) {
-        throw Exception('Booking ID was not returned by the server.');
-      }
-
-      for (final detail in widget.bookingDetails) {
-        final detailResponse = await ApiService.storeBookingDetail(
-          bookingId: bookingId,
-          roomId: detail.room.id,
-          totalRoom: detail.quantity,
-          notes: detail.notes.isEmpty ? null : detail.notes,
-        );
-
-        final detailMap = detailResponse['detail'] as Map<String, dynamic>?;
-        final bookingDetailId = int.tryParse(
-          detailMap?['id']?.toString() ?? '',
-        );
-
-        if (bookingDetailId == null) {
-          throw Exception('Booking detail ID was not returned by the server.');
-        }
-
-        for (final addOn in detail.selectedAddOns) {
-          if (addOn.id <= 0) continue;
-          await ApiService.storeBookingDetailAddOn(
-            bookingDetailId: bookingDetailId,
-            addOnId: addOn.id,
-            qty: detail.quantity,
-            subTotal: addOn.price * detail.quantity,
-          );
-        }
-      }
-
-      final createdBookingResponse = await ApiService.fetchBookingById(
-        bookingId,
-      );
-      final bookingPayload =
-          createdBookingResponse['data'] as Map<String, dynamic>? ??
-          createdBookingResponse;
-      final booking = Booking.fromJson(bookingPayload);
-
+      await ApiService.updateBooking(widget.bookingId, 'paid');
+      final resp = await ApiService.fetchBookingById(widget.bookingId);
+      final payload = resp['data'] as Map<String, dynamic>? ?? resp;
+      final booking = Booking.fromJson(payload);
       if (!mounted) return;
-
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => BookingDetailPage(booking: booking)),
       );
@@ -138,10 +90,15 @@ class _PaymentConfirmationPageState extends State<PaymentConfirmationPage> {
           backgroundColor: const Color(0xFFDC2626),
         ),
       );
-      setState(() {
-        _isSubmitting = false;
-      });
+      setState(() => _isSubmitting = false);
     }
+  }
+
+  Future<void> _handleBack() async {
+    Navigator.pop(context);
+    try {
+      await ApiService.updateBooking(widget.bookingId, 'cancelled');
+    } catch (_) {}
   }
 
   Future<void> _confirmPayment() async {
@@ -170,26 +127,41 @@ class _PaymentConfirmationPageState extends State<PaymentConfirmationPage> {
   Future<void> _handleBiometricAuthentication(
     BuildContext dialogContext,
   ) async {
+    Future<void> cancelAndPop({String? errorMsg}) async {
+      try {
+        Navigator.of(dialogContext).pop();
+      } catch (_) {}
+      try {
+        await ApiService.updateBooking(widget.bookingId, 'cancelled');
+      } catch (_) {}
+      if (!mounted) return;
+      if (errorMsg != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMsg),
+            backgroundColor: const Color(0xFFDC2626),
+          ),
+        );
+      }
+      Navigator.pop(context);
+    }
+
     try {
       final isSupported = await _localAuth.isDeviceSupported();
       final canCheckBiometrics = await _localAuth.canCheckBiometrics;
-
       if (!isSupported || !canCheckBiometrics) {
         throw Exception(
           'Fingerprint authentication is not available on this device.',
         );
       }
-
       final availableBiometrics = await _localAuth.getAvailableBiometrics();
       final hasFingerprint =
           availableBiometrics.contains(BiometricType.fingerprint) ||
           availableBiometrics.contains(BiometricType.strong) ||
           availableBiometrics.contains(BiometricType.weak);
-
       if (!hasFingerprint) {
         throw Exception('No fingerprint biometric is enrolled on this device.');
       }
-
       final isAuthenticated = await _localAuth.authenticate(
         localizedReason: 'Scan your fingerprint to confirm this payment',
         options: const AuthenticationOptions(
@@ -198,34 +170,23 @@ class _PaymentConfirmationPageState extends State<PaymentConfirmationPage> {
           useErrorDialogs: true,
         ),
       );
-
       if (!mounted) return;
-
       if (isAuthenticated) {
-        Navigator.of(dialogContext).pop();
+        try {
+          Navigator.of(dialogContext).pop();
+        } catch (_) {}
         await _processPayment();
+      } else {
+        await cancelAndPop();
       }
     } on PlatformException catch (error) {
-      if (!mounted) return;
-      Navigator.of(dialogContext).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
+      await cancelAndPop(
+        errorMsg:
             error.message ??
-                'Fingerprint authentication could not be completed.',
-          ),
-          backgroundColor: const Color(0xFFDC2626),
-        ),
+            'Fingerprint authentication could not be completed.',
       );
     } catch (error) {
-      if (!mounted) return;
-      Navigator.of(dialogContext).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('$error'),
-          backgroundColor: const Color(0xFFDC2626),
-        ),
-      );
+      await cancelAndPop(errorMsg: '$error');
     }
   }
 
@@ -237,172 +198,178 @@ class _PaymentConfirmationPageState extends State<PaymentConfirmationPage> {
               ? widget.bookingDetails.first.roomImage
               : '');
 
-    return Scaffold(
-      backgroundColor: _bg,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _PaymentAppBar(onBack: () => Navigator.pop(context)),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(16, 14, 16, 20),
-                child: Column(
-                  children: [
-                    _OverviewCard(
-                      hotelName: widget.hotelName,
-                      hotelLocation: widget.hotelLocation,
-                      imageUrl: previewImage,
-                    ),
-                    const SizedBox(height: 14),
-                    _SectionCard(
-                      title: 'Booking Details',
-                      icon: Icons.calendar_month_rounded,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _infoRow('Check-in', _formatDate(_checkIn)),
-                          const SizedBox(height: 12),
-                          _infoRow('Check-out', _formatDate(_checkOut)),
-                          const SizedBox(height: 14),
-                          ..._buildBookingLines(),
-                        ],
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _handleBack();
+      },
+      child: Scaffold(
+        backgroundColor: _bg,
+        body: SafeArea(
+          child: Column(
+            children: [
+              _PaymentAppBar(onBack: _handleBack),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 20),
+                  child: Column(
+                    children: [
+                      _OverviewCard(
+                        hotelName: widget.hotelName,
+                        hotelLocation: widget.hotelLocation,
+                        imageUrl: previewImage,
                       ),
-                    ),
-                    const SizedBox(height: 14),
-                    _SectionCard(
-                      title: 'Price Summary',
-                      icon: Icons.account_balance_wallet_outlined,
-                      child: Column(
-                        children: [
-                          _priceRow('Room Rate', _roomRateTotal),
-                          const SizedBox(height: 8),
-                          _priceRow('Addons', _addOnTotal),
-                          const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 10),
-                            child: Divider(height: 1, color: _line),
-                          ),
-                          _priceRow('TOTAL', _total, isBold: true),
-                        ],
+                      const SizedBox(height: 14),
+                      _SectionCard(
+                        title: 'Booking Details',
+                        icon: Icons.calendar_month_rounded,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _infoRow('Check-in', _formatDate(_checkIn)),
+                            const SizedBox(height: 12),
+                            _infoRow('Check-out', _formatDate(_checkOut)),
+                            const SizedBox(height: 14),
+                            ..._buildBookingLines(),
+                          ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 14),
-                    _SectionCard(
-                      title: 'Use Coupon',
-                      icon: Icons.confirmation_num_outlined,
-                      child: Column(
-                        children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Container(
-                                  height: 36,
-                                  alignment: Alignment.center,
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFF3F4F6),
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: const Text(
-                                    'LUXURYSTAY50',
-                                    style: TextStyle(
-                                      color: _muted,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500,
+                      const SizedBox(height: 14),
+                      _SectionCard(
+                        title: 'Price Summary',
+                        icon: Icons.account_balance_wallet_outlined,
+                        child: Column(
+                          children: [
+                            _priceRow('Room Rate', _roomRateTotal),
+                            const SizedBox(height: 8),
+                            _priceRow('Addons', _addOnTotal),
+                            const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 10),
+                              child: Divider(height: 1, color: _line),
+                            ),
+                            _priceRow('TOTAL', _total, isBold: true),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      _SectionCard(
+                        title: 'Use Coupon',
+                        icon: Icons.confirmation_num_outlined,
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Container(
+                                    height: 36,
+                                    alignment: Alignment.center,
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFF3F4F6),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: const Text(
+                                      'LUXURYSTAY50',
+                                      style: TextStyle(
+                                        color: _muted,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w500,
+                                      ),
                                     ),
                                   ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            _priceRow('Discount', 0),
+                            const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 10),
+                              child: Divider(height: 1, color: _line),
+                            ),
+                            _priceRow('TOTAL PAYMENT', _total, isBold: true),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      _SectionCard(
+                        title: 'Payment Method',
+                        child: Container(
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF8FAFC),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: Row(
+                            children: const [
+                              _VisaBadge(),
+                              SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Visa - - - - 8888',
+                                      style: TextStyle(
+                                        color: _text,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                    SizedBox(height: 2),
+                                    Text(
+                                      'Expires 12/26',
+                                      style: TextStyle(
+                                        color: _muted,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 12),
-                          _priceRow('Discount', 0),
-                          const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 10),
-                            child: Divider(height: 1, color: _line),
-                          ),
-                          _priceRow('TOTAL PAYMENT', _total, isBold: true),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    _SectionCard(
-                      title: 'Payment Method',
-                      child: Container(
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF8FAFC),
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: Row(
-                          children: const [
-                            _VisaBadge(),
-                            SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Visa - - - - 8888',
-                                    style: TextStyle(
-                                      color: _text,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                  SizedBox(height: 2),
-                                  Text(
-                                    'Expires 12/26',
-                                    style: TextStyle(
-                                      color: _muted,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 18),
-              child: SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: ElevatedButton(
-                  onPressed: _isSubmitting ? null : _confirmPayment,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _primary,
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18),
-                    ),
+                    ],
                   ),
-                  child: _isSubmitting
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2.2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Text(
-                          'Confirm Payment',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
                 ),
               ),
-            ),
-          ],
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 18),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 52,
+                  child: ElevatedButton(
+                    onPressed: _isSubmitting ? null : _confirmPayment,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _primary,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                    ),
+                    child: _isSubmitting
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Text(
+                            'Confirm Payment',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

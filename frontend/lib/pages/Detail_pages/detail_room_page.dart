@@ -189,7 +189,7 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                   }
                 });
               },
-              onBookNow: (bookingList) {
+              onBookNow: (bookingList, bookingId) {
                 Navigator.pop(popupContext);
                 Navigator.of(pageContext).push(
                   MaterialPageRoute(
@@ -200,6 +200,7 @@ class _DetailRoomPageState extends State<DetailRoomPage> {
                           ? widget.imageUrls.first
                           : '',
                       bookingDetails: List.from(bookingList),
+                      bookingId: bookingId,
                       checkIn: widget.checkIn,
                       checkOut: widget.checkOut,
                     ),

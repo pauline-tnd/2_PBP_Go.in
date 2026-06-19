@@ -4,6 +4,7 @@ import 'package:frontend/models/bookingDetail.dart';
 import 'package:frontend/models/addOn.dart';
 import 'package:frontend/widgets/room/add_on_pop_up.dart';
 import 'package:frontend/widgets/adaptive_image.dart';
+import 'package:frontend/services/api_services.dart';
 
 class BookingConfirmationPopUp extends StatefulWidget {
   final List<BookingDetail> bookingDetails;
@@ -14,7 +15,8 @@ class BookingConfirmationPopUp extends StatefulWidget {
   final DateTime? checkIn;
   final DateTime? checkOut;
   final void Function()? onCustomAnother;
-  final void Function(List<BookingDetail> bookingDetails)? onBookNow;
+  final void Function(List<BookingDetail> bookingDetails, int bookingId)?
+  onBookNow;
   final void Function(int index)? onEditItem;
   final void Function(int index)? onDeleteItem;
   final void Function()? onNavigateToHotel;
@@ -47,6 +49,76 @@ class _BookingConfirmationPopUpState extends State<BookingConfirmationPopUp> {
   static const _dark = Color(0xFF1E293B);
   static const _muted = Color(0xFF94A3B8);
   static const _line = Color(0xFFE2E8F0);
+
+  bool _isBookingNow = false;
+
+  static String _formatDate(DateTime v) =>
+      '${v.year.toString().padLeft(4, '0')}-'
+      '${v.month.toString().padLeft(2, '0')}-'
+      '${v.day.toString().padLeft(2, '0')}';
+
+  Future<void> _handleBookNow() async {
+    if (_isBookingNow) return;
+    final checkIn = widget.checkIn;
+    final checkOut = widget.checkOut;
+    if (checkIn == null || checkOut == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select dates first')),
+      );
+      return;
+    }
+    setState(() => _isBookingNow = true);
+    try {
+      final bookingResp = await ApiService.storeBooking(
+        checkIn: _formatDate(checkIn),
+        checkOut: _formatDate(checkOut),
+        status: 'pending',
+      );
+      final bookingId = int.tryParse(
+        (bookingResp['booking'] as Map<String, dynamic>?)?['id']?.toString() ??
+            '',
+      );
+      if (bookingId == null) throw Exception('Booking ID not returned.');
+
+      for (final detail in widget.bookingDetails) {
+        final detailResp = await ApiService.storeBookingDetail(
+          bookingId: bookingId,
+          roomId: detail.room.id,
+          totalRoom: detail.quantity,
+          notes: detail.notes.isEmpty ? null : detail.notes,
+        );
+        final bookingDetailId = int.tryParse(
+          (detailResp['detail'] as Map<String, dynamic>?)?['id']?.toString() ??
+              '',
+        );
+        if (bookingDetailId == null)
+          throw Exception('Booking detail ID not returned.');
+
+        for (final addOn in detail.selectedAddOns) {
+          if (addOn.id <= 0) continue;
+          await ApiService.storeBookingDetailAddOn(
+            bookingDetailId: bookingDetailId,
+            addOnId: addOn.id,
+            qty: detail.quantity,
+            subTotal: addOn.price * detail.quantity,
+          );
+        }
+      }
+
+      if (!mounted) return;
+      widget.onBookNow?.call(List.from(widget.bookingDetails), bookingId);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Booking failed: $e'),
+          backgroundColor: const Color(0xFFDC2626),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isBookingNow = false);
+    }
+  }
 
   String formatPrice(double price) {
     return NumberFormat('#,###', 'en_US').format(price.toInt());
@@ -420,11 +492,9 @@ class _BookingConfirmationPopUpState extends State<BookingConfirmationPopUp> {
                       Expanded(
                         child: _BottomActionButton(
                           label: 'Book Now',
-                          onPressed: widget.onBookNow == null
+                          onPressed: (_isBookingNow || widget.onBookNow == null)
                               ? null
-                              : () => widget.onBookNow!(
-                                  List.from(widget.bookingDetails),
-                                ),
+                              : _handleBookNow,
                         ),
                       ),
                     ],
