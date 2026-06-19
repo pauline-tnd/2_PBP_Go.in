@@ -319,7 +319,7 @@ class _HotelCardState extends State<HotelCard> {
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              hotel.userRating.toString(),
+                              hotel.userRating.toStringAsFixed(1),
                               style: const TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w700,
