@@ -48,9 +48,11 @@ class _PaymentConfirmationPageState extends State<PaymentConfirmationPage> {
   DateTime get _checkOut =>
       widget.checkOut ?? _checkIn.add(const Duration(days: 1));
 
+  int get _totalNights => _checkOut.difference(_checkIn).inDays;
+
   double get _roomRateTotal => widget.bookingDetails.fold<double>(
     0,
-    (sum, detail) => sum + (detail.room.price * detail.quantity),
+    (sum, detail) => sum + (detail.room.price * detail.quantity * _totalNights),
   );
 
   double get _addOnTotal => widget.bookingDetails.fold<double>(
@@ -59,7 +61,8 @@ class _PaymentConfirmationPageState extends State<PaymentConfirmationPage> {
         sum +
         detail.selectedAddOns.fold<double>(
           0,
-          (addOnSum, addOn) => addOnSum + (addOn.price * detail.quantity),
+          (addOnSum, addOn) =>
+              addOnSum + (addOn.price * detail.quantity * _totalNights),
         ),
   );
 
